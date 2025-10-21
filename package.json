@@ -54,6 +54,13 @@
 					"rcasm"
 				]
 			}
+		],
+		"grammars": [
+			{
+				"language": "rcasm",
+				"scopeName": "source.rcasm",
+				"path": "./syntaxes/rcasm.tmLanguage.json"
+			}
 		]
 	},
 	"scripts": {

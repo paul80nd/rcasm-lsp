@@ -1,0 +1,81 @@
+{
+	"name": "rcasm",
+	"scopeName": "source.rcasm",
+	"fileTypes": [
+		"rcasm"
+	],
+	"uuid": "84bbebec-8c9e-4d81-bd9d-a59542597565",
+	"patterns": [
+		{
+			"name": "string.quoted.double.rcasm",
+			"match": "\"[^\"]*\""
+		},
+		{
+			"name": "string.quoted.single.rcasm",
+			"match": "'[^']*'"
+		},
+		{
+			"name": "comment.line.semicolon",
+			"match": ";[^\n]*\n"
+		},
+		{
+			"name": "meta.equate.rcasm",
+			"match": "(?i)^([a-zA-Z0-9_][a-zA-Z0-9_\\.]*)(?=([ \t]*=|[ \t]+equ[ \t]+))",
+			"captures": {
+				"1": {
+					"name": "variable.other.constant.rcasm"
+				}
+			}
+		},
+		{
+			"name": "meta.macro.rcasm",
+			"match": "(?i)^[ \t]*(!macro)[ \t]+([a-zA-Z0-9_\\.]+)",
+			"captures": {
+				"1": {
+					"name": "variable.other.macro.rcasm"
+				},
+				"2": {
+					"name": "meta.macro.name.rcasm"
+				}
+			}
+		},
+		{
+			"name": "meta.other.rcasm",
+			"match": "(?i)^[ \t]*(!if|!let|!align|!include|!binary|!for|!fill|!byte|!word|!use|!filescope|!error|!segment|!break)[ \t]*",
+			"captures": {
+				"1": {
+					"name": "variable.other.pseudo.rcam"
+				}
+			}
+		},
+		{
+			"name": "meta.definition.label.rcasm",
+			"match": "(?i)^[ \t]*([a-zA-Z_][a-zA-Z0-9_]*):",
+			"captures": {
+				"1": {
+					"name": "variable.other.label.rcasm"
+				}
+			}
+		},
+		{
+			"name": "constant.numeric.hex.rcasm",
+			"match": "(0[xX])([0-9A-Fa-f]+)\\b"
+		},
+		{
+			"name": "constant.numeric.binary.rcasm",
+			"match": "([01]+b)\\b"
+		},
+		{
+			"name": "constant.numeric.decimal.rcasm",
+			"match": "([0-9]+d?)\\b"
+		},
+		{
+			"name": "constant.language.register.rcasm",
+			"match": "(?i)\\b(a|b|c|d|j|j1|j2|m|m1|m2|x|y|xy)\\b"
+		},
+		{
+			"name": "keyword.other.opcode.rcasm",
+			"match": "(?i)\\b(add|and|bcs|beq|ble|blt|bmi|bne|clr|cmp|div|dvr|eor|hlr|hlt|inc|ixy|jmp|jsr|rts|ldi|ldr|lds|mdr|mod|mov|not|opc|org|orr|rol|str)\\b"
+		}
+	]
+}
