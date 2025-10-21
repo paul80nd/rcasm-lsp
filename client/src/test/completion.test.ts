@@ -8,9 +8,9 @@ import * as assert from 'assert';
 import { getDocUri, activate } from './helper';
 
 suite('Should do completion', () => {
-	const docUri = getDocUri('completion.txt');
+	const docUri = getDocUri('completion.rcasm');
 
-	test('Completes JS/TS in txt file', async () => {
+	test('Completes JS/TS in rcasm file', async () => {
 		await testCompletion(docUri, new vscode.Position(0, 0), {
 			items: [
 				{ label: 'JavaScript', kind: vscode.CompletionItemKind.Text },

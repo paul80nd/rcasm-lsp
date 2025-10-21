@@ -17,7 +17,7 @@
 		"vscode": "^1.100.0"
 	},
 	"activationEvents": [
-		"onLanguage:plaintext"
+		"onLanguage:rcasm"
 	],
 	"main": "./client/out/extension",
 	"contributes": {
@@ -43,7 +43,18 @@
 					"description": "Traces the communication between VS Code and the language server."
 				}
 			}
-		}
+		},
+		"languages": [
+			{
+				"id": "rcasm",
+				"extensions": [
+					".rcasm"
+				],
+				"aliases": [
+					"rcasm"
+				]
+			}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
