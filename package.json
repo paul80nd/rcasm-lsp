@@ -52,7 +52,8 @@
 				],
 				"aliases": [
 					"rcasm"
-				]
+				],
+				"configuration": "./language-configuration.json"
 			}
 		],
 		"grammars": [
