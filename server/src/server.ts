@@ -106,7 +106,7 @@ connection.onDidChangeConfiguration(change => {
 		documentSettings.clear();
 	} else {
 		globalSettings = (
-			(change.settings.languageServerExample || defaultSettings)
+			(change.settings.languageServerRcasm || defaultSettings)
 		);
 	}
 	// Refresh the diagnostics since the `maxNumberOfProblems` could have changed.
@@ -123,7 +123,7 @@ function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 	if (!result) {
 		result = connection.workspace.getConfiguration({
 			scopeUri: resource,
-			section: 'languageServerExample'
+			section: 'languageServerRcasm'
 		});
 		documentSettings.set(resource, result);
 	}
