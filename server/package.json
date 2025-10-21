@@ -1,8 +1,8 @@
 {
-	"name": "lsp-sample-server",
-	"description": "Example implementation of a language server in node.",
+	"name": "rcasm-lsp-server",
+	"description": "Relay computer assembly language server",
 	"version": "1.0.0",
-	"author": "Microsoft Corporation",
+	"author": "Paul Law",
 	"license": "MIT",
 	"engines": {
 		"node": "*"

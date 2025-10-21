@@ -1,7 +1,7 @@
 {
-	"name": "lsp-sample-client",
-	"description": "VSCode part of a language server",
-	"author": "Microsoft Corporation",
+	"name": "rcasm-lsp-client",
+	"description": "VSCode part of relay computer assembly language server",
+	"author": "Paul Law",
 	"license": "MIT",
 	"version": "0.0.1",
 	"publisher": "vscode",
