@@ -19,6 +19,8 @@ import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
 
+import * as rcasm from '@paul80nd/rcasm';
+
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
@@ -82,19 +84,19 @@ connection.onInitialized(() => {
 	}
 });
 
-// The example settings
-interface ExampleSettings {
+// The rcasm settings
+interface RcasmSettings {
 	maxNumberOfProblems: number;
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided in this example
 // but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
-let globalSettings: ExampleSettings = defaultSettings;
+const defaultSettings: RcasmSettings = { maxNumberOfProblems: 1000 };
+let globalSettings: RcasmSettings = defaultSettings;
 
 // Cache the settings of all open documents
-const documentSettings = new Map<string, Thenable<ExampleSettings>>();
+const documentSettings = new Map<string, Thenable<RcasmSettings>>();
 
 connection.onDidChangeConfiguration(change => {
 	if (hasConfigurationCapability) {
@@ -111,7 +113,7 @@ connection.onDidChangeConfiguration(change => {
 	connection.languages.diagnostics.refresh();
 });
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+function getDocumentSettings(resource: string): Thenable<RcasmSettings> {
 	if (!hasConfigurationCapability) {
 		return Promise.resolve(globalSettings);
 	}
@@ -159,45 +161,29 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 	// In this simple example we get the settings for every validate run.
 	const settings = await getDocumentSettings(textDocument.uri);
 
-	// The validator creates diagnostics for all uppercase words length 2 and more
-	const text = textDocument.getText();
-	const pattern = /\b[A-Z]{2,}\b/g;
-	let m: RegExpExecArray | null;
+	const { errors, warnings } = rcasm.assemble(textDocument.getText());
 
-	let problems = 0;
-	const diagnostics: Diagnostic[] = [];
-	while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-		problems++;
-		const diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Warning,
+	const toDiagnostic = (e: rcasm.Diagnostic, s: DiagnosticSeverity): Diagnostic => {
+		return {
+			severity: s,
 			range: {
-				start: textDocument.positionAt(m.index),
-				end: textDocument.positionAt(m.index + m[0].length)
+				start: textDocument.positionAt(e.loc.start.offset),
+				end: textDocument.positionAt(e.loc.end.offset)
 			},
-			message: `${m[0]} is all uppercase.`,
-			source: 'ex'
-		};
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Spelling matters'
-				},
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Particularly for names'
-				}
-			];
-		}
-		diagnostics.push(diagnostic);
+			message: e.msg,
+			source: 'rcasm'
+		} as Diagnostic;
+	};
+
+	const entries: Diagnostic[] = [];
+	let maxProblems = settings.maxNumberOfProblems;
+	entries.push(...errors.filter((_, idx) => idx <= maxProblems).map(e => toDiagnostic(e, DiagnosticSeverity.Error)));
+	maxProblems -= errors.length;
+	if (maxProblems > 0) {
+		entries.push(...warnings.filter((_, idx) => idx <= maxProblems).map(e => toDiagnostic(e, DiagnosticSeverity.Warning)));
 	}
-	return diagnostics;
+
+	return entries;
 }
 
 connection.onDidChangeWatchedFiles(_change => {
