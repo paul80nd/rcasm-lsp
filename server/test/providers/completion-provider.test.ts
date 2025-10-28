@@ -278,7 +278,7 @@ describe("CompletionProvider", () => {
 			});
 
 			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "move" })
+				expect.objectContaining({ label: "mov" })
 			);
 		});
 
@@ -291,7 +291,7 @@ describe("CompletionProvider", () => {
 			});
 
 			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "MOVE" })
+				expect.objectContaining({ label: "MOV" })
 			);
 		});
 
@@ -438,13 +438,13 @@ describe("CompletionProvider", () => {
 	describe("#onCompletionResolve()", () => {
 		it("adds documentation", () => {
 			const item = provider.onCompletionResolve({
-				label: "move",
+				label: "mov",
 				data: true,
 			});
 			expect(item.documentation).toBeTruthy();
 			expect(lsp.MarkupContent.is(item.documentation)).toBe(true);
 			lsp.MarkupContent.is(item.documentation);
-			expect((item.documentation! as lsp.MarkupContent).value).toContain("MOVE");
+			expect((item.documentation! as lsp.MarkupContent).value).toContain("mov");
 		});
 	});
 });

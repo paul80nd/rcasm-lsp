@@ -66,23 +66,23 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 			value += "\n\n" + doc.conditionCodeDescription;
 		}
 
-		const widths = [5, 5, 5, 5, 5];
+		const widths = [4, 4, 4, 4, 4];
 
 		if (doc.src || doc.dest) {
 			value += `\n`;
-			value += `\n|     |Dr   |Ar   |(m)  |imm  |`;
-			value += `\n|:----|-----|-----|-----|-----|`;
+			value += `\n|    |dr  |ar  |(m) |imm |`;
+			value += `\n|:---|----|----|----|----|`;
 			if (doc.src) {
 				const srcCols = Object.values(doc.src).map((v, i) =>
 					(v ? "  ✓" : "  -").padEnd(widths[i], " ")
 				);
-				value += `\n|**src**  |${srcCols.join("|")}|`;
+				value += `\n|**src** |${srcCols.join("|")}|`;
 			}
 			if (doc.dest) {
 				const destCols = Object.values(doc.dest).map((v, i) =>
 					(v ? "  ✓" : "  -").padEnd(widths[i], " ")
 				);
-				value += `\n|**dest** |${destCols.join("|")}|`;
+				value += `\n|**dst** |${destCols.join("|")}|`;
 			}
 		}
 	}
