@@ -16,9 +16,6 @@
 	"engines": {
 		"vscode": "^1.100.0"
 	},
-	"activationEvents": [
-		"onLanguage:rcasm"
-	],
 	"main": "./client/out/extension",
 	"contributes": {
 		"configuration": {
