@@ -1,1 +1,1 @@
-{"root":["./src/server.ts"],"version":"5.9.3"}
+{"root":["./src/config.ts","./src/context.ts","./src/diagnostics.ts","./src/document-processor.ts","./src/server.ts","./src/providers/completion-provider.ts","./src/providers/configuration-provider.ts","./src/providers/index.ts","./src/providers/text-document-sync-provider.ts"],"version":"5.9.3"}
