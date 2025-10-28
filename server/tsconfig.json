@@ -6,8 +6,10 @@
 		],
 		"module": "commonjs",
 		"moduleResolution": "node",
+		"resolveJsonModule": true,
 		"sourceMap": true,
 		"strict": true,
+		"esModuleInterop": true,
 		"outDir": "out",
 		"rootDir": "src"
 	},

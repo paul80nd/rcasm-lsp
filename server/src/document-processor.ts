@@ -2,13 +2,13 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 // import Parser from "web-tree-sitter";
 
 // import { readDocumentFromUri, resolveReferencedUris } from "./files";
-// import { processSymbols, Symbols } from "./symbols";
+import { processSymbols, Symbols } from "./symbols";
 import { Context } from "./context";
 
 export interface ProcessedDocument {
 	document: TextDocument;
 	//   tree: Parser.Tree;
-	//   symbols: Symbols;
+	symbols: Symbols;
 	//   referencedUris: string[];
 }
 
@@ -37,7 +37,7 @@ export default class DocumentProcessor {
 		const processed: ProcessedDocument = {
 			document,
 			//       tree,
-			//       symbols: processSymbols(document.uri, tree, this.ctx),
+			symbols: processSymbols(/*document.uri, tree, this.ctx*/),
 			//       referencedUris: [],
 		};
 
