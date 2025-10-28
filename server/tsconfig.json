@@ -11,7 +11,8 @@
 		"strict": true,
 		"esModuleInterop": true,
 		"outDir": "out",
-		"rootDir": "src"
+		"rootDir": "src",
+		"skipLibCheck": true
 	},
 	"include": [
 		"src"
