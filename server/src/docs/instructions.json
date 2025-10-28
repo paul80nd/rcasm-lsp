@@ -1,7 +1,7 @@
 {
 	"add": {
-		"title": "ADD",
-		"summary": "Add",
+		"title": "add",
+		"summary": "Arithmetic Add",
 		"operation": "[destination] ← [source] + [destination]",
 		"syntax": [
 			"add <source>,<destination>"
@@ -35,12 +35,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "*",
-			"n": "*",
+		"flags": {
 			"z": "*",
-			"v": "*",
-			"c": "*"
+			"c": "*",
+			"s": "*"
 		},
 		"procs": {
 			"rcasm": true,
@@ -83,108 +81,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
+		"flags": {
 			"z": "*",
-			"v": "0",
-			"c": "0"
-		},
-		"procs": {
-			"rcasm": true,
-			"rcasm+div": true
-		}
-	},
-	"asl": {
-		"title": "ASL",
-		"summary": "Arithmetic Shift Left",
-		"operation": "[destination] ← [destination] shifted by \\<count\\>",
-		"syntax": [
-			"asl [<count>,]<destination>"
-		],
-		"description": "Arithmetically shift the bits of the operand left. The shift count may be specified in one of three ways. The count may be a literal, the contents of a data register, or the value 1. An immediate (i.e., literal) count permits a shift of 1 to 8 places. If the count is in a register, the value is modulo 64 (i.e., 0 to 63). If no count is specified, one shift is made (i.e., `ASL <destination>` shifts the contents of the *word* at the effective address one place left).\n\nThe effect of an arithmetic shift left is to shift a zero into the least-significant bit position and to shift the most-significant bit out into both the X- and the C-bits of the *CCR*. The overflow bit of the *CCR* is set if a sign change occurs during shifting (i.e., if the most-significant bit changes value during shifting).\n\n```ascii\n┌───┐     ┌──────────────┐\n│ C │◄──┬─┤ Operand ◄─── │◄─── 0\n└───┘   │ └──────────────┘\n┌───┐   │\n│ X │◄──┘\n└───┘\n```",
-		"src": {
-			"dn": true,
-			"an": false,
-			"anIndirect": false,
-			"anPostInc": false,
-			"anPreDec": false,
-			"anOffset": false,
-			"anIdx": false,
-			"absW": false,
-			"absL": false,
-			"pcOffset": false,
-			"pcIdx": false,
-			"imm": true
-		},
-		"dest": {
-			"dn": true,
-			"an": false,
-			"anIndirect": true,
-			"anPostInc": true,
-			"anPreDec": true,
-			"anOffset": true,
-			"anIdx": true,
-			"absW": true,
-			"absL": true,
-			"pcOffset": false,
-			"pcIdx": false,
-			"imm": false
-		},
-		"ccr": {
-			"x": "*",
-			"n": "*",
-			"z": "*",
-			"v": "*",
-			"c": "*"
-		},
-		"procs": {
-			"rcasm": true,
-			"rcasm+div": true
-		}
-	},
-	"asr": {
-		"title": "ASR",
-		"summary": "Arithmetic Shift Right",
-		"operation": "[destination] ← [destination] shifted by \\<count\\>",
-		"syntax": [
-			"asr [<count>,]<destination>"
-		],
-		"description": "Arithmetically shift the bits of the operand in the specified direction (i.e., left or right). The shift count may be specified in one of three ways. The count may be a literal, the contents of a data register, or the value 1. An immediate (i.e., literal) count permits a shift of 1 to 8 places. If the count is in a register, the value is modulo 64 (i.e., 0 to 63). If no count is specified, one shift is made (i.e., `ASR <destination>` shifts the contents of the *word* at the effective address one place right).\n\nThe effect of an arithmetic shift right is to shift the least-significant bit into both the X- and C-bits of the CCR. The most-significant bit (i.e., the sign bit) is *replicated* to preserve the sign of the number.\n\n```ascii\n   ┌───┬──────────────┐     ┌───┐\n┌─►│MSB│ Operand ───► ├─┬──►│ C │\n│  └─┬─┴──────────────┘ │   └───┘\n└────┘                  │   ┌───┐\n                        └──►│ X │\n                            └───┘\n```",
-		"src": {
-			"dn": true,
-			"an": false,
-			"anIndirect": false,
-			"anPostInc": false,
-			"anPreDec": false,
-			"anOffset": false,
-			"anIdx": false,
-			"absW": false,
-			"absL": false,
-			"pcOffset": false,
-			"pcIdx": false,
-			"imm": true
-		},
-		"dest": {
-			"dn": true,
-			"an": false,
-			"anIndirect": true,
-			"anPostInc": true,
-			"anPreDec": true,
-			"anOffset": true,
-			"anIdx": true,
-			"absW": true,
-			"absL": true,
-			"pcOffset": false,
-			"pcIdx": false,
-			"imm": false
-		},
-		"ccr": {
-			"x": "*",
-			"n": "*",
-			"z": "*",
-			"v": "*",
-			"c": "*"
+			"c": "0",
+			"s": "*"
 		},
 		"procs": {
 			"rcasm": true,
@@ -199,12 +99,10 @@
 			"bcc <label>"
 		],
 		"description": "If the the carry bit is clear, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset. A short branch to the next instruction is impossible, since the branch code 0 indicates a long branch with a 16-bit offset. The assembly language form `BCC *+8` means branch to the point eight bytes from the current PC if the carry bit is clear.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -219,12 +117,10 @@
 			"bcs <label>"
 		],
 		"description": "If the the carry bit is set, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset. A short branch to the next instruction is impossible, since the branch code 0 indicates a long branch with a 16-bit offset. The assembly language form `BCS *+8` means branch to the point eight bytes from the current PC if the carry bit is set.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -239,12 +135,10 @@
 			"beq <label>"
 		],
 		"description": "If the the zero bit is set, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset. A short branch to the next instruction is impossible, since the branch code 0 indicates a long branch with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -259,12 +153,10 @@
 			"bge <label>"
 		],
 		"description": "If greater than or equal, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -279,32 +171,10 @@
 			"bgt <label>"
 		],
 		"description": "If greater than, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
-		},
-		"procs": {
-			"rcasm": true,
-			"rcasm+div": true
-		}
-	},
-	"bhi": {
-		"title": "Bhi",
-		"summary": "Branch Conditionally: High",
-		"operation": "If C̅.Z THEN [PC] ← [PC] + d",
-		"syntax": [
-			"bhi <label>"
-		],
-		"description": "If higher than, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
-			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -319,32 +189,10 @@
 			"ble <label>"
 		],
 		"description": "If less than or equal, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
-		},
-		"procs": {
-			"rcasm": true,
-			"rcasm+div": true
-		}
-	},
-	"bls": {
-		"title": "Bls",
-		"summary": "Branch Conditionally: Low or Same",
-		"operation": "If C+Z THEN [PC] ← [PC] + d",
-		"syntax": [
-			"bls <label>"
-		],
-		"description": "If lower than or same, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
-			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -359,12 +207,10 @@
 			"blt <label>"
 		],
 		"description": "If less than, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -379,12 +225,10 @@
 			"bmi <label>"
 		],
 		"description": "If the negative bit is set, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -399,32 +243,10 @@
 			"beq <label>"
 		],
 		"description": "If the the zero bit is clear, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset. A short branch to the next instruction is impossible, since the branch code 0 indicates a long branch with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
-		},
-		"procs": {
-			"rcasm": true,
-			"rcasm+div": true
-		}
-	},
-	"bpl": {
-		"title": "Bpl",
-		"summary": "Branch Conditionally: Plus",
-		"operation": "If N̅ THEN [PC] ← [PC] + d",
-		"syntax": [
-			"bpl <label>"
-		],
-		"description": "If the negative bit is clear, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
-			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -439,12 +261,10 @@
 			"bvc <label>"
 		],
 		"description": "If the overflow bit is clear, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -459,12 +279,10 @@
 			"bvs <label>"
 		],
 		"description": "If the overflow bit is set, program execution continues at location [PC] + displacement, d. The displacement is a two's complement value. The value in the PC corresponds to the current location plus two. The range of the branch is -126 to +128 bytes with an 8-bit offset, and -32K to +32K bytes with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -480,12 +298,10 @@
 			"bra <literal>"
 		],
 		"description": "Program execution continues at location [PC] + d. The displacement, d, is a two's complement value (8 bits for a short branch and 16 bits for a long branch). The value in the PC corresponds to the current location plus two. Note that a short branch to the next instruction is impossible, since the branch code 0 is used to indicate a long branch with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -500,12 +316,10 @@
 			"bsr <label>"
 		],
 		"description": "The longword address of the instruction immediately following the `BSR` instruction is pushed onto the system stack pointed at by A7. Program execution then continues at location [PC] + displacement. The displacement is an 8-bit two's complement value for a short branch, or a 16-bit two's complement value for a long branch. The value in the PC corresponds to the current location plus two. Note that a short branch to the next instruction is impossible, since the branch code 0 is used to indicate a long branch with a 16-bit offset.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -534,12 +348,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "0",
-			"z": "1",
-			"v": "0",
-			"c": "0"
+		"flags": {
+			"z": "-",
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -568,12 +380,10 @@
 			"pcIdx": true,
 			"imm": true
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
+		"flags": {
 			"z": "*",
-			"v": "*",
-			"c": "*"
+			"c": "0",
+			"s": "*"
 		},
 		"procs": {
 			"rcasm": true,
@@ -602,12 +412,10 @@
 			"pcIdx": true,
 			"imm": true
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
-			"z": "*",
-			"v": "*",
-			"c": "0"
+		"flags": {
+			"z": "-",
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -636,12 +444,10 @@
 			"pcIdx": true,
 			"imm": true
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
-			"z": "*",
-			"v": "*",
-			"c": "0"
+		"flags": {
+			"z": "-",
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -670,12 +476,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
+		"flags": {
 			"z": "*",
-			"v": "0",
-			"c": "0"
+			"c": "0",
+			"s": "*"
 		},
 		"procs": {
 			"rcasm": true,
@@ -704,12 +508,10 @@
 			"pcIdx": true,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -738,38 +540,41 @@
 			"pcIdx": true,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
 			"rcasm+div": true
 		}
 	},
-	"lsl": {
-		"title": "LSL",
-		"summary": "Logical Shift Left",
-		"operation": "[destination] ← [destination] shifted by \\<count\\>",
+	"ldi": {
+		"title": "ldi",
+		"summary": "8-bit Load Immediate",
+		"operation": "[destination] ← [source]\n[CCR] ← [source]\n[destination] ← [SR]\nIF [S] = 1<br/>&nbsp;&nbsp;THEN [SR] ← [source]<br/>ELSE TRAP\nIF [S] = 1&nbsp;&nbsp;&nbsp;&nbsp;{MOVE USP,An form}<br/> &nbsp;&nbsp;THEN [USP] ← [An]<br/> ELSE TRAP\nIF [S] = 1&nbsp;&nbsp;&nbsp;&nbsp;{MOVE An,USP form}<br/> &nbsp;&nbsp;THEN [An] ← [USP]<br/> ELSE TRAP",
 		"syntax": [
-			"lsl [<count>,]<destination>"
+			"ldi <source>,<destination>",
+			"ldi <source>,CCR",
+			"ldi SR,<destination>",
+			"ldi <source>,SR",
+			"ldi USP,An",
+			"ldi An,USP"
 		],
-		"description": "Logically shift the bits of the operand left. A zero is shifted into the input position and the bit shifted out is copied into both the C- and the X-bit of the CCR. The shift count may be specified in one of three ways. The count may be a literal, the contents of a data register, or the value 1. An immediate count permits a shift of 1 to 8 places. If the count is in a register, the value is modulo 64 - from 0 to 63. If no count is specified, one shift is made (e.g., `LSL <destination>` shifts the *word* at the effective address one position left).\n\n```ascii\n┌───┐     ┌──────────────┐\n│ C │◄──┬─┤ Operand ◄─── │◄─── 0\n└───┘   │ └──────────────┘\n┌───┐   │\n│ X │◄──┘\n└───┘\n```",
+		"description": "Move the contents of the source to the destination location. The data is examined as it is moved and the condition codes set accordingly. Note that this is actually a *copy* command because the source is not affected by the move. The move instruction has the widest range of addressing modes of all the 68000's instructions.\n\n**Copy data to CCR from source**\n\nMove the contents of the source operand to the condition code register. The source operand is a *word*, but only the low-order *byte* contains the condition codes. The upper byte is neglected. Note that `MOVE <source>,CCR` is a word operation, but `ANDI`, `ORI`, and `EORI` to `CCR` are all byte operations.\n\n**Copy data from SR to destination**\n\nMove the contents of the status register to the destination location. The source operand, the status register, is a word. This instruction is not privileged in the 68000, but is privileged in the 68010, 68020, and 68030. Executing a `MOVE SR,<destination>` while in the user mode on these processors results in a privilege violation trap.\n\n**Copy data to SR from source**\n\nMove the contents of the source operand to the status register. The source operand is a word and all bits of the status register are affected.\n\n**Copy data to or from USP**\n\nMove the contents of the user stack pointer to an address register or vice versa. This is a privileged instruction and allows the operating system running in the supervisor state either to read the contents of the user stack pointer or to set up the user stack pointer.",
 		"src": {
 			"dn": true,
-			"an": false,
-			"anIndirect": false,
-			"anPostInc": false,
-			"anPreDec": false,
-			"anOffset": false,
-			"anIdx": false,
-			"absW": false,
-			"absL": false,
-			"pcOffset": false,
-			"pcIdx": false,
+			"an": true,
+			"anIndirect": true,
+			"anPostInc": true,
+			"anPreDec": true,
+			"anOffset": true,
+			"anIdx": true,
+			"absW": true,
+			"absL": true,
+			"pcOffset": true,
+			"pcIdx": true,
 			"imm": true
 		},
 		"dest": {
@@ -786,60 +591,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "*",
-			"n": "*",
-			"z": "*",
-			"v": "0",
-			"c": "*"
-		},
-		"procs": {
-			"rcasm": true,
-			"rcasm+div": true
-		}
-	},
-	"lsr": {
-		"title": "LSR",
-		"summary": "Logical Shift Right",
-		"operation": "[destination] ← [destination] shifted by \\<count\\>",
-		"syntax": [
-			"lsr [<count>,]<destination>"
-		],
-		"description": "Logically shift the bits of the operand right. A zero is shifted into the input position and the bit shifted out is copied into both the C- and the X-bit of the CCR. The shift count may be specified in one of three ways. The count may be a literal, the contents of a data register, or the value 1. An immediate count permits a shift of 1 to 8 places. If the count is in a register, the value is modulo 64 - from 0 to 63. If no count is specified, one shift is made (e.g., `LSR <destination>` shifts the *word* at the effective address one position right).\n\n```ascii\n       ┌──────────────┐     ┌───┐\n 0 ───►│ Operand ───► ├─┬──►│ C │\n       └──────────────┘ │   └───┘\n                        │   ┌───┐\n                        └──►│ X │\n                            └───┘\n```",
-		"src": {
-			"dn": true,
-			"an": false,
-			"anIndirect": false,
-			"anPostInc": false,
-			"anPreDec": false,
-			"anOffset": false,
-			"anIdx": false,
-			"absW": false,
-			"absL": false,
-			"pcOffset": false,
-			"pcIdx": false,
-			"imm": true
-		},
-		"dest": {
-			"dn": true,
-			"an": false,
-			"anIndirect": true,
-			"anPostInc": true,
-			"anPreDec": true,
-			"anOffset": true,
-			"anIdx": true,
-			"absW": true,
-			"absL": true,
-			"pcOffset": false,
-			"pcIdx": false,
-			"imm": false
-		},
-		"ccr": {
-			"x": "*",
-			"n": "*",
-			"z": "*",
-			"v": "0",
-			"c": "*"
+		"flags": {
+			"z": "-",
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -887,12 +642,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
-			"z": "*",
-			"v": "0",
-			"c": "0"
+		"flags": {
+			"z": "-",
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -916,12 +669,10 @@
 			"nop"
 		],
 		"description": "The no operation instruction, `NOP` performs no *computation*. Execution continues with the instruction following the `NOP` instruction. The processor's state is not modified by a `NOP`.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -950,12 +701,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
+		"flags": {
 			"z": "*",
-			"v": "0",
-			"c": "0"
+			"c": "0",
+			"s": "*"
 		},
 		"procs": {
 			"rcasm": true,
@@ -999,12 +748,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
+		"flags": {
 			"z": "*",
-			"v": "0",
-			"c": "0"
+			"c": "0",
+			"s": "*"
 		},
 		"procs": {
 			"rcasm": true,
@@ -1047,60 +794,10 @@
 			"pcIdx": false,
 			"imm": false
 		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
+		"flags": {
 			"z": "*",
-			"v": "0",
-			"c": "*"
-		},
-		"procs": {
-			"rcasm": true,
-			"rcasm+div": true
-		}
-	},
-	"ror": {
-		"title": "ROR",
-		"summary": "Rotate Right",
-		"operation": "[destination] ← [destination] rotated by \\<count\\>",
-		"syntax": [
-			"ror [<count>,]<destination>"
-		],
-		"description": "Rotate the bits of the operand right. The extend bit, X, is not included in the operation. A rotate operation is circular in the sense that the bit shifted out at one end is shifted into the other end. That is, no bit is lost or destroyed by a rotate operation. The bit shifted out is also copied into the C-bit of the CCR, but not into the X-bit. The shift count may be specified in one of three ways: the count may be a literal, the contents of a data register, or the value 1. An immediate count permits a shift of 1 to 8 places. If the count is in a register, the value is modulo 64, allowing a range of 0 to 63. If no count is specified, the *word* at the effective address is rotated by one place (e.g., `ROR <destination>`).\n\n```ascii\n┌─────────────────────┐\n│   ┌──────────────┐  │   ┌───┐\n└──►│ Operand ───► ├──┴──►│ C │\n    └──────────────┘      └───┘\n```",
-		"src": {
-			"dn": true,
-			"an": false,
-			"anIndirect": false,
-			"anPostInc": false,
-			"anPreDec": false,
-			"anOffset": false,
-			"anIdx": false,
-			"absW": false,
-			"absL": false,
-			"pcOffset": false,
-			"pcIdx": false,
-			"imm": true
-		},
-		"dest": {
-			"dn": true,
-			"an": false,
-			"anIndirect": true,
-			"anPostInc": true,
-			"anPreDec": true,
-			"anOffset": true,
-			"anIdx": true,
-			"absW": true,
-			"absL": true,
-			"pcOffset": false,
-			"pcIdx": false,
-			"imm": false
-		},
-		"ccr": {
-			"x": "-",
-			"n": "*",
-			"z": "*",
-			"v": "0",
-			"c": "*"
+			"c": "0",
+			"s": "*"
 		},
 		"procs": {
 			"rcasm": true,
@@ -1115,12 +812,10 @@
 			"rts"
 		],
 		"description": "The program counter is pulled from the stack and the previous value of the PC is lost. `RTS` is used to terminate a subroutine.",
-		"ccr": {
-			"x": "-",
-			"n": "-",
+		"flags": {
 			"z": "-",
-			"v": "-",
-			"c": "-"
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,
@@ -1135,12 +830,10 @@
 			"stop #<data>"
 		],
 		"description": "The immediate operand is copied into the entire status register (i.e., both status byte and *CCR* are modified), and the program counter advanced to point to the next instruction to be executed. The processor then suspends all further processing and halts. That is, the privileged `STOP` instruction stops the 68000.\n\nThe execution of instructions resumes when a trace, an interrupt, or a reset exception occurs. A trace exception will occur if the trace bit is set when the `STOP` instruction is encountered. If an interrupt request arrives whose priority is higher than the current processor priority, an interrupt exception occurs, otherwise the interrupt request has no effect. If the bit of the immediate data corresponding to the S-bit is clear (i.e., user mode selected), execution of the `STOP` instruction will cause a privilege violation. An external reset will always initiate reset exception processing.",
-		"ccr": {
-			"x": "*",
-			"n": "*",
-			"z": "*",
-			"v": "*",
-			"c": "*"
+		"flags": {
+			"z": "-",
+			"c": "-",
+			"s": "-"
 		},
 		"procs": {
 			"rcasm": true,

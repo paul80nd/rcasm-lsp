@@ -28,9 +28,9 @@ export interface ComponentInfo {
 // Regex to match line components:
 // ^
 // (?<label>                           Label:
-//   ([^:\s;*=]+:?:?)                  - anything at start of line - optional colon
+//   ([^:\s;*=]+:)                     - anything at start of line with colon present
 //   |                                   or...
-//   (\s+[^:\s;*=]+::?)                - can have leading whitespace with colon present
+//   (\s+[^:\s;*=]+:)                  - can have leading whitespace with colon present
 // )?
 // (\s*                                Instruction or directive:
 //   (
@@ -41,7 +41,6 @@ export interface ComponentInfo {
 //
 //     (                                 No-operand mnemonics:
 //       (?<mnemonic1>\.?(nop|reset|rte|rtr|rts|trapv|illegal|clrfo|clrso|comment|einline|even|inline|list|mexit|nolist|nopage|odd|page|popsection|pushsection|rsreset|endif|endc|else|elseif|endm|endr|erem))
-//       (?<size1>\.[a-z0-9_.]*)?          - Size qualifier
 //     )
 //     |
 //     (                                 Any other mnemonic:
@@ -66,7 +65,7 @@ export interface ComponentInfo {
 // (\s*(?<comment>.+))?                Comment (any trailing text)
 // $
 const pattern =
-	/^(?<label>([^:\s;*=]+:?:?)|(\s+[^:\s;*=]+::?))?(\s*(((?<mnemonic1>\.?(nop|reset|rte|rtr|rts|trapv|illegal|clrfo|clrso|comment|einline|even|inline|list|mexit|nolist|nopage|odd|page|popsection|pushsection|rsreset|endif|endc|else|elseif|endm|endr|erem))(?<size1>\.[a-z0-9_.]*)?)|((?<mnemonic>([^\s.,;*=]+|=))(?<size>\.[^\s.,;*]*)?(\s*(?<operands>(?<op1>"([^"]*)"?|'([^']*)'?|<([^>]*)>?|[^\s;,]+)(?<op2>,\s*("([^"]*)"?|'([^']*)'?|<([^>]*)>?|[^\s;,]*))*))?)))?(\s*(?<comment>.+))?$/i;
+	/^(?<label>([^:\s;*=]+:)|(\s+[^:\s;*=]+:))?(\s*(((?<mnemonic1>\.?(nop|reset|rte|rtr|rts|trapv|illegal|clrfo|clrso|comment|einline|even|inline|list|mexit|nolist|nopage|odd|page|popsection|pushsection|rsreset|endif|endc|else|elseif|endm|endr|erem)))|((?<mnemonic>([^\s.,;*=]+|=))(?<size>\.[^\s.,;*]*)?(\s*(?<operands>(?<op1>"([^"]*)"?|'([^']*)'?|<([^>]*)>?|[^\s;,]+)(?<op2>,\s*("([^"]*)"?|'([^']*)'?|<([^>]*)>?|[^\s;,]*))*))?)))?(\s*(?<comment>.+))?$/i;
 
 /**
  * Parse a single line of source code into positional components

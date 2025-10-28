@@ -43,20 +43,6 @@ describe("parse", () => {
 			});
 		});
 
-		it("parses a label with no colon", () => {
-			const line = parseLine("label");
-			expect(line).toEqual({
-				label: { start: 0, end: 5, value: "label" },
-			});
-		});
-
-		it("parses a label with double colon", () => {
-			const line = parseLine("label::");
-			expect(line).toEqual({
-				label: { start: 0, end: 5, value: "label" },
-			});
-		});
-
 		it("parses a local label", () => {
 			const line = parseLine(".label:");
 			expect(line).toEqual({
@@ -161,24 +147,6 @@ describe("parse", () => {
 		it("parses a line with only whitespace", () => {
 			const line = parseLine("  ");
 			expect(line).toEqual({});
-		});
-
-		it("parses '=' as a mnemonic", () => {
-			const line = parseLine("label = value");
-			expect(line).toEqual({
-				label: { start: 0, end: 5, value: "label" },
-				mnemonic: { start: 6, end: 7, value: "=" },
-				operands: [{ start: 8, end: 13, value: "value" }],
-			});
-		});
-
-		it("parses '=' as a mnemonic with no whitespace", () => {
-			const line = parseLine("label=value");
-			expect(line).toEqual({
-				label: { start: 0, end: 5, value: "label" },
-				mnemonic: { start: 5, end: 6, value: "=" },
-				operands: [{ start: 6, end: 11, value: "value" }],
-			});
 		});
 
 		it("parses an incomplete size", () => {

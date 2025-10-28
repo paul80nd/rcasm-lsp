@@ -55,9 +55,9 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 	}
 
 	if (isInstructionDoc(doc)) {
-		if (doc.ccr) {
-			const cols = Object.values(doc.ccr);
-			value += `\n\n| X | N | Z | V | C |\n|---|---|---|---|---|\n| ${cols.join(
+		if (doc.flags) {
+			const cols = Object.values(doc.flags);
+			value += `\n\n| Z | C | S |\n|---|---|---|\n| ${cols.join(
 				" | "
 			)} |`;
 		}

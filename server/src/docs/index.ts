@@ -2,18 +2,17 @@ import instructionsJson from "./instructions.json";
 import directivesJson from "./directives.json";
 import { AddressingMode, RegisterName } from "../syntax";
 
-export type ConditionCode = "x" | "n" | "z" | "v" | "c";
+export type AluFlag = "z" | "c" | "s";
 
 /**
- * CCR register states
+ * ALU flag register states
  *
- * U The state of the bit is undefined (i.e., its value cannot be predicted)
  * - The bit remains unchanged by the execution of the instruction
  * * The bit is set or cleared according to the outcome of the instruction.
  */
-export type CCState = "-" | "*" | "0" | "U" | "1";
+export type AluFlagState = "-" | "*" | "0" | "U" | "1";
 
-export type ConditionCodes = Record<ConditionCode, CCState>;
+export type AluFlags = Record<AluFlag, AluFlagState>;
 
 /**
  * Supported addressing modes for operand
@@ -29,7 +28,7 @@ export interface MnemonicDoc {
 
 export interface InstructionDoc extends MnemonicDoc {
 	operation?: string;
-	ccr?: ConditionCodes;
+	flags?: AluFlags;
 	conditionCodeDescription?: string;
 	//   // sampleSyntax?: string[];
 	//   // example?: string;
@@ -56,7 +55,7 @@ export const directiveDocs = directivesJson as Record<string, MnemonicDoc>;
 
 export const mnemonicDocs = {
 	...instructionDocs,
-	//   ...directiveDocs,
+	...directiveDocs,
 };
 
 // export const addressingModeDocs: Record<AddressingMode, string> = {
@@ -75,9 +74,9 @@ export const mnemonicDocs = {
 // };
 
 export const registerDocs: Record<RegisterName, string> = {
-  ccr: "Condition Code Register",
-  pc: "Program Counter",
-  sr: "Stack Register",
-  usp: "User Stack Pointer",
-  vbr: "Vector Base Register",
+	ccr: "Condition Code Register",
+	pc: "Program Counter",
+	sr: "Stack Register",
+	usp: "User Stack Pointer",
+	vbr: "Vector Base Register",
 };
