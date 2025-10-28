@@ -66,12 +66,12 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 			value += "\n\n" + doc.conditionCodeDescription;
 		}
 
-		const widths = [5, 5, 5, 5, 5, 5, 8, 5, 5, 5, 8, 5];
+		const widths = [5, 5, 5, 5, 5];
 
 		if (doc.src || doc.dest) {
 			value += `\n`;
-			value += `\n|     |Dn   |An   |(An) |(An)+|-(An)|d(An)|d(An,Xi)|ABS.W|ABS.L|d(PC)|d(PC,Xn)|imm  |`;
-			value += `\n|:----|-----|-----|-----|-----|-----|-----|--------|-----|-----|-----|--------|-----|`;
+			value += `\n|     |Dr   |Ar   |(m)  |imm  |`;
+			value += `\n|:----|-----|-----|-----|-----|`;
 			if (doc.src) {
 				const srcCols = Object.values(doc.src).map((v, i) =>
 					(v ? "  ✓" : "  -").padEnd(widths[i], " ")

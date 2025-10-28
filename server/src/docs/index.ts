@@ -59,17 +59,9 @@ export const mnemonicDocs = {
 };
 
 // export const addressingModeDocs: Record<AddressingMode, string> = {
-//   dn: "Dn",
-//   an: "An",
-//   anIndirect: "(An)",
-//   anPostInc: "(An)+",
-//   anPreDec: "-(An)",
-//   anOffset: "d(An)",
-//   anIdx: "d(An,Xi)",
-//   absW: "ABS.W",
-//   absL: "ABS.L",
-//   pcOffset: "d(PC)",
-//   pcIdx: "d(PC,Xn)",
+//   dr: "Dr",
+//   ar: "Ar",
+//   mIndirect: "(m)",
 //   imm: "imm",
 // };
 
