@@ -1,5 +1,3 @@
-import { Size } from "./syntax";
-
 export interface ParsedLine {
 	label?: Component;
 	mnemonic?: Component;
@@ -17,7 +15,6 @@ export interface Component {
 export enum ComponentType {
 	Label,
 	Mnemonic,
-	Size,
 	Operand,
 	Comment,
 }
@@ -139,7 +136,7 @@ export function parseLine(text: string): ParsedLine {
  * Identify the component at given postion on a line
  */
 export function componentAtIndex(
-	{ label, mnemonic, size, operands, comment }: ParsedLine,
+	{ label, mnemonic, operands, comment }: ParsedLine,
 	index: number
 ): ComponentInfo | undefined {
 	if (label && containsIndex(label, index)) {
@@ -152,12 +149,6 @@ export function componentAtIndex(
 		return {
 			component: mnemonic,
 			type: ComponentType.Mnemonic,
-		};
-	}
-	if (size && containsIndex(size, index)) {
-		return {
-			component: size,
-			type: ComponentType.Size,
 		};
 	}
 	if (operands) {
@@ -188,8 +179,6 @@ function containsIndex(component: Component, index: number): boolean {
 
 export interface SignatureInfo {
 	label: string;
-	sizes: Size[];
-	size?: Component;
 	operands: Component[];
 }
 
@@ -197,18 +186,10 @@ export interface SignatureInfo {
  * Get components from syntax signature text
  */
 export function parseSignature(text: string): SignatureInfo {
-	const info: SignatureInfo = { label: text, sizes: [], operands: [] };
+	const info: SignatureInfo = { label: text, operands: [] };
 	let end = 0;
 
-	const [inst, opList] = text.split(" ");
-	const [, size] = inst.split(".");
-	if (size) {
-		const value = size.replace(/[\]]/g, "");
-		const start = end + text.substring(end).indexOf(value);
-		end = start + value.length;
-		info.size = { start, end, value };
-		info.sizes = value.replace(/[().]/g, "").split("") as Size[];
-	}
+	const [, opList] = text.split(" ");
 
 	if (opList) {
 		for (const op of opList.split(",")) {

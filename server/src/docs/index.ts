@@ -1,6 +1,6 @@
 import instructionsJson from "./instructions.json";
 import directivesJson from "./directives.json";
-import { AddressingMode, RegisterName, Size } from "../syntax";
+import { AddressingMode, RegisterName } from "../syntax";
 
 export type ConditionCode = "x" | "n" | "z" | "v" | "c";
 
@@ -57,17 +57,6 @@ export const directiveDocs = directivesJson as Record<string, MnemonicDoc>;
 export const mnemonicDocs = {
 	...instructionDocs,
 	//   ...directiveDocs,
-};
-
-export const sizeDocs: Record<Size, string> = {
-  b: "Byte (8 bit)",
-  w: "Word (16 bit)",
-  l: "Long-word (32 bit)",
-  q: "Quad-word (64 bit)",
-  s: "Single precision (32 bit)",
-  d: "Double precision (64 bit)",
-  x: "Extended precision (96 bit)",
-  p: "Packed decimal (not yet supported in vasm)",
 };
 
 // export const addressingModeDocs: Record<AddressingMode, string> = {

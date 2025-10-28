@@ -1,7 +1,4 @@
 import * as lsp from "vscode-languageserver";
-// import { promises as fsp } from "fs";
-// import { relative } from "path";
-// import { fileURLToPath } from "url";
 
 import { Provider } from ".";
 import * as syntax from "../syntax";
@@ -9,15 +6,12 @@ import {
 	directiveDocs,
 	instructionDocs,
 	mnemonicDocs,
-	registerDocs,
-	sizeDocs,
+	registerDocs
 } from "../docs/index";
-// import { isAsmExt, resolveIncludesGen, getDirectory } from "../files";
 import {
 	Definition,
 	DefinitionType,
 	labelBeforePosition,
-	//   processPath,
 } from "../symbols";
 import { Context } from "../context";
 import {
@@ -101,14 +95,6 @@ export default class CompletionProvider implements Provider {
 		switch (type) {
 			case ComponentType.Mnemonic:
 				return this.completeMnemonics(isUpperCase/*, processed, position*/);
-			case ComponentType.Size: {
-				// Match case of mnemonic
-				const upperCase =
-					line.mnemonic !== undefined &&
-					line.mnemonic.value.length > 0 &&
-					line.mnemonic.value.toUpperCase() === line.mnemonic.value;
-				return this.completeSizes(upperCase, signature?.sizes);
-			}
 			case ComponentType.Operand: {
 				if (!mnemonic) {
 					return [];
@@ -164,16 +150,6 @@ export default class CompletionProvider implements Provider {
 			}
 		}
 		return item;
-	}
-
-	private completeSizes(uppercase: boolean, sizes?: syntax.Size[]) {
-		return (sizes || syntax.sizes).map((label, i) => ({
-			label: uppercase ? label.toUpperCase() : label,
-			detail: sizeDocs[label as syntax.Size],
-			kind: lsp.CompletionItemKind.Keyword,
-			sortText: String(i), // Preserve size order from docs
-			preselect: label === "w", // Word is normally default
-		}));
 	}
 
 	async completeMnemonics(

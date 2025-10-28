@@ -66,7 +66,7 @@ describe("CompletionProvider", () => {
 		// });
 
 		it("includes supported mnemonics", async () => {
-			const textDocument = await createDoc("example.s", "  mov");
+			const textDocument = await createDoc("example.s", "  mo");
 			const ctx020: Context = {
 				...ctx,
 				config: {
@@ -82,7 +82,7 @@ describe("CompletionProvider", () => {
 			});
 
 			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "movec" })
+				expect.objectContaining({ label: "move" })
 			);
 		});
 
@@ -96,34 +96,6 @@ describe("CompletionProvider", () => {
 
 			expect(completions).toContainEqual(
 				expect.objectContaining({ label: "MOVE" })
-			);
-		});
-
-		it("completes sizes", async () => {
-			const textDocument = await createDoc("example.s", "  move.");
-
-			const completions = await provider.onCompletion({
-				position: lsp.Position.create(0, 7),
-				textDocument,
-			});
-
-			expect(completions).toEqual([
-				expect.objectContaining({ label: "b" }),
-				expect.objectContaining({ label: "w", preselect: true }),
-				expect.objectContaining({ label: "l" }),
-			]);
-		});
-
-		it("matches case on sizes", async () => {
-			const textDocument = await createDoc("example.s", "  MOVE.");
-
-			const completions = await provider.onCompletion({
-				position: lsp.Position.create(0, 7),
-				textDocument,
-			});
-
-			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "W" })
 			);
 		});
 

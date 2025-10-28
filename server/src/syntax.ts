@@ -1,7 +1,3 @@
-export const sizes: Size[] = ["b", "w", "l", "q", "s", "d", "x", "p"];
-
-export type Size = "b" | "w" | "l" | "q" | "s" | "d" | "x" | "p";
-
 export type RegisterName = "pc" | "sr" | "ccr" | "usp" | "vbr";
 
 export type AddressingMode =
