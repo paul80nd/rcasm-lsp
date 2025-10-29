@@ -171,41 +171,41 @@ describe("CompletionProvider", () => {
 			});
 		});
 
-		// test('completes directives', async function () {
-		// 	await testCompletionFor('|', {
-		// 		items: [
-		// 			{ label: '!align', resultText: '!align ${1:8}' },
-		// 			{ label: 'add', resultText: 'add' }
-		// 		]
-		// 	});
-		// 	await testCompletionFor(' |', {
-		// 		items: [
-		// 			{ label: '!word', resultText: ' !word ${1:0x0000}' },
-		// 			{ label: 'add', resultText: ' add' }
-		// 		]
-		// 	});
+		test('completes directives', async function () {
+			// 	await testCompletionFor('|', {
+			// 		items: [
+			// 			{ label: '!align', resultText: '!align ${1:8}' },
+			// 			{ label: 'add', resultText: 'add' }
+			// 		]
+			// 	});
+			// 	await testCompletionFor(' |', {
+			// 		items: [
+			// 			{ label: '!word', resultText: ' !word ${1:0x0000}' },
+			// 			{ label: 'add', resultText: ' add' }
+			// 		]
+			// 	});
 
-		// 	await testCompletionFor(' !|', {
-		// 		items: [{ label: '!align' }, { label: '!byte' }, { label: '!fill' }, { label: '!for' }, { label: '!word' }]
-		// 	});
+			await testCompletionFor(' !|', {
+				items: [{ label: '!align' }, { label: '!byte' }, { label: '!fill' }, { label: '!for' }, { label: '!word' }]
+			});
 
-		// 	await testCompletionFor('label: |', {
-		// 		items: [
-		// 			{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00}' },
-		// 			{ label: 'add', resultText: 'label: add' }
-		// 		]
-		// 	});
+			// 	await testCompletionFor('label: |', {
+			// 		items: [
+			// 			{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00}' },
+			// 			{ label: 'add', resultText: 'label: add' }
+			// 		]
+			// 	});
 
-		// 	await testCompletionFor('label: l|', { items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }] });
+			await testCompletionFor('label: l|', { items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }] });
 
-		// 	await testCompletionFor('label: !f| ; comment', {
-		// 		items: [
-		// 			{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00} ; comment' },
-		// 			{ label: '!for', resultText: 'label: !for ${1:i} in range(${2:5}) {\n        ${3:add}\n} ; comment' }
-		// 		]
-		// 	});
+			await testCompletionFor('label: !f| ; comment', {
+				items: [
+					{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00} ; comment' },
+					{ label: '!for', resultText: 'label: !for ${1:i} in range(${2:5}) {\n        ${3:add}\n} ; comment' }
+				]
+			});
 
-		// });
+		});
 
 		// test('mnemonic completion includes detail', async function () {
 		// 	await testCompletionFor('bc|', { items: [{ label: 'bcs', detail: 'Branch if Carry Set' }] });

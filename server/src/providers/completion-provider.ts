@@ -55,10 +55,7 @@ export default class CompletionProvider implements Provider {
 		}));
 	}
 
-	async onCompletion({
-		position,
-		textDocument,
-	}: lsp.CompletionParams): Promise<lsp.CompletionItem[]> {
+	async onCompletion({ position, textDocument, }: lsp.CompletionParams): Promise<lsp.CompletionItem[]> {
 		const processed = this.ctx.store.get(textDocument.uri);
 		if (!processed) {
 			return [];
@@ -78,7 +75,7 @@ export default class CompletionProvider implements Provider {
 		const signature =
 			doc && doc.syntax.length ? parseSignature(doc.syntax[0]) : null; // TODO: find active
 
-		const isUpperCase = value.length > 0 && value.toUpperCase() === value;
+		const isUpperCase = value.length > 0 && value.toLowerCase() !== value;
 
 		// Default to operand if after mnemonic and last component
 		if (!info) {
@@ -252,7 +249,7 @@ export default class CompletionProvider implements Provider {
 		connection.onCompletionResolve(this.onCompletionResolve.bind(this));
 		return {
 			completionProvider: {
-				//         triggerCharacters: ["."],
+				//triggerCharacters: ['.'],
 				resolveProvider: true,
 			},
 		};

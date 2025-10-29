@@ -9,30 +9,57 @@ describe("parse", () => {
 	describe("#parseLine()", () => {
 		it("parses a complete instruction line", () => {
 			const line = parseLine(
-				"label:    move.w     #1,10(a0,d1,w)    ; comment here"
+				"label:    mov     #1,10(a0,d1,w)    ; comment here"
 			);
 			expect(line).toEqual({
 				label: { start: 0, end: 5, value: "label" },
-				mnemonic: { start: 10, end: 14, value: "move" },
-				size: { start: 15, end: 16, value: "w" },
+				mnemonic: { start: 10, end: 13, value: "mov" },
 				operands: [
-					{ start: 21, end: 23, value: "#1" },
-					{ start: 24, end: 35, value: "10(a0,d1,w)" },
+					{ start: 18, end: 20, value: "#1" },
+					{ start: 21, end: 32, value: "10(a0,d1,w)" },
 				],
-				comment: { start: 39, end: 53, value: "; comment here" },
+				comment: { start: 36, end: 50, value: "; comment here" },
 			});
 		});
 
-		it("parses an instruction line with no size", () => {
-			const line = parseLine("label: move #1,10(a0,d1,w) ; comment here");
+		it("parses a complete directive line", () => {
+			const line = parseLine(
+				"label:    !byte     10, 0xfe, 01010101b    ; comment here"
+			);
 			expect(line).toEqual({
 				label: { start: 0, end: 5, value: "label" },
-				mnemonic: { start: 7, end: 11, value: "move" },
+				mnemonic: { start: 10, end: 15, value: "!byte" },
 				operands: [
-					{ start: 12, end: 14, value: "#1" },
-					{ start: 15, end: 26, value: "10(a0,d1,w)" },
+					{ start: 20, end: 22, value: "10" },
+					{ start: 24, end: 28, value: "0xfe" },
+					{ start: 30, end: 39, value: "01010101b" },
 				],
-				comment: { start: 27, end: 41, value: "; comment here" },
+				comment: { start: 43, end: 57, value: "; comment here" },
+			});
+		});
+
+		it("parses a condensed instruction line", () => {
+			const line = parseLine("label: mov #1,10(a0,d1,w) ; comment here");
+			expect(line).toEqual({
+				label: { start: 0, end: 5, value: "label" },
+				mnemonic: { start: 7, end: 10, value: "mov" },
+				operands: [
+					{ start: 11, end: 13, value: "#1" },
+					{ start: 14, end: 25, value: "10(a0,d1,w)" },
+				],
+				comment: { start: 26, end: 40, value: "; comment here" },
+			});
+		});
+
+		it("parses a condensed directive line", () => {
+			const line = parseLine("label: !word 0xfedc  ; comment here");
+			expect(line).toEqual({
+				label: { start: 0, end: 5, value: "label" },
+				mnemonic: { start: 7, end: 12, value: "!word" },
+				operands: [
+					{ start: 13, end: 19, value: "0xfedc" }
+				],
+				comment: { start: 21, end: 35, value: "; comment here" },
 			});
 		});
 
@@ -43,17 +70,10 @@ describe("parse", () => {
 			});
 		});
 
-		it("parses a local label", () => {
-			const line = parseLine(".label:");
+		it("parses a prefixed label", () => {
+			const line = parseLine("_label:");
 			expect(line).toEqual({
-				label: { start: 0, end: 6, value: ".label" },
-			});
-		});
-
-		it("parses a local label with alternate syntax", () => {
-			const line = parseLine("label$:");
-			expect(line).toEqual({
-				label: { start: 0, end: 6, value: "label$" },
+				label: { start: 0, end: 6, value: "_label" },
 			});
 		});
 
@@ -72,38 +92,88 @@ describe("parse", () => {
 			});
 		});
 
-		it("parses an instruction line with no label", () => {
-			const line = parseLine("     move.w #1,10(a0,d1,w) ; comment here");
+		it("parses a label and directive with no whitespace", () => {
+			const line = parseLine("label:!word");
 			expect(line).toEqual({
-				mnemonic: { start: 5, end: 9, value: "move" },
-				size: { start: 10, end: 11, value: "w" },
+				label: { start: 0, end: 5, value: "label" },
+				mnemonic: { start: 6, end: 11, value: "!word" },
+			});
+		});
+
+		it("parses an instruction line with no label", () => {
+			const line = parseLine("     mov #1,10(a0,d1,w) ; comment here");
+			expect(line).toEqual({
+				mnemonic: { start: 5, end: 8, value: "mov" },
 				operands: [
-					{ start: 12, end: 14, value: "#1" },
-					{ start: 15, end: 26, value: "10(a0,d1,w)" },
+					{ start: 9, end: 11, value: "#1" },
+					{ start: 12, end: 23, value: "10(a0,d1,w)" },
 				],
-				comment: { start: 27, end: 41, value: "; comment here" },
+				comment: { start: 24, end: 38, value: "; comment here" },
+			});
+		});
+
+		it("parses an instruction line with no label and no leading whitespace", () => {
+			const line = parseLine("mov a,b ; comment here");
+			expect(line).toEqual({
+				mnemonic: { start: 0, end: 3, value: "mov" },
+				operands: [
+					{ start: 4, end: 5, value: "a" },
+					{ start: 6, end: 7, value: "b" },
+				],
+				comment: { start: 8, end: 22, value: "; comment here" },
+			});
+		});
+
+		it("parses a directive line with no label", () => {
+			const line = parseLine("     !fill 10,0xfe ; comment here");
+			expect(line).toEqual({
+				mnemonic: { start: 5, end: 10, value: "!fill" },
+				operands: [
+					{ start: 11, end: 13, value: "10" },
+					{ start: 14, end: 18, value: "0xfe" },
+				],
+				comment: { start: 19, end: 33, value: "; comment here" },
+			});
+		});
+
+		it("parses a directive line with no label and no leading whitespace", () => {
+			const line = parseLine("!fill 10,0xfe ; comment here");
+			expect(line).toEqual({
+				mnemonic: { start: 0, end: 5, value: "!fill" },
+				operands: [
+					{ start: 6, end: 8, value: "10" },
+					{ start: 9, end: 13, value: "0xfe" },
+				],
+				comment: { start: 14, end: 28, value: "; comment here" },
 			});
 		});
 
 		it("parses an instruction line with no operands", () => {
-			const line = parseLine("     bra.s ; comment here");
+			const line = parseLine("     jmp ; comment here");
 			expect(line).toEqual({
-				mnemonic: { start: 5, end: 8, value: "bra" },
-				size: { start: 9, end: 10, value: "s" },
+				mnemonic: { start: 5, end: 8, value: "jmp" },
+				comment: { start: 9, end: 23, value: "; comment here" },
+			});
+		});
+
+		it("parses a directive line with no operands", () => {
+			const line = parseLine("     !byte ; comment here");
+			expect(line).toEqual({
+				mnemonic: { start: 5, end: 10, value: "!byte" },
 				comment: { start: 11, end: 25, value: "; comment here" },
 			});
 		});
 
 		it("parses a comment by position", () => {
-			const line = parseLine("label: move #1,10(a0,d1.w) comment here");
+			const line = parseLine("label: mov #1,10(a0,d1.w) comment here");
 			expect(line).toEqual({
 				label: { start: 0, end: 5, value: "label" },
-				mnemonic: { start: 7, end: 11, value: "move" },
+				mnemonic: { start: 7, end: 10, value: "mov" },
 				operands: [
-					{ start: 12, end: 14, value: "#1" },
-					{ start: 15, end: 26, value: "10(a0,d1.w)" },
+					{ start: 11, end: 13, value: "#1" },
+					{ start: 14, end: 25, value: "10(a0,d1.w)" },
 				],
-				comment: { start: 27, end: 39, value: "comment here" },
+				comment: { start: 26, end: 38, value: "comment here" },
 			});
 		});
 
@@ -115,27 +185,37 @@ describe("parse", () => {
 			});
 		});
 
-		it("parses a comment by separator for macros with no operands", () => {
-			const line = parseLine(" mcr ; comment here");
+		it("directive expecting parameters takes first word of a comment by position", () => {
+			const line = parseLine(" !word comment here");
 			expect(line).toEqual({
-				mnemonic: { start: 1, end: 4, value: "mcr" },
-				comment: { start: 5, end: 19, value: "; comment here" },
+				mnemonic: { start: 1, end: 6, value: "!word" },
+				operands: [
+					{ start: 7, end: 14, value: "comment" }
+				],
+				comment: { start: 15, end: 19, value: "here" },
+			});
+		});
+
+		it("parses a comment by separator for directives expecting operands", () => {
+			const line = parseLine(" !byte ; comment here");
+			expect(line).toEqual({
+				mnemonic: { start: 1, end: 6, value: "!byte" },
+				comment: { start: 7, end: 21, value: "; comment here" },
 			});
 		});
 
 		it("parses operands with space after comma", () => {
 			const line = parseLine(
-				"label:    move.w     #1, 10(a0,d1,w)    ; comment here"
+				"label:    mov     #1, 10(a0,d1,w)    ; comment here"
 			);
 			expect(line).toEqual({
 				label: { start: 0, end: 5, value: "label" },
-				mnemonic: { start: 10, end: 14, value: "move" },
-				size: { start: 15, end: 16, value: "w" },
+				mnemonic: { start: 10, end: 13, value: "mov" },
 				operands: [
-					{ start: 21, end: 23, value: "#1" },
-					{ start: 25, end: 36, value: "10(a0,d1,w)" },
+					{ start: 18, end: 20, value: "#1" },
+					{ start: 22, end: 33, value: "10(a0,d1,w)" },
 				],
-				comment: { start: 40, end: 54, value: "; comment here" },
+				comment: { start: 37, end: 51, value: "; comment here" },
 			});
 		});
 
@@ -149,64 +229,44 @@ describe("parse", () => {
 			expect(line).toEqual({});
 		});
 
-		it("parses an incomplete size", () => {
-			const line = parseLine("label:    move.");
-			expect(line).toEqual({
-				label: { start: 0, end: 5, value: "label" },
-				mnemonic: { start: 10, end: 14, value: "move" },
-				size: { start: 15, end: 15, value: "" },
-			});
-		});
-
 		it("parses an incomplete operand list", () => {
-			const line = parseLine(" move d0,");
+			const line = parseLine(" mov d0,");
 			expect(line).toEqual({
-				mnemonic: { start: 1, end: 5, value: "move" },
+				mnemonic: { start: 1, end: 4, value: "mov" },
 				operands: [
-					{ start: 6, end: 8, value: "d0" },
-					{ start: 9, end: 9, value: "" },
+					{ start: 5, end: 7, value: "d0" },
+					{ start: 8, end: 8, value: "" },
 				],
 			});
 		});
 
 		it("parses an operand containing spaces in double quotes", () => {
-			const line = parseLine(' dc.b "foo bar baz" ; comment');
+			const line = parseLine(' !byte "foo bar baz" ; comment');
 			expect(line).toEqual({
-				mnemonic: { start: 1, end: 3, value: "dc" },
-				size: { start: 4, end: 5, value: "b" },
-				operands: [{ start: 6, end: 19, value: '"foo bar baz"' }],
-				comment: {
-					end: 29,
-					start: 20,
-					value: "; comment",
-				},
+				mnemonic: { start: 1, end: 6, value: "!byte" },
+				operands: [{ start: 7, end: 20, value: '"foo bar baz"' }],
+				comment: { end: 30, start: 21, value: "; comment", },
 			});
 		});
 
 		it("parses an operand containing spaces with in single quotes", () => {
-			const line = parseLine(" dc.b 'foo bar baz' ; comment");
+			const line = parseLine(" !word 'foo bar baz' ; comment");
 			expect(line).toEqual({
-				mnemonic: { start: 1, end: 3, value: "dc" },
-				size: { start: 4, end: 5, value: "b" },
-				operands: [{ start: 6, end: 19, value: "'foo bar baz'" }],
-				comment: {
-					end: 29,
-					start: 20,
-					value: "; comment",
-				},
+				mnemonic: { start: 1, end: 6, value: "!word" },
+				operands: [{ start: 7, end: 20, value: "'foo bar baz'" }],
+				comment: { end: 30, start: 21, value: "; comment", },
 			});
 		});
 
 		it("parses an operand containing spaces with unbalanced quotes", () => {
-			const line = parseLine(" dc.b 'foo bar baz");
+			const line = parseLine(" !byte 'foo bar baz");
 			expect(line).toEqual({
-				mnemonic: { start: 1, end: 3, value: "dc" },
-				size: { start: 4, end: 5, value: "b" },
-				operands: [{ start: 6, end: 18, value: "'foo bar baz" }],
+				mnemonic: { start: 1, end: 6, value: "!byte" },
+				operands: [{ start: 7, end: 19, value: "'foo bar baz" }],
 			});
 		});
 
-		it("parses a label containing a numeric macro parameter", () => {
+		it("parses a label containing a numeric macro parameter (invalid rcasm)", () => {
 			const line = parseLine("foo\\1bar: rts");
 			expect(line).toEqual({
 				label: { start: 0, end: 8, value: "foo\\1bar" },
@@ -214,7 +274,7 @@ describe("parse", () => {
 			});
 		});
 
-		it("parses a label containing a special char macro parameter", () => {
+		it("parses a label containing a special char macro parameter (invalid rcasm)", () => {
 			const line = parseLine("foo\\@bar: rts");
 			expect(line).toEqual({
 				label: { start: 0, end: 8, value: "foo\\@bar" },
@@ -222,7 +282,7 @@ describe("parse", () => {
 			});
 		});
 
-		it("parses a label containing a quoted macro parameter", () => {
+		it("parses a label containing a quoted macro parameter (invalid rcasm)", () => {
 			const line = parseLine("foo\\<reptn>bar: rts");
 			expect(line).toEqual({
 				label: { start: 0, end: 14, value: "foo\\<reptn>bar" },
@@ -230,7 +290,7 @@ describe("parse", () => {
 			});
 		});
 
-		it("parses a mnemonic containing a macro parameter", () => {
+		it("parses a mnemonic containing a macro parameter (invalid rcasm)", () => {
 			const line = parseLine(" b\\1 d0,d1");
 			expect(line).toEqual({
 				mnemonic: { start: 1, end: 4, value: "b\\1" },
@@ -241,30 +301,18 @@ describe("parse", () => {
 			});
 		});
 
-		it("parses a size containing a macro parameter", () => {
-			const line = parseLine(" move.\\1 d0,d1");
+		it("parses an operand containing a macro parameter (invalid rcasm)", () => {
+			const line = parseLine(" mov \\1,d0");
 			expect(line).toEqual({
-				mnemonic: { start: 1, end: 5, value: "move" },
-				size: { start: 6, end: 8, value: "\\1" },
+				mnemonic: { start: 1, end: 4, value: "mov" },
 				operands: [
-					{ start: 9, end: 11, value: "d0" },
-					{ start: 12, end: 14, value: "d1" },
+					{ start: 5, end: 7, value: "\\1" },
+					{ start: 8, end: 10, value: "d0" },
 				],
 			});
 		});
 
-		it("parses an operand containing a macro parameter", () => {
-			const line = parseLine(" move \\1,d0");
-			expect(line).toEqual({
-				mnemonic: { start: 1, end: 5, value: "move" },
-				operands: [
-					{ start: 6, end: 8, value: "\\1" },
-					{ start: 9, end: 11, value: "d0" },
-				],
-			});
-		});
-
-		it("parses a quoted macro arguments", () => {
+		it("parses a quoted macro arguments (invalid rcasm)", () => {
 			const line = parseLine('    FOO     <1,"foo">,d2');
 			expect(line).toEqual({
 				mnemonic: { start: 4, end: 7, value: "FOO" },
@@ -277,37 +325,23 @@ describe("parse", () => {
 
 		it("parses a complex statement with parens", () => {
 			const line = parseLine(
-				" dc.w	ddfstop,(DIW_XSTRT-17+(DIW_W>>4-1)<<4)>>1&$fc-SCROLL*8"
+				" dc	ddfstop,(DIW_XSTRT-17+(DIW_W>>4-1)<<4)>>1&$fc-SCROLL*8"
 			);
 			expect(line).toEqual({
-				mnemonic: {
-					end: 3,
-					start: 1,
-					value: "dc",
-				},
+				mnemonic: { end: 3, start: 1, value: "dc", },
 				operands: [
+					{ end: 11, start: 4, value: "ddfstop", },
 					{
-						end: 13,
-						start: 6,
-						value: "ddfstop",
-					},
-					{
-						start: 14,
-						end: 60,
+						start: 12, end: 58,
 						value: "(DIW_XSTRT-17+(DIW_W>>4-1)<<4)>>1&$fc-SCROLL*8",
 					},
-				],
-				size: {
-					end: 5,
-					start: 4,
-					value: "w",
-				},
+				]
 			});
 		});
 	});
 
 	describe("#componentAtIndex()", () => {
-		const line = parseLine("label: move.w   #1,10(a0,d1,w) ; comment here");
+		const line = parseLine("label: mov   #1,10(a0,d1,w) ; comment here");
 
 		it("identifies the label component", () => {
 			const info = componentAtIndex(line, 1);
@@ -320,54 +354,54 @@ describe("parse", () => {
 		it("identifies the label component", () => {
 			const info = componentAtIndex(line, 8);
 			expect(info).toEqual({
-				component: { start: 7, end: 11, value: "move" },
+				component: { start: 7, end: 10, value: "mov" },
 				type: ComponentType.Mnemonic,
 			});
 		});
 
 		it("identifies the first operand component", () => {
-			const info = componentAtIndex(line, 17);
+			const info = componentAtIndex(line, 14);
 			expect(info).toEqual({
-				component: { start: 16, end: 18, value: "#1" },
+				component: { start: 13, end: 15, value: "#1" },
 				type: ComponentType.Operand,
 				index: 0,
 			});
 		});
 
 		it("identifies the first second component", () => {
-			const info = componentAtIndex(line, 20);
+			const info = componentAtIndex(line, 17);
 			expect(info).toEqual({
-				component: { start: 19, end: 30, value: "10(a0,d1,w)" },
+				component: { start: 16, end: 27, value: "10(a0,d1,w)" },
 				type: ComponentType.Operand,
 				index: 1,
 			});
 		});
 
 		it("identifies the comment component", () => {
-			const info = componentAtIndex(line, 32);
+			const info = componentAtIndex(line, 28);
 			expect(info).toEqual({
-				component: { start: 31, end: 45, value: "; comment here" },
+				component: { start: 28, end: 42, value: "; comment here" },
 				type: ComponentType.Comment,
 			});
 		});
 
 		it("returns undefined for position outside components", () => {
-			const info = componentAtIndex(line, 14);
+			const info = componentAtIndex(line, 12);
 			expect(info).toBeUndefined();
 		});
 
 		it("matches the first char of a component", () => {
 			const info = componentAtIndex(line, 7);
 			expect(info).toEqual({
-				component: { start: 7, end: 11, value: "move" },
+				component: { start: 7, end: 10, value: "mov" },
 				type: ComponentType.Mnemonic,
 			});
 		});
 
 		it("matches the last char of a component", () => {
-			const info = componentAtIndex(line, 11);
+			const info = componentAtIndex(line, 10);
 			expect(info).toEqual({
-				component: { start: 7, end: 11, value: "move" },
+				component: { start: 7, end: 10, value: "mov" },
 				type: ComponentType.Mnemonic,
 			});
 		});
