@@ -9,7 +9,7 @@
 			"add",
 			"add <dst>{a|d}"
 		],
-		"description": "Adds the contents of register b and c placing the result in dst (a or d). If dst is not specified then register a is assumed.",
+		"description": "Adds the contents of register `b` and `c` placing the result in `dst` (a or d).  If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
 			"ar": false,
@@ -36,7 +36,7 @@
 			"and",
 			"and <dst>{a|d}"
 		],
-		"description": "Performs a bitwise AND on register b and c placing the result in dst (a or d). If dst is not specified then register a is assumed.",
+		"description": "Performs a bitwise AND on register `b` and `c` placing the result in `dst` (a or d).  If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
 			"ar": false,
@@ -183,15 +183,16 @@
 		"title": "clr",
 		"class": "MOV8",
 		"cycles": 8,
-		"summary": "8-bit Register Clear",
+		"summary": "Register Clear",
+		"variant": "8-bit Register Clear",
 		"operation": "[dst] ← 0",
 		"syntax": [
 			"clr <dst>{a|b|c|d|m1|m2|x|y}"
 		],
 		"description": "Clears (sets to 0) general purpose 8-bit register dst. This is the equivalent of `mov dst,dst`.",
-		"src": {
+		"dest": {
 			"dr": true,
-			"ar": true,
+			"ar": false,
 			"mIndirect": false,
 			"imm": false
 		},
@@ -208,9 +209,17 @@
 			{
 				"class": "MOV16",
 				"cycles": 10,
-				"summary": "16-bit Register Clear",
+				"variant": "16-bit Register Clear",
 				"description": "Clears (sets to 0) 16-bit register xy. This is the equivalent of `mov xy,xy`.",
-				"syntax": "clr xy",
+				"syntax": [
+					"clr xy"
+				],
+				"dest": {
+					"dr": false,
+					"ar": true,
+					"mIndirect": false,
+					"imm": false
+				},
 				"whenFirstParamIs": [
 					"xy"
 				]
@@ -458,20 +467,23 @@
 		"title": "ldi",
 		"class": "SETAB",
 		"cycles": 8,
-		"summary": "8-bit Load Immediate",
+		"summary": "Load Immediate",
 		"operation": "[dst] ← value",
 		"syntax": [
 			"ldi <dst>{a|b} , <value>{-16,15}"
 		],
 		"snippet": "ldi ${1:a},${2:0}",
 		"description": "Loads an 8-bit constant value into dst (register a or b), value must be between -16 and 15.",
+		"variant": "8-bit Load Immediate",
 		"variants": [
 			{
 				"class": "GOTO",
 				"cycles": 24,
-				"summary": "16-bit Load Immediate",
+				"variant": "16-bit Load Immediate",
 				"description": "Loads a 16-bit constant value into dst (register m or j), value can be between 0x0000 and 0xFFFF.",
-				"syntax": "ldi <dst>{m|j} , [ <value>{0x0000,0xFFFF} | <label> ]",
+				"syntax": [
+					"ldi <dst>{m|j} , [ <value>{0x0000,0xFFFF} | <label> ]"
+				],
 				"whenFirstParamIs": [
 					"m",
 					"j"
@@ -618,20 +630,23 @@
 		"title": "mov",
 		"class": "MOV8",
 		"cycles": 8,
-		"summary": "8-bit Register to Register Copy",
+		"summary": "Register to Register Copy",
 		"operation": "[dst] ← [src]",
 		"syntax": [
 			"mov <dst>{a-d|m1|m2|x|y} , <src>{a-d|m1|m2|x|y}"
 		],
 		"snippet": "mov ${1:b},${2:a}",
 		"description": "Copies a value from src to dst between any of the eight general purpose 8-bit registers. If dst and src are the same then dst will be set to 0.",
+		"variant": "8-bit Register to Register Copy",
 		"variants": [
 			{
 				"class": "MOV16",
 				"cycles": 10,
-				"summary": "16-bit Register to Register Copy",
+				"variant": "16-bit Register to Register Copy",
 				"description": "Copies a value between the 16-bit src registers (m, xy or j) and dst (xy or the program counter pc). If dst and src are the same then dst will be set to 0.",
-				"syntax": "mov <dst>{xy|pc} , <src>{m|xy|j|as}",
+				"syntax": [
+					"mov <dst>{xy|pc} , <src>{m|xy|j|as}"
+				],
 				"whenFirstParamIs": [
 					"xy",
 					"pc"

@@ -166,7 +166,9 @@ export default class CompletionProvider implements Provider {
 					label: isUpperCase
 						? doc.title.toUpperCase()
 						: doc.title.toLowerCase(),
-					detail: doc.summary,
+					labelDetails: {
+						description: doc.summary
+					},
 					kind: lsp.CompletionItemKind.Function,
 				};
 				item.data = true;

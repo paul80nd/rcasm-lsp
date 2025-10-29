@@ -30,18 +30,26 @@ export interface MnemonicDoc {
 }
 
 export interface InstructionDoc extends MnemonicDoc {
-	class?: InstructionClass;
-	cycles?: integer;
+	class: InstructionClass;
+	cycles: integer;	
 	operation?: string;
 	flags?: AluFlags;
 	snippet?: string;
-	conditionCodeDescription?: string;
-	//   // sampleSyntax?: string[];
-	//   // example?: string;
-	//   // application?: string;
 	src?: AddressingModes;
 	dest?: AddressingModes;
 	procs: Processors;
+	variant?: string;
+	variants?: InstructionVariant[];
+}
+
+export interface InstructionVariant {
+	class: InstructionClass;
+	cycles: integer;
+	variant: string;
+	description?: string;
+	syntax: string[];
+	src?: AddressingModes;
+	dest?: AddressingModes;
 }
 
 export type Processor =

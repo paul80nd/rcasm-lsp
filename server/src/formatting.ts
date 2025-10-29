@@ -46,43 +46,79 @@ import {
 // }
 
 export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
-	let value = `\n\`\`\`vasmmot\n${doc.syntax.join("\n")}\n\`\`\`\n`; // TODO
-	value += "\n***\n";
 
-	value += "**" + doc.summary + "**";
-	if (doc.description) {
-		value += `\n\n${doc.description}`;
-	}
+	let value = ``;
 
 	if (isInstructionDoc(doc)) {
+
+		const vs = doc.variants ?? [];
+		const hva = vs.length > 0 ? '🄰 ' : '';
+		const hvs = ['🄱 '];
+
+		// Syntax
+		value = '\n```rcasm\n';
+		value += doc.syntax.map(s => hva + s).join('\n');
+		vs.forEach((v, i) => {
+			value += '\n' + v.syntax.map(s => hvs[i] + s).join('\n');
+		});
+		value += '\n```\n\n---\n';
+
+		// Description
+		value += `${hva}**${vs.length > 0 ? doc.variant ?? doc.summary : doc.summary}**`;
+		if (doc.description) {
+			value += `  \n${doc.description}`;
+		}
+		vs.forEach((v, i) => {
+			value += `\n\n${hvs[i]}**${v.variant}**`;
+			if (v.description) {
+				value += `  \n${v.description}`;
+			}
+		});
+
+		// Flags
 		if (doc.flags) {
-			const cols = Object.values(doc.flags);
-			value += `\n\n| Z | C | S |\n|---|---|---|\n| ${cols.join(
-				" | "
-			)} |`;
+			const cols = Object.values(doc.flags).map(f => f === '-' ? '-' : '`' + f + '`');
+			value += '\n\n---\n\n';
+			value += '|   |   | Z | C | S |\n';
+			value += '|---|---|:-:|:-:|:-:|\n';
+			value += `| ${hva}\`${doc.class}\` \`${doc.cycles}\` | &nbsp;&nbsp; | ${cols.join(" | ")} |`;
+			vs.forEach((v, i) => {
+				value += `\n| ${hvs[i]}\`${v.class}\` \`${v.cycles}\` | &nbsp;&nbsp; | ${cols.join(" | ")} |`;
+			});
 		}
 
-		if (doc.conditionCodeDescription) {
-			value += "\n\n" + doc.conditionCodeDescription;
-		}
+		const widths = [19, 34, 8, 8, 8];
 
-		const widths = [4, 4, 4, 4, 4];
-
+		// Addressing Modes
 		if (doc.src || doc.dest) {
-			value += `\n`;
-			value += `\n|    |dr  |ar  |(m) |imm |`;
-			value += `\n|:---|----|----|----|----|`;
+			value += '\n\n---\n\n';
+			value += '|     |  | dr&nbsp;&nbsp; | ar&nbsp;&nbsp; | (m)&nbsp; | imm |\n';
+			value += '|-----|--|----|----|-----|-----|';
 			if (doc.src) {
-				const srcCols = Object.values(doc.src).map((v, i) =>
-					(v ? "  ✓" : "  -").padEnd(widths[i], " ")
-				);
-				value += `\n|**src** |${srcCols.join("|")}|`;
+				let src = vs.length > 0
+					? Object.values(doc.src).map(v => (v ? ' ' + hva : ''))
+					: Object.values(doc.src).map(v => (v ? '  ✓' : ''));
+				vs.forEach((v, i) => {
+					if (v.src) {
+						const vsrc = Object.values(v.src).map(v => (v ? ' ' + hvs[i] : ''));
+						src = src.map((s, i) => s + vsrc[i]);
+					}
+				});
+				const srcCols = src.map(v => v === '' ? ' -' : v).map((v, i) => v.padEnd(widths[i], " "));
+				value += `\n| \`src\`  |&nbsp; &nbsp;|${srcCols.join("|")}|`;
 			}
 			if (doc.dest) {
-				const destCols = Object.values(doc.dest).map((v, i) =>
-					(v ? "  ✓" : "  -").padEnd(widths[i], " ")
-				);
-				value += `\n|**dst** |${destCols.join("|")}|`;
+				let dst = vs.length > 0
+					? Object.values(doc.dest).map(v => (v ? ' ' + hva: ''))
+					: Object.values(doc.dest).map(v => (v ? '  ✓'  : ''));
+				vs.forEach((v, i) => {
+					if (v.dest) {
+						const vdest = Object.values(v.dest).map(v => (v ? ' ' + hvs[i] : ''));
+						dst = dst.map((s, i) => s + vdest[i]);
+					}
+				});
+				const destCols = dst.map(v => v === '' ? ' -' : v).map((v, i) => v.padEnd(widths[i], " "));
+				value += `\n| \`dst\` |&nbsp; &nbsp;|${destCols.join("|")}|`;
 			}
 		}
 	}
