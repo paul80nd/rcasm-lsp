@@ -71,7 +71,7 @@
 		},
 		{
 			"name": "constant.language.register.rcasm",
-			"match": "(?i)\\b(a|b|c|d|j|j1|j2|m|m1|m2|x|y|xy)\\b"
+			"match": "(?i)\\b(a|b|c|d|j|j1|j2|m|m1|m2|x|y|xy|pc|as)\\b"
 		},
 		{
 			"name": "keyword.other.opcode.rcasm",

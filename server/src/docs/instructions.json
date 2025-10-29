@@ -317,7 +317,7 @@
 			"eor",
 			"eor <dst>{a|d}"
 		],
-		"description": "Performs a bitwise XOR (exlusive OR) on register b and c placing the result in dst (a or d). If dst is not specified then register a is assumed. Affects Z (zero) and S (sign) flags. Synonym of `cmp`.",
+		"description": "Performs a bitwise XOR (exlusive OR) on register `b` and `c` placing the result in `dst` (a or d). If dst is not specified then register a is assumed. Synonym of `cmp`.",
 		"dest": {
 			"dr": true,
 			"ar": false,
@@ -344,7 +344,7 @@
 			"inc",
 			"inc <dst>{a|d}"
 		],
-		"description": "Adds one to the contents of register b (register c is ignored) placing the result in dst (a or d). If dst is not specified then register a is assumed. Affects Z (zero), S (sign) and C (carry) flags.",
+		"description": "Adds one to the contents of register `b` (register `c` is ignored) placing the result in `dst` (a or d). If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
 			"ar": false,
@@ -410,7 +410,7 @@
 		"syntax": [
 			"ixy"
 		],
-		"description": "Increments the 16-bit value in the xy register by 1.",
+		"description": "Increments the 16-bit value in the `xy` register by 1.",
 		"flags": {
 			"z": "-",
 			"c": "-",
@@ -431,7 +431,7 @@
 			"jmp <label>"
 		],
 		"snippet": "jmp ${1:label}",
-		"description": "Unconditionally jumps to label (via register j).",
+		"description": "Unconditionally jumps to `label` (via register j).",
 		"flags": {
 			"z": "-",
 			"c": "-",
@@ -452,7 +452,7 @@
 			"jsr <label>"
 		],
 		"snippet": "jsr ${1:label}",
-		"description": "Saves the address of the next instruction into register xy and then unconditionally jumps to label (via register j). Notionally behaves as a 'call subroutine' operation.",
+		"description": "Saves the address of the next instruction into register `xy` and then unconditionally jumps to `label` (via register j). Notionally behaves as a 'call subroutine' operation.",
 		"flags": {
 			"z": "-",
 			"c": "-",
@@ -473,34 +473,47 @@
 			"ldi <dst>{a|b} , <value>{-16,15}"
 		],
 		"snippet": "ldi ${1:a},${2:0}",
-		"description": "Loads an 8-bit constant value into dst (register a or b), value must be between -16 and 15.",
+		"description": "Loads an 8-bit constant value into `dst` (register a or b), `value` must be between -16 and 15.",
 		"variant": "8-bit Load Immediate",
 		"variants": [
 			{
 				"class": "GOTO",
 				"cycles": 24,
 				"variant": "16-bit Load Immediate",
-				"description": "Loads a 16-bit constant value into dst (register m or j), value can be between 0x0000 and 0xFFFF.",
+				"description": "Loads a 16-bit constant value into `dst` (register m or j), `value` can be between 0x0000 and 0xFFFF.",
 				"syntax": [
-					"ldi <dst>{m|j} , [ <value>{0x0000,0xFFFF} | <label> ]"
+					"ldi <dst>{m|j} , <value>{0x0000,0xFFFF}",
+					"ldi <dst>{m|j} , <label>"
 				],
 				"whenFirstParamIs": [
 					"m",
 					"j"
-				]
+				],
+				"src": {
+					"dr": false,
+					"ar": false,
+					"mIndirect": false,
+					"imm": true
+				},
+				"dest": {
+					"dr": false,
+					"ar": true,
+					"mIndirect": false,
+					"imm": false
+				}
 			}
 		],
 		"src": {
-			"dr": true,
-			"ar": false,
-			"mIndirect": false,
-			"imm": false
-		},
-		"dest": {
 			"dr": false,
 			"ar": false,
 			"mIndirect": false,
 			"imm": true
+		},
+		"dest": {
+			"dr": true,
+			"ar": false,
+			"mIndirect": false,
+			"imm": false
 		},
 		"flags": {
 			"z": "-",
@@ -522,7 +535,7 @@
 			"lds <dst>{a|d}"
 		],
 		"snippet": "lds ${1:a}",
-		"description": "Loads register dst (a or d) from the front panel switches",
+		"description": "Loads register `dst` (a or d) from the front panel switches.",
 		"dest": {
 			"dr": true,
 			"ar": false,
@@ -549,7 +562,7 @@
 			"ldr <dst>{a|b|c|d}"
 		],
 		"snippet": "ldr ${1:b}",
-		"description": "Loads register dst (a, b, c or d) with the byte in memory currently referenced by register m.",
+		"description": "Loads register `dst` (a, b, c or d) with the byte in memory currently referenced by register `m`.",
 		"src": {
 			"dr": false,
 			"ar": false,
@@ -636,32 +649,44 @@
 			"mov <dst>{a-d|m1|m2|x|y} , <src>{a-d|m1|m2|x|y}"
 		],
 		"snippet": "mov ${1:b},${2:a}",
-		"description": "Copies a value from src to dst between any of the eight general purpose 8-bit registers. If dst and src are the same then dst will be set to 0.",
+		"description": "Copies a value from `src` to `dst` between any of the eight general purpose 8-bit registers. If dst and src are the same then dst will be set to 0.",
 		"variant": "8-bit Register to Register Copy",
 		"variants": [
 			{
 				"class": "MOV16",
 				"cycles": 10,
 				"variant": "16-bit Register to Register Copy",
-				"description": "Copies a value between the 16-bit src registers (m, xy or j) and dst (xy or the program counter pc). If dst and src are the same then dst will be set to 0.",
+				"description": "Copies a value between the 16-bit `src` registers (m, xy or j) and `dst` (xy or the program counter pc). If dst and src are the same then dst will be set to 0.",
 				"syntax": [
 					"mov <dst>{xy|pc} , <src>{m|xy|j|as}"
 				],
 				"whenFirstParamIs": [
 					"xy",
 					"pc"
-				]
+				],
+				"src": {
+					"dr": false,
+					"ar": true,
+					"mIndirect": false,
+					"imm": false
+				},
+				"dest": {
+					"dr": false,
+					"ar": true,
+					"mIndirect": false,
+					"imm": false
+				}
 			}
 		],
 		"src": {
 			"dr": true,
-			"ar": true,
+			"ar": false,
 			"mIndirect": false,
 			"imm": false
 		},
 		"dest": {
 			"dr": true,
-			"ar": true,
+			"ar": false,
 			"mIndirect": false,
 			"imm": false
 		},
@@ -685,7 +710,7 @@
 			"not <dst>",
 			"not <dst>{a|d}"
 		],
-		"description": "Performs a bitwise NOT on register b (register c is ignored) placing the result in dst (a or d). If dst is not specified then register a is assumed. Affects Z (zero) and S (sign) flags.",
+		"description": "Performs a bitwise NOT on register `b` (register `c` is ignored) placing the result in `dst` (a or d). If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
 			"ar": false,
@@ -712,7 +737,7 @@
 			"or",
 			"or <dest>{a|d}"
 		],
-		"description": "Performs a bitwise OR on register b and c placing the result in dst (a or d). If dst is not specified then register a is assumed. Affects Z (zero) and S (sign) flags.",
+		"description": "Performs a bitwise OR on register `b` and `c` placing the result in `dst` (a or d). If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
 			"ar": false,
@@ -739,7 +764,7 @@
 			"rol",
 			"rol <dst>{a|d}"
 		],
-		"description": "Performs a bitwise left-rotation on register b (register c is ignored) placing the result in dst (a or d). If dst is not specified then register a is assumed. Every bit shifts one place to the left with the left most bit rotated around to right. Affects Z (zero) and S (sign) flags.",
+		"description": "Performs a bitwise left-rotation on register `b` (register `c` is ignored) placing the result in `dst` (a or d). If dst is not specified then register a is assumed. Every bit shifts one place to the left with the left most bit rotated around to right.",
 		"dest": {
 			"dr": true,
 			"ar": false,
@@ -765,11 +790,23 @@
 		"syntax": [
 			"rts"
 		],
-		"description": "Copies the value in register xy to the program counter pc. Notionally behaves as a 'return' operation to a previous jsr call.",
+		"description": "Copies the value in register `xy` to the program counter `pc`. Notionally behaves as a 'return' operation to a previous jsr call.",
 		"flags": {
 			"z": "-",
 			"c": "-",
 			"s": "-"
+		},
+		"src": {
+			"dr": false,
+			"ar": true,
+			"mIndirect": false,
+			"imm": false
+		},
+		"dest": {
+			"dr": false,
+			"ar": true,
+			"mIndirect": false,
+			"imm": false
 		},
 		"procs": {
 			"rcasm": true,
@@ -786,7 +823,7 @@
 			"str <src>{a|b|c|d}"
 		],
 		"snippet": "str ${1:a}",
-		"description": "Stores register src (a, b, c or d) into the byte of memory currently referenced by register m.",
+		"description": "Stores register `src` (a, b, c or d) into the byte of memory currently referenced by register `m`.",
 		"src": {
 			"dr": true,
 			"ar": false,
