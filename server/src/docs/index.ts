@@ -27,6 +27,7 @@ export interface MnemonicDoc {
 	summary: string;
 	syntax: string[];
 	description?: string;
+	snippet?: string;
 }
 
 export interface InstructionDoc extends MnemonicDoc {
@@ -34,7 +35,6 @@ export interface InstructionDoc extends MnemonicDoc {
 	cycles: integer;	
 	operation?: string;
 	flags?: AluFlags;
-	snippet?: string;
 	src?: AddressingModes;
 	dest?: AddressingModes;
 	procs: Processors;

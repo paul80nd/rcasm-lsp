@@ -86,7 +86,7 @@ export default class CompletionProvider implements Provider {
 
 		switch (type) {
 			case ComponentType.Mnemonic:
-				return this.completeMnemonics(isUpperCase/*, processed, position*/);
+				return this.completeMnemonics(isUpperCase);
 			case ComponentType.Operand: {
 				const mnemonic = line.mnemonic?.value.toLowerCase();
 				if (!mnemonic) {
@@ -148,11 +148,8 @@ export default class CompletionProvider implements Provider {
 		return item;
 	}
 
-	async completeMnemonics(
-		isUpperCase: boolean,
-		// processed: ProcessedDocument,
-		// position: lsp.Position
-	): Promise<lsp.CompletionItem[]> {
+	async completeMnemonics(isUpperCase: boolean): Promise<lsp.CompletionItem[]> {
+
 		const instructions = Object.values(instructionDocs)
 			.filter((doc) =>
 				this.ctx.config.processors.some((proc) => doc.procs[proc])
@@ -175,6 +172,7 @@ export default class CompletionProvider implements Provider {
 			});
 
 		const directives = Object.values(directiveDocs).map((doc) => {
+			const insertText = doc.snippet ?? doc.title;
 			return {
 				label: isUpperCase ? doc.title.toUpperCase() : doc.title.toLowerCase(),
 				labelDetails: {
@@ -182,14 +180,13 @@ export default class CompletionProvider implements Provider {
 				},
 				sortText: doc.title.substring(1),
 				kind: lsp.CompletionItemKind.Keyword,
+				insertText: isUpperCase ? insertText.toUpperCase() : insertText,
+				insertTextFormat: doc.snippet ? lsp.InsertTextFormat.Snippet : lsp.InsertTextFormat.PlainText,
 				data: true,
 			};
 		});
 
-		const symbols = await this.completeAllDefinitions(/*processed, position*/);
-		const macros = symbols.filter(this.isMacro);
-
-		return [...instructions, ...directives, ...macros];
+		return [...instructions, ...directives];
 	}
 
 	completeDefinitions(
@@ -217,9 +214,8 @@ export default class CompletionProvider implements Provider {
 		// position: lsp.Position
 	) {
 		const symbols = await this.completeAllDefinitions(/*processed, position*/);
-		const withoutMacros = symbols.filter((s) => !this.isMacro(s));
 		const registers = this.completeRegisters(isUpperCase);
-		return [...withoutMacros, ...registers];
+		return [...symbols, ...registers];
 	}
 
 	completeRegisters(isUpperCase: boolean) {
@@ -227,10 +223,6 @@ export default class CompletionProvider implements Provider {
 			[...this.addrRegs, ...this.dataRegs, ...this.namedRegs],
 			isUpperCase
 		);
-	}
-
-	isMacro(s: lsp.CompletionItem) {
-		return s.kind === typeMappings[DefinitionType.Macro];
 	}
 
 	async completeAllDefinitions(
@@ -271,7 +263,6 @@ function enumValues(values: string[]): lsp.CompletionItem[] {
 const typeMappings: Record<DefinitionType, lsp.CompletionItemKind> = {
 	[DefinitionType.Section]: lsp.CompletionItemKind.Module,
 	[DefinitionType.Label]: lsp.CompletionItemKind.Field,
-	[DefinitionType.Macro]: lsp.CompletionItemKind.Function,
 	[DefinitionType.Constant]: lsp.CompletionItemKind.Constant,
 	[DefinitionType.Variable]: lsp.CompletionItemKind.Variable,
 	[DefinitionType.Register]: lsp.CompletionItemKind.Constant,

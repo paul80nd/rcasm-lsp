@@ -88,6 +88,7 @@ describe('CompletionProvider', () => {
 
 		test('completes directives', async function () {
 			await completionFor('|').includes([{ label: '!align' }, { label: 'add' }]);
+			await completionFor('!|').includes([{ label: '!align' }]);
 			await completionFor(' |').includes([{ label: '!word' }, { label: 'add' }]);
 			await completionFor(' !|').includes([{ label: '!align' }, { label: '!byte' }, { label: '!fill' }, { label: '!for' }, { label: '!word' }]);
 			await completionFor('label: |').includes([{ label: '!fill' }, { label: 'add' }]);
@@ -105,14 +106,23 @@ describe('CompletionProvider', () => {
 			await completionFor('!a|').includes([{ label: '!align', kind: lsp.CompletionItemKind.Keyword }]);
 		});
 
+		test('completion includes snippets', async function () {
+			await completionFor('l|').includes([{ insertText: 'ldi ${1:a},${2:0}' }]);
+			await completionFor('label: ld|').includes([{ insertText: 'ldr ${1:b}' }]);
+			await completionFor('label: b| ; comment').includes([{ insertText: 'beq ${1:label}' }]);
+			await completionFor('!|').includes([{ insertText: '!align ${1:8}' }]);
+			await completionFor('label: |').includes([{ insertText: '!fill ${1:8},${2:0x00}' }]);
+			await completionFor('label: !f| ; comment').includes([{ insertText: '!for ${1:i} in range(${2:5}) {\n        ${3:add}\n}' }]);
+		});
+
 		test('directive completions have sort order', async () =>
 			await completionFor('|').includes([
 				{ label: '!align', sortText: 'align' },
 				{ label: '!byte', sortText: 'byte' }
 			]));
 
-		it('excludes unsupported mnemonics', async () => await
-			completionFor('  di|').doesNotInclude([{ label: 'div' }]));
+		it('excludes unsupported mnemonics', async () =>
+			await completionFor('  di|').doesNotInclude([{ label: 'div' }]));
 
 		it('includes supported mnemonics', async () => {
 			const textDocument = await createDoc('example.s', '  di');
@@ -135,17 +145,19 @@ describe('CompletionProvider', () => {
 			);
 		});
 
-		it('matches case on mnemonics', async () => await
-			completionFor('MO|').includes([{ label: 'MOV' }]));
+		it('completions match case', async () => {
+			await completionFor('MO|').includes([{ label: 'MOV' }]);
+			await completionFor('!A|').includes([{ label: '!ALIGN' }]);
+		});
 
-		it('completes an operand on first character', async () => await
-			completionFor('  mov |').includes([{ label: 'd0' }]));
+		it('completes an operand on first character', async () =>
+			await completionFor('  mov |').includes([{ label: 'd0' }]));
 
-		it('completes an operand with registers', async () => await
-			completionFor('move d|').includes([{ label: 'd0' }]));
+		it('completes an operand with registers', async () =>
+			await completionFor('move d|').includes([{ label: 'd0' }]));
 
-		it('matches case on registers', async () => await
-			completionFor('move D|').includes([{ label: 'D0' }]));
+		it('matches case on registers', async () =>
+			await completionFor('move D|').includes([{ label: 'D0' }]));
 
 		// it('completes an operand with a symbol', async () => {
 		// 	const textDocument = await createDoc(
@@ -238,80 +250,6 @@ describe('CompletionProvider', () => {
 		// 		});
 
 		// TODO: signature specific operand competions
-
-		// PROVIDES SNIPPETS
-		// test('completes mnemonics', async function () {
-		// 	// await completionFor('|', {
-		// 	// 	items: [
-		// 	// 		{ label: 'ldi', resultText: 'ldi ${1:a},${2:0}' },
-		// 	// 		{ label: 'add', resultText: 'add' }
-		// 	// 	]
-		// 	// });
-		// 	// await completionFor(' |', {
-		// 	// 	items: [
-		// 	// 		{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' },
-		// 	// 		{ label: 'add', resultText: ' add' }
-		// 	// 	]
-		// 	// });
-		// 	await completionFor(' l|', {
-		// 		items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' }]
-		// 	});
-
-		// 	// await completionFor('label: |', {
-		// 	// 	items: [
-		// 	// 		{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' },
-		// 	// 		{ label: 'add', resultText: 'label: add' }
-		// 	// 	]
-		// 	// });
-
-		// 	await completionFor('label: l|', {
-		// 		items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }]
-		// 	});
-
-		// 	await completionFor(' ld| a,5', {
-		// 		items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0} a,5' }]
-		// 	});
-
-		// 	await completionFor('label: l| ; comment', {
-		// 		items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0} ; comment' }]
-		// 	});
-		// });
-
-		// PROVIDES SNIPPETS
-		// test('completes directives', async function () {
-		// 	// 	await completionFor('|', {
-		// 	// 		items: [
-		// 	// 			{ label: '!align', resultText: '!align ${1:8}' },
-		// 	// 			{ label: 'add', resultText: 'add' }
-		// 	// 		]
-		// 	// 	});
-		// 	// 	await completionFor(' |', {
-		// 	// 		items: [
-		// 	// 			{ label: '!word', resultText: ' !word ${1:0x0000}' },
-		// 	// 			{ label: 'add', resultText: ' add' }
-		// 	// 		]
-		// 	// 	});
-
-		// 	await completionFor(' !|').includes([{ label: '!align' }, { label: '!byte' }, { label: '!fill' }, { label: '!for' }, { label: '!word' }]);
-
-		// 	// 	await completionFor('label: |', {
-		// 	// 		items: [
-		// 	// 			{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00}' },
-		// 	// 			{ label: 'add', resultText: 'label: add' }
-		// 	// 		]
-		// 	// 	});
-
-		// 	await completionFor('label: l|', { items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }] });
-
-		// 	await completionFor('label: !f| ; comment', {
-		// 		items: [
-		// 			{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00} ; comment' },
-		// 			{ label: '!for', resultText: 'label: !for ${1:i} in range(${2:5}) {\n        ${3:add}\n} ; comment' }
-		// 		]
-		// 	});
-
-		// });
-
 	});
 
 	describe('#onCompletionResolve()', () => {

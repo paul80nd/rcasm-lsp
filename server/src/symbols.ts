@@ -34,7 +34,6 @@ export enum DefinitionType {
 	Register = "register",
 	RegisterList = "register_list",
 	Offset = "offset",
-	Macro = "macro",
 	XRef = "xref",
 }
 
