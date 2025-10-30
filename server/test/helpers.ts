@@ -3,6 +3,8 @@ import * as lsp from "vscode-languageserver";
 // import { TextDocument } from "vscode-languageserver-textdocument";
 // import Parser from "web-tree-sitter";
 import path from "path";
+import * as matchers from 'jest-extended';
+expect.extend(matchers);
 
 import { createContext } from "../src/context";
 import { Config } from "../src/config";

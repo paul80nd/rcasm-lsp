@@ -1,34 +1,13 @@
-import * as lsp from "vscode-languageserver";
-import { TextDocument } from "vscode-languageserver-textdocument";
+import * as lsp from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
-import { Context } from "../../src/context";
-import DocumentProcessor from "../../src/document-processor";
-import CompletionProvider from "../../src/providers/completion-provider";
-import { createTestContext } from "../helpers";
+import { Context } from '../../src/context';
+import DocumentProcessor from '../../src/document-processor';
+import CompletionProvider from '../../src/providers/completion-provider';
+import { createTestContext } from '../helpers';
 import assert from 'assert';
 
-interface ItemDescription {
-	label: string;
-	detail?: string;
-	documentation?: string | lsp.MarkupContent | null;
-	/**
-	 * Only test that the documentation includes the substring
-	 */
-	documentationIncludes?: string;
-	kind?: lsp.CompletionItemKind;
-	insertTextFormat?: lsp.InsertTextFormat;
-	resultText?: string;
-	notAvailable?: boolean;
-	command?: lsp.Command;
-	sortText?: string;
-}
-
-interface ExpectedCompletions {
-	count?: number;
-	items?: ItemDescription[];
-}
-
-describe("CompletionProvider", () => {
+describe('CompletionProvider', () => {
 	let provider: CompletionProvider;
 	let ctx: Context;
 	let processor: DocumentProcessor;
@@ -41,87 +20,48 @@ describe("CompletionProvider", () => {
 
 	// Create and process text doc
 	const createDoc = async (filename: string, text: string) => {
-		const uri = ctx.workspaceFolders[0].uri + "/" + filename;
-		const textDocument = TextDocument.create(uri, "vasmmot", 0, text);
+		const uri = ctx.workspaceFolders[0].uri + '/' + filename;
+		const textDocument = TextDocument.create(uri, 'vasmmot', 0, text);
 		await processor.process(textDocument);
 		return textDocument;
 	};
 
-	const assertCompletion = (completions: lsp.CompletionItem[], expected: ItemDescription, document: TextDocument) => {
-		const matches = completions.filter(completion => {
-			return completion.label === expected.label;
-		});
-		if (expected.notAvailable) {
-			assert.equal(matches.length, 0, expected.label + " should not be present");
-		} else {
-			assert.equal(matches.length, 1, expected.label + " should only existing once: Actual: " + completions.map(c => c.label).join(', '));
+	const completionFor = (v: string) => CompletionTest.for(v);
+
+	class CompletionTest {
+
+		public static for(value: string): CompletionTest {
+			const offset = value.indexOf('|');
+			assert.ok(offset !== -1, `| missing in '${value}'`);
+			value = value.substring(0, offset) + value.substring(offset + 1);
+			return new CompletionTest(value, offset);
 		}
 
-		const match = matches[0];
-		if (expected.detail) {
-			assert.equal(match.detail, expected.detail);
-		}
-		if (expected.documentation) {
-			assert.deepEqual(match.documentation, expected.documentation);
-		}
-		if (expected.documentationIncludes) {
-			assert.ok(match.documentation !== undefined);
-			if (typeof match.documentation === 'string') {
-				assert.ok(match.documentation.indexOf(expected.documentationIncludes) !== -1);
-			} else {
-				assert.ok(match.documentation!.value.indexOf(expected.documentationIncludes) !== -1);
-			}
-		}
-		if (expected.kind) {
-			assert.equal(match.kind, expected.kind);
-		}
-		if (expected.resultText && match.textEdit) {
-			const edit = lsp.TextEdit.is(match.textEdit) ? match.textEdit : lsp.TextEdit.replace(match.textEdit.replace, match.textEdit.newText);
-			assert.equal(TextDocument.applyEdits(document, [edit]), expected.resultText);
-		}
-		if (expected.insertTextFormat) {
-			assert.equal(match.insertTextFormat, expected.insertTextFormat);
-		}
-		if (expected.command) {
-			assert.deepEqual(match.command, expected.command);
-		}
-		if (expected.sortText) {
-			assert.equal(match.sortText, expected.sortText);
-		}
-	};
+		private constructor(private value: string, private offset: number) { }
 
-	const testCompletionFor = async (value: string, expected: ExpectedCompletions) => {
-		const offset = value.indexOf('|');
-		assert.ok(offset !== -1, '| missing in "' + value + '"');
-		value = value.substring(0, offset) + value.substring(offset + 1);
-
-		const textDocument = await createDoc("example.rcasm", value);
-
-		const completions = await provider.onCompletion({
-			position: textDocument.positionAt(offset),
-			textDocument,
-		});
-
-		// no duplicate labels
-		const labels = completions.map(i => i.label).sort();
-		let previous = null;
-		for (const label of labels) {
-			assert.ok(previous !== label, `Duplicate label ${label} in ${labels.join(',')}`);
-			previous = label;
+		private async doCompletion(): Promise<lsp.CompletionItem[]> {
+			const textDocument = await createDoc('example.s', this.value);
+			return await provider.onCompletion({
+				position: lsp.Position.create(0, this.offset),
+				textDocument,
+			});
 		}
 
-		if (typeof expected.count === 'number') {
-			assert.equal(completions.length, expected.count);
-		}
-		if (expected.items) {
-			for (const item of expected.items) {
-				assertCompletion(completions, item, textDocument);
-			}
-		}
-	};
+		public async includes<E,>(expected: readonly E[]) {
+			expect(await this.doCompletion()).toIncludeAllPartialMembers(expected);
+		};
 
-	describe("#register()", () => {
-		it("regsiters", () => {
+		public async doesNotInclude<E,>(expected: readonly E[]) {
+			expect(await this.doCompletion()).not.toIncludeAllPartialMembers(expected);
+		};
+
+		public async hasNothing() {
+			expect(await this.doCompletion()).toHaveLength(0);
+		};
+	}
+
+	describe('#register()', () => {
+		it('regsiters', () => {
 			const conn = {
 				onCompletion: jest.fn(),
 				onCompletionResolve: jest.fn(),
@@ -129,115 +69,43 @@ describe("CompletionProvider", () => {
 			const capabilities = provider.register(conn as unknown as lsp.Connection);
 			expect(conn.onCompletion).toHaveBeenCalled();
 			expect(conn.onCompletionResolve).toHaveBeenCalled();
-			expect(capabilities).toHaveProperty("completionProvider");
+			expect(capabilities).toHaveProperty('completionProvider');
 		});
 	});
 
-	describe("#onCompletion()", () => {
+	describe('#onCompletion()', () => {
+
 		test('completes mnemonics', async function () {
-			// await testCompletionFor('|', {
-			// 	items: [
-			// 		{ label: 'ldi', resultText: 'ldi ${1:a},${2:0}' },
-			// 		{ label: 'add', resultText: 'add' }
-			// 	]
-			// });
-			// await testCompletionFor(' |', {
-			// 	items: [
-			// 		{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' },
-			// 		{ label: 'add', resultText: ' add' }
-			// 	]
-			// });
-			await testCompletionFor(' l|', {
-				items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' }]
-			});
-
-			// await testCompletionFor('label: |', {
-			// 	items: [
-			// 		{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' },
-			// 		{ label: 'add', resultText: 'label: add' }
-			// 	]
-			// });
-
-			await testCompletionFor('label: l|', {
-				items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }]
-			});
-
-			await testCompletionFor(' ld| a,5', {
-				items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0} a,5' }]
-			});
-
-			await testCompletionFor('label: l| ; comment', {
-				items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0} ; comment' }]
-			});
+			await completionFor('|').includes([{ label: 'ldi' }, { label: 'add' }]);
+			await completionFor(' |').includes([{ label: 'ldi' }, { label: 'add' }]);
+			await completionFor('ld|').includes([{ label: 'ldi' }]);
+			await completionFor(' l|').includes([{ label: 'ldi' }]);
+			await completionFor('label: |').includes([{ label: 'ldi' }, { label: 'add' }]);
+			await completionFor('label: l|').includes([{ label: 'ldi' }]);
+			await completionFor(' ld| a,5').includes([{ label: 'ldi' }]);
+			await completionFor('label: l| ; comment').includes([{ label: 'ldi' }]);
 		});
 
 		test('completes directives', async function () {
-			// 	await testCompletionFor('|', {
-			// 		items: [
-			// 			{ label: '!align', resultText: '!align ${1:8}' },
-			// 			{ label: 'add', resultText: 'add' }
-			// 		]
-			// 	});
-			// 	await testCompletionFor(' |', {
-			// 		items: [
-			// 			{ label: '!word', resultText: ' !word ${1:0x0000}' },
-			// 			{ label: 'add', resultText: ' add' }
-			// 		]
-			// 	});
-
-			await testCompletionFor(' !|', {
-				items: [{ label: '!align' }, { label: '!byte' }, { label: '!fill' }, { label: '!for' }, { label: '!word' }]
-			});
-
-			// 	await testCompletionFor('label: |', {
-			// 		items: [
-			// 			{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00}' },
-			// 			{ label: 'add', resultText: 'label: add' }
-			// 		]
-			// 	});
-
-			await testCompletionFor('label: l|', { items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }] });
-
-			await testCompletionFor('label: !f| ; comment', {
-				items: [
-					{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00} ; comment' },
-					{ label: '!for', resultText: 'label: !for ${1:i} in range(${2:5}) {\n        ${3:add}\n} ; comment' }
-				]
-			});
-
+			await completionFor('|').includes([{ label: '!align' }, { label: 'add' }]);
+			await completionFor(' |').includes([{ label: '!word' }, { label: 'add' }]);
+			await completionFor(' !|').includes([{ label: '!align' }, { label: '!byte' }, { label: '!fill' }, { label: '!for' }, { label: '!word' }]);
+			await completionFor('label: |').includes([{ label: '!fill' }, { label: 'add' }]);
+			await completionFor('label: !|').includes([{ label: '!fill' }]);
+			await completionFor('label: !f| ; comment').includes([{ label: '!fill' }, { label: '!for' }]);
 		});
 
-		// test('mnemonic completion includes detail', async function () {
-		// 	await testCompletionFor('bc|', { items: [{ label: 'bcs', detail: 'Branch if Carry Set' }] });
-		// });
+		test('completion includes label description', async () => {
+			await completionFor('bc|').includes([{ label: 'bcs', labelDetails: { description: 'Branch Conditionally: Carry Set' } }]);
+			await completionFor('!a|').includes([{ label: '!align', labelDetails: { description: 'Define Align' } }]);
+		});
 
-		// test('Mnemonic Completion includes documentation', async function () {
-		// 	await testCompletionFor('ad|', {
-		// 		items: [{
-		// 			label: 'add',
-		// 			documentation: {
-		// 				kind: 'markdown',
-		// 				value: '__Arithmetic Add__  \nAdds the contents of register b and c placing the result in dst (a or d). If dst is not specified then register a is assumed. Affects Z (zero), S (sign) and C (carry) flags.  \nSyntax: `add [<dest>{a|d}]`'
-		// 			}
-		// 		}
-		// 		]
-		// 	});
-		// });
+		test('completion includes kind', async () => {
+			await completionFor('bc|').includes([{ label: 'bcs', kind: lsp.CompletionItemKind.Method }]);
+			await completionFor('!a|').includes([{ label: '!align', kind: lsp.CompletionItemKind.Keyword }]);
+		});
 
-		// test('Directive Completion includes documentation', async function () {
-		// 		await testCompletionFor('!al|', {
-		// 			items: [{
-		// 				label: '!align',
-		// 				documentation: {
-		// 					kind: 'markdown',
-		// 					value: '__Define Align__  \nWrites 8-bit zeros into the output until the current location is a multiple of the given value.  \nSyntax: `<value>{2,4,8,16...}`'
-		// 				}
-		// 			}
-		// 			]
-		// 		});
-		// 	});
-
-		// 	test('Completions in order', async () => {
+		// test('Completions in order', async () => {
 		// 	await testCompletionFor('|', {
 		// 		items: [
 		// 			{ label: 'add', sortText: undefined },
@@ -248,26 +116,16 @@ describe("CompletionProvider", () => {
 		// 	});
 		// });
 
-		it("excludes unsupported mnemonics", async () => {
-			const textDocument = await createDoc("example.s", "  mov");
+		it('excludes unsupported mnemonics', async () => await
+			completionFor('  di|').doesNotInclude([{ label: 'div' }]));
 
-			const completions = await provider.onCompletion({
-				position: lsp.Position.create(0, 4),
-				textDocument,
-			});
-
-			expect(completions).not.toContainEqual(
-				expect.objectContaining({ label: "movec" })
-			);
-		});
-
-		it("includes supported mnemonics", async () => {
-			const textDocument = await createDoc("example.s", "  mo");
+		it('includes supported mnemonics', async () => {
+			const textDocument = await createDoc('example.s', '  di');
 			const ctx020: Context = {
 				...ctx,
 				config: {
 					...ctx.config,
-					processors: ["rcasm", "rcasm+div"],
+					processors: ['rcasm', 'rcasm+div'],
 				},
 			};
 			const provider020 = new CompletionProvider(ctx020);
@@ -278,65 +136,25 @@ describe("CompletionProvider", () => {
 			});
 
 			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "mov" })
+				expect.objectContaining({ label: 'div' })
 			);
 		});
 
-		it("matches case on mnemonics", async () => {
-			const textDocument = await createDoc("example.s", "  MOV");
+		it('matches case on mnemonics', async () => await
+			completionFor('MO|').includes([{ label: 'MOV' }]));
 
-			const completions = await provider.onCompletion({
-				position: lsp.Position.create(0, 4),
-				textDocument,
-			});
+		it('completes an operand on first character', async () => await
+			completionFor('  mov |').includes([{ label: 'd0' }]));
 
-			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "MOV" })
-			);
-		});
+		it('completes an operand with registers', async () => await
+			completionFor('move d|').includes([{ label: 'd0' }]));
 
-		it("completes an operand with registers", async () => {
-			const textDocument = await createDoc("example.s", "  move d");
+		it('matches case on registers', async () => await
+			completionFor('move D|').includes([{ label: 'D0' }]));
 
-			const completions = await provider.onCompletion({
-				position: lsp.Position.create(0, 8),
-				textDocument,
-			});
-
-			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "d0" })
-			);
-		});
-
-		it("matches case on registers", async () => {
-			const textDocument = await createDoc("example.s", "  move D");
-
-			const completions = await provider.onCompletion({
-				position: lsp.Position.create(0, 8),
-				textDocument,
-			});
-
-			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "D0" })
-			);
-		});
-
-		it("completes an operand on first character", async () => {
-			const textDocument = await createDoc("example.s", "  move ");
-
-			const completions = await provider.onCompletion({
-				position: lsp.Position.create(0, 7),
-				textDocument,
-			});
-
-			expect(completions).toContainEqual(
-				expect.objectContaining({ label: "d0" })
-			);
-		});
-
-		// it("completes an operand with a symbol", async () => {
+		// it('completes an operand with a symbol', async () => {
 		// 	const textDocument = await createDoc(
-		// 		"example.s",
+		// 		'example.s',
 		// 		`foo = 1
 		//   move f
 		//       `
@@ -348,13 +166,13 @@ describe("CompletionProvider", () => {
 		// 	});
 
 		// 	expect(completions).toContainEqual(
-		// 		expect.objectContaining({ label: "foo" })
+		// 		expect.objectContaining({ label: 'foo' })
 		// 	);
 		// });
 
-		// 		it("completes local symbols", async () => {
+		// 		it('completes local symbols', async () => {
 		// 			const textDocument = await createDoc(
-		// 				"example.s",
+		// 				'example.s',
 		// 				`global1:
 		// .local1:
 		// global2:
@@ -371,30 +189,22 @@ describe("CompletionProvider", () => {
 		// 			});
 
 		// 			expect(completions).toContainEqual(
-		// 				expect.objectContaining({ label: ".local2" })
+		// 				expect.objectContaining({ label: '.local2' })
 		// 			);
 		// 			expect(completions).not.toContainEqual(
-		// 				expect.objectContaining({ label: ".local1" })
+		// 				expect.objectContaining({ label: '.local1' })
 		// 			);
 		// 			expect(completions).not.toContainEqual(
-		// 				expect.objectContaining({ label: ".local3" })
+		// 				expect.objectContaining({ label: '.local3' })
 		// 			);
 		// 		});
 
-		it("doesn't complete on first character of line", async () => {
-			const textDocument = await createDoc("example.s", ``);
+		// it('does not complete on first character of line', async () => await
+		// 	completionFor('|').hasNothing());
 
-			const completions = await provider.onCompletion({
-				position: lsp.Position.create(0, 0),
-				textDocument,
-			});
-
-			expect(completions).toHaveLength(0);
-		});
-
-		// 		it("includes comment documentation before declaration", async () => {
+		// 		it('includes comment documentation before declaration', async () => {
 		// 			const textDocument = await createDoc(
-		// 				"example.s",
+		// 				'example.s',
 		// 				`; test 123
 		// ; example
 		// foo = 123
@@ -408,14 +218,14 @@ describe("CompletionProvider", () => {
 
 		// 			expect(completions).toContainEqual(
 		// 				expect.objectContaining({
-		// 					documentation: { kind: "markdown", value: "test 123  \nexample" },
+		// 					documentation: { kind: 'markdown', value: 'test 123  \nexample' },
 		// 				})
 		// 			);
 		// 		});
 
-		// 		it("includes comment documentation on same line as declaration", async () => {
+		// 		it('includes comment documentation on same line as declaration', async () => {
 		// 			const textDocument = await createDoc(
-		// 				"example.s",
+		// 				'example.s',
 		// 				`foo = 123 ; example
 		//  move fo`
 		// 			);
@@ -427,24 +237,98 @@ describe("CompletionProvider", () => {
 
 		// 			expect(completions).toContainEqual(
 		// 				expect.objectContaining({
-		// 					documentation: { kind: "markdown", value: "example" },
+		// 					documentation: { kind: 'markdown', value: 'example' },
 		// 				})
 		// 			);
 		// 		});
 
 		// TODO: signature specific operand competions
+
+		// PROVIDES SNIPPETS
+		// test('completes mnemonics', async function () {
+		// 	// await completionFor('|', {
+		// 	// 	items: [
+		// 	// 		{ label: 'ldi', resultText: 'ldi ${1:a},${2:0}' },
+		// 	// 		{ label: 'add', resultText: 'add' }
+		// 	// 	]
+		// 	// });
+		// 	// await completionFor(' |', {
+		// 	// 	items: [
+		// 	// 		{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' },
+		// 	// 		{ label: 'add', resultText: ' add' }
+		// 	// 	]
+		// 	// });
+		// 	await completionFor(' l|', {
+		// 		items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' }]
+		// 	});
+
+		// 	// await completionFor('label: |', {
+		// 	// 	items: [
+		// 	// 		{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' },
+		// 	// 		{ label: 'add', resultText: 'label: add' }
+		// 	// 	]
+		// 	// });
+
+		// 	await completionFor('label: l|', {
+		// 		items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }]
+		// 	});
+
+		// 	await completionFor(' ld| a,5', {
+		// 		items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0} a,5' }]
+		// 	});
+
+		// 	await completionFor('label: l| ; comment', {
+		// 		items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0} ; comment' }]
+		// 	});
+		// });
+
+		// PROVIDES SNIPPETS
+		// test('completes directives', async function () {
+		// 	// 	await completionFor('|', {
+		// 	// 		items: [
+		// 	// 			{ label: '!align', resultText: '!align ${1:8}' },
+		// 	// 			{ label: 'add', resultText: 'add' }
+		// 	// 		]
+		// 	// 	});
+		// 	// 	await completionFor(' |', {
+		// 	// 		items: [
+		// 	// 			{ label: '!word', resultText: ' !word ${1:0x0000}' },
+		// 	// 			{ label: 'add', resultText: ' add' }
+		// 	// 		]
+		// 	// 	});
+
+		// 	await completionFor(' !|').includes([{ label: '!align' }, { label: '!byte' }, { label: '!fill' }, { label: '!for' }, { label: '!word' }]);
+
+		// 	// 	await completionFor('label: |', {
+		// 	// 		items: [
+		// 	// 			{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00}' },
+		// 	// 			{ label: 'add', resultText: 'label: add' }
+		// 	// 		]
+		// 	// 	});
+
+		// 	await completionFor('label: l|', { items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }] });
+
+		// 	await completionFor('label: !f| ; comment', {
+		// 		items: [
+		// 			{ label: '!fill', resultText: 'label: !fill ${1:8},${2:0x00} ; comment' },
+		// 			{ label: '!for', resultText: 'label: !for ${1:i} in range(${2:5}) {\n        ${3:add}\n} ; comment' }
+		// 		]
+		// 	});
+
+		// });
+
 	});
 
-	describe("#onCompletionResolve()", () => {
-		it("adds documentation", () => {
+	describe('#onCompletionResolve()', () => {
+		it('adds documentation', () => {
 			const item = provider.onCompletionResolve({
-				label: "mov",
+				label: 'mov',
 				data: true,
 			});
 			expect(item.documentation).toBeTruthy();
 			expect(lsp.MarkupContent.is(item.documentation)).toBe(true);
 			lsp.MarkupContent.is(item.documentation);
-			expect((item.documentation! as lsp.MarkupContent).value).toContain("mov");
+			expect((item.documentation! as lsp.MarkupContent).value).toContain('mov');
 		});
 	});
 });

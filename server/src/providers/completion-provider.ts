@@ -57,28 +57,21 @@ export default class CompletionProvider implements Provider {
 
 	async onCompletion({ position, textDocument, }: lsp.CompletionParams): Promise<lsp.CompletionItem[]> {
 		const processed = this.ctx.store.get(textDocument.uri);
-		if (!processed) {
-			return [];
-		}
+		if (!processed) { return []; }
 
 		const textOnLine = processed.document.getText(lsp.Range.create(lsp.Position.create(position.line, 0), position));
-		const line = parseLine(textOnLine ?? "");
-		if (!line) {
-			return [];
-		}
+		const line = parseLine(textOnLine ?? '');
+		if (!line) { return []; }
 
 		const info = componentAtIndex(line, position.character);
-		const value = info?.component.value ?? "";
+		const value = info?.component.value ?? '';
 		let type = info?.type;
-		const mnemonic = line.mnemonic?.value.toLowerCase();
-		const doc = mnemonic && mnemonicDocs[mnemonic];
-		const signature =
-			doc && doc.syntax.length ? parseSignature(doc.syntax[0]) : null; // TODO: find active
 
 		const isUpperCase = value.length > 0 && value.toLowerCase() !== value;
 
-		// Default to operand if after mnemonic and last component
+		// Fallbacks when haven't started a component yet
 		if (!info) {
+			// Default to operand if after mnemonic and last component
 			if (
 				line.mnemonic &&
 				position.character > line.mnemonic.end &&
@@ -87,15 +80,21 @@ export default class CompletionProvider implements Provider {
 			) {
 				type = ComponentType.Operand;
 			}
+			// Default to mnemonic if not one already
+			if (!line.mnemonic) { type = ComponentType.Mnemonic; }
 		}
 
 		switch (type) {
 			case ComponentType.Mnemonic:
 				return this.completeMnemonics(isUpperCase/*, processed, position*/);
 			case ComponentType.Operand: {
+				const mnemonic = line.mnemonic?.value.toLowerCase();
 				if (!mnemonic) {
 					return [];
 				}
+				const doc = mnemonic && mnemonicDocs[mnemonic];
+				const signature =
+					doc && doc.syntax.length ? parseSignature(doc.syntax[0]) : null; // TODO: find active
 				switch (signature?.operands[info?.index ?? 0].value) {
 					case "<cpu_type>":
 						return enumValues(syntax.cpuTypes);
@@ -159,6 +158,7 @@ export default class CompletionProvider implements Provider {
 				this.ctx.config.processors.some((proc) => doc.procs[proc])
 			)
 			.map((doc) => {
+				const insertText = doc.snippet ?? doc.title;
 				const item: lsp.CompletionItem = {
 					label: isUpperCase
 						? doc.title.toUpperCase()
@@ -166,7 +166,9 @@ export default class CompletionProvider implements Provider {
 					labelDetails: {
 						description: doc.summary
 					},
-					kind: lsp.CompletionItemKind.Function,
+					kind: lsp.CompletionItemKind.Method,
+					insertText: isUpperCase ? insertText.toUpperCase() : insertText,
+					insertTextFormat: doc.snippet ? lsp.InsertTextFormat.Snippet : lsp.InsertTextFormat.PlainText
 				};
 				item.data = true;
 				return item;
@@ -175,7 +177,9 @@ export default class CompletionProvider implements Provider {
 		const directives = Object.values(directiveDocs).map((doc) => {
 			return {
 				label: isUpperCase ? doc.title.toUpperCase() : doc.title.toLowerCase(),
-				detail: doc.summary,
+				labelDetails: {
+					description: doc.summary
+				},
 				kind: lsp.CompletionItemKind.Keyword,
 				data: true,
 			};
