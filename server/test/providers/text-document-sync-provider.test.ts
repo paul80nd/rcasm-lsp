@@ -1,10 +1,10 @@
-import * as lsp from "vscode-languageserver";
+import * as lsp from 'vscode-languageserver';
 
-import { Context } from "../../src/context";
-import TextDocumentSyncProvider from "../../src/providers/text-document-sync-provider";
-import { createTestContext, range } from "../helpers";
+import { Context } from '../../src/context';
+import TextDocumentSyncProvider from '../../src/providers/text-document-sync-provider';
+import { createTestContext, range } from '../helpers';
 
-describe("TextDocumentSyncProvider", () => {
+describe('TextDocumentSyncProvider', () => {
   let provider: TextDocumentSyncProvider;
   let ctx: Context;
 
@@ -13,8 +13,8 @@ describe("TextDocumentSyncProvider", () => {
     provider = new TextDocumentSyncProvider(ctx);
   });
 
-  describe("#register()", () => {
-    it("regsiters", () => {
+  describe('#register()', () => {
+    it('regsiters', () => {
       const conn = {
         onDidOpenTextDocument: jest.fn(),
         onDidChangeTextDocument: jest.fn(),
@@ -23,37 +23,37 @@ describe("TextDocumentSyncProvider", () => {
       const capabilities = provider.register(conn as unknown as lsp.Connection);
       expect(conn.onDidOpenTextDocument).toHaveBeenCalled();
       expect(conn.onDidChangeTextDocument).toHaveBeenCalled();
-      expect(capabilities).toHaveProperty("textDocumentSync");
+      expect(capabilities).toHaveProperty('textDocumentSync');
     });
   });
 
-  describe("#onDidOpenTextDocument()", () => {
-    it("processes a new document", async () => {
-      const uri = "file:///example.s";
+  describe('#onDidOpenTextDocument()', () => {
+    it('processes a new document', async () => {
+      const uri = 'file:///example.s';
       await provider.onDidOpenTextDocument({
         textDocument: {
           uri,
-          languageId: "vasmmot",
+          languageId: 'vasmmot',
           version: 1,
-          text: " move d0,d1",
+          text: ' move d0,d1',
         },
       });
 
       const processed = ctx.store.get(uri);
       expect(processed).toBeTruthy();
-      expect(processed!.document.getText()).toBe(" move d0,d1");
+      expect(processed!.document.getText()).toBe(' move d0,d1');
     });
   });
 
-  describe("#onDidChangeTextDocument()", () => {
-    it("processes a change", async () => {
-      const uri = "file:///example.s";
+  describe('#onDidChangeTextDocument()', () => {
+    it('processes a change', async () => {
+      const uri = 'file:///example.s';
       await provider.onDidOpenTextDocument({
         textDocument: {
           uri,
-          languageId: "vasmmot",
+          languageId: 'vasmmot',
           version: 1,
-          text: " move d0,d1",
+          text: ' move d0,d1',
         },
       });
 
@@ -62,11 +62,11 @@ describe("TextDocumentSyncProvider", () => {
           uri,
           version: 2,
         },
-        contentChanges: [{ range: range(0, 7, 0, 8), text: "2" }],
+        contentChanges: [{ range: range(0, 7, 0, 8), text: '2' }],
       });
 
       const processed = ctx.store.get(uri);
-      expect(processed?.document.getText()).toBe(" move d2,d1");
+      expect(processed?.document.getText()).toBe(' move d2,d1');
     });
   });
 });
