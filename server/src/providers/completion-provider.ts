@@ -180,6 +180,7 @@ export default class CompletionProvider implements Provider {
 				labelDetails: {
 					description: doc.summary
 				},
+				sortText: doc.title.substring(1),
 				kind: lsp.CompletionItemKind.Keyword,
 				data: true,
 			};

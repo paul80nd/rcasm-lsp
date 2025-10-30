@@ -105,16 +105,11 @@ describe('CompletionProvider', () => {
 			await completionFor('!a|').includes([{ label: '!align', kind: lsp.CompletionItemKind.Keyword }]);
 		});
 
-		// test('Completions in order', async () => {
-		// 	await testCompletionFor('|', {
-		// 		items: [
-		// 			{ label: 'add', sortText: undefined },
-		// 			{ label: '!align', sortText: 'align' },
-		// 			{ label: 'bcs', sortText: undefined },
-		// 			{ label: '!byte', sortText: 'byte' }
-		// 		]
-		// 	});
-		// });
+		test('directive completions have sort order', async () =>
+			await completionFor('|').includes([
+				{ label: '!align', sortText: 'align' },
+				{ label: '!byte', sortText: 'byte' }
+			]));
 
 		it('excludes unsupported mnemonics', async () => await
 			completionFor('  di|').doesNotInclude([{ label: 'div' }]));
