@@ -57,6 +57,9 @@ describe('HoverProvider', () => {
 		public async is<E>(expected: E) {
 			expect(await this.doHover()).toEqual(expected);
 		}
+		public async isUndefined() {
+			expect(await this.doHover()).toBeUndefined();
+		}
 	}
 
 	describe('#register()', () => {
@@ -71,24 +74,6 @@ describe('HoverProvider', () => {
 	});
 
 	describe('#onHover()', () => {
-		//     it("provide hover info for symbol reference", async () => {
-		//       const textDocument = await createDoc(
-		//         "example.s",
-		//         `foo = 1
-		// 	move #foo,d1`
-		//       );
-
-		//       const hover = await provider.onHover({
-		//         textDocument,
-		//         position: lsp.Position.create(1, 9),
-		//       });
-
-		//       expect(hover).toEqual({
-		//         range: range(1, 7, 1, 10),
-		//         contents: [{ language: "vasmmot", value: "foo = 1" }],
-		//       });
-		//     });
-
 		it('provides hover info for instructions', async () =>
 			await hoverFor('label: m|ov a,b ; test').is({
 				range: range(0, 7, 0, 15),
@@ -107,6 +92,34 @@ describe('HoverProvider', () => {
 				}
 			}));
 
+		it('provides hover info for positions within instruction', async () => {
+			const contents = {
+				kind: 'markdown',
+				value: expect.stringMatching(/Arithmetic Add/)
+			};
+			await hoverFor('| add').isUndefined();
+			await hoverFor('|add').is({ range: range(0, 0, 0, 3), contents });
+			await hoverFor('a|dd').is({ range: range(0, 0, 0, 3), contents });
+			await hoverFor('add|').is({ range: range(0, 0, 0, 3), contents });
+			await hoverForAt('add \n add', 1, 2).is({ range: range(1, 1, 1, 4), contents });
+		});
+
+		it('provides hover info for data', async () => {
+			await hoverFor('!by|te 0x01, 0x02').is({
+				range: range(0, 0, 0, 16),
+				contents: {
+					kind: 'markdown',
+					value: expect.stringMatching(/Define Byte Data/)
+				}
+			});
+			await hoverFor('!wor|d 0x01, 0x02').is({
+				range: range(0, 0, 0, 16),
+				contents: {
+					kind: 'markdown',
+					value: expect.stringMatching(/Define Word Data/)
+				}
+			});
+		});
 		//     it("provide hover info for directives", async () => {
 		//       const textDocument = await createDoc("example.s", ` section foo,bss`);
 
@@ -138,6 +151,24 @@ describe('HoverProvider', () => {
 		//           kind: "plaintext",
 		//           value: expect.stringMatching(/Word/),
 		//         },
+		//       });
+		//     });
+
+		//     it("provide hover info for symbol reference", async () => {
+		//       const textDocument = await createDoc(
+		//         "example.s",
+		//         `foo = 1
+		// 	move #foo,d1`
+		//       );
+
+		//       const hover = await provider.onHover({
+		//         textDocument,
+		//         position: lsp.Position.create(1, 9),
+		//       });
+
+		//       expect(hover).toEqual({
+		//         range: range(1, 7, 1, 10),
+		//         contents: [{ language: "vasmmot", value: "foo = 1" }],
 		//       });
 		//     });
 

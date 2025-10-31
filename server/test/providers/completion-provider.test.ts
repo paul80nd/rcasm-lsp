@@ -12,8 +12,8 @@ describe('CompletionProvider', () => {
 	let ctx: Context;
 	let processor: DocumentProcessor;
 
-	beforeAll(async () => {
-		ctx = await createTestContext();
+	beforeAll(() => {
+		ctx = createTestContext();
 		processor = new DocumentProcessor(ctx);
 		provider = new CompletionProvider(ctx);
 	});
@@ -394,7 +394,7 @@ describe('CompletionProvider', () => {
 	});
 
 	describe('#onCompletionResolve()', () => {
-		it('adds documentation', () => {
+		it('adds instruction documentation', () => {
 			const item = provider.onCompletionResolve({
 				label: 'mov',
 				data: true
@@ -403,6 +403,17 @@ describe('CompletionProvider', () => {
 			expect(lsp.MarkupContent.is(item.documentation)).toBe(true);
 			lsp.MarkupContent.is(item.documentation);
 			expect((item.documentation! as lsp.MarkupContent).value).toContain('mov');
+		});
+
+		it('adds directive documentation', () => {
+			const item = provider.onCompletionResolve({
+				label: '!byte',
+				data: true
+			});
+			expect(item.documentation).toBeTruthy();
+			expect(lsp.MarkupContent.is(item.documentation)).toBe(true);
+			lsp.MarkupContent.is(item.documentation);
+			expect((item.documentation! as lsp.MarkupContent).value).toContain('!byte');
 		});
 	});
 });

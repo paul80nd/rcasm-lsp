@@ -43,9 +43,8 @@ export default class HoverProvider implements Provider {
 			switch (node.type) {
 				case nodes.NodeType.Instruction:
 					return this.hoverInstructionMnemonic(node as nodes.Instruction, getRange(node));
-				//       case "directive_mnemonic":
-				//       case "control_mnemonic":
-				//         return this.hoverDirectiveMnemonic(node);
+				case nodes.NodeType.Directive:
+					return this.hoverDirectiveMnemonic(node as nodes.Directive, getRange(node));
 				//       case "size":
 				//         return this.hoverSize(node);
 				//       case "symbol":
@@ -86,16 +85,16 @@ export default class HoverProvider implements Provider {
 		};
 	}
 
-	//   private async hoverDirectiveMnemonic(node: SyntaxNode) {
-	//     const docs = await lookupMnemonicDoc(node.text);
-	//     return {
-	//       range: nodeAsRange(node),
-	//       contents: docs || {
-	//         kind: lsp.MarkupKind.PlainText,
-	//         value: "(directive) " + node.text.toUpperCase(),
-	//       },
-	//     };
-	//   }
+	private hoverDirectiveMnemonic(node: nodes.Directive, range: lsp.Range) {
+		const docs = lookupMnemonicDoc(node.mnemonic);
+		return {
+			range,
+			contents: docs || {
+				kind: lsp.MarkupKind.PlainText,
+				value: '(directive) ' + node.mnemonic
+			}
+		};
+	}
 
 	//   private async hoverSize(node: SyntaxNode) {
 	//     const sizeDoc = sizeDocs[node.text.toLowerCase() as Size];

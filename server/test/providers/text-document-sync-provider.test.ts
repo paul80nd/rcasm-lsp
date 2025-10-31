@@ -46,9 +46,9 @@ describe('TextDocumentSyncProvider', () => {
 	});
 
 	describe('#onDidChangeTextDocument()', () => {
-		it('processes a change', async () => {
+		it('processes a change', () => {
 			const uri = 'file:///example.s';
-			await provider.onDidOpenTextDocument({
+			provider.onDidOpenTextDocument({
 				textDocument: {
 					uri,
 					languageId: 'vasmmot',
@@ -57,7 +57,7 @@ describe('TextDocumentSyncProvider', () => {
 				}
 			});
 
-			await provider.onDidChangeTextDocument({
+			provider.onDidChangeTextDocument({
 				textDocument: {
 					uri,
 					version: 2

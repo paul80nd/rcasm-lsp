@@ -12,7 +12,7 @@ export enum NodeType {
 	// 	Register,
 	// 	SetPC,
 	// 	Expr,
-	// 	Directive,
+	Directive,
 	// 	Fill,
 	Scope
 	// 	Expression
@@ -155,9 +155,9 @@ class Line extends Node {
 				// 				case 'setpc':
 				// 					this.adoptChild(new SetPC(l.stmt));
 				// 					break;
-				// 				case 'data':
-				// 					this.adoptChild(new DataDirective(l.stmt));
-				// 					break;
+				case 'data':
+					this.adoptChild(new DataDirective(l.stmt));
+					break;
 				// 				case 'fill':
 				// 					this.adoptChild(new FillDirective(l.stmt));
 				// 					break;
@@ -211,7 +211,18 @@ export class Scope extends Node {
 // 	}
 // }
 
-// export class DataDirective extends Node { constructor(d: rcasm.StmtData) { super(d, NodeType.Directive); } }
+export class Directive extends Node {
+	public mnemonic: string;
+	constructor(d: rcasm.Node, mne: string) {
+		super(d, NodeType.Directive);
+		this.mnemonic = mne.toLowerCase();
+	}
+}
+export class DataDirective extends Directive {
+	constructor(d: rcasm.StmtData) {
+		super(d, d.dataSize === rcasm.DataSize.Byte ? '!byte' : '!word');
+	}
+}
 // export class FillDirective extends Node { constructor(d: rcasm.StmtFill) { super(d, NodeType.Directive); } }
 // export class AlignDirective extends Node { constructor(d: rcasm.StmtAlign) { super(d, NodeType.Directive); } }
 // export class LetDirective extends Node { constructor(d: rcasm.StmtLet) { super(d, NodeType.Directive); } }

@@ -123,6 +123,17 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 				value += `\n| \`dst\` |&nbsp; &nbsp;|${destCols.join('|')}|`;
 			}
 		}
+	} else {
+		// Syntax
+		value = '\n```rcasm\n';
+		value += doc.syntax.join('\n');
+		value += '\n```\n\n---\n';
+
+		// Description
+		value += `**${doc.summary}**`;
+		if (doc.description) {
+			value += `  \n${doc.description}`;
+		}
 	}
 
 	return {
