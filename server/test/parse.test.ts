@@ -356,6 +356,18 @@ describe('parse', () => {
 				component: { start: 7, end: 10, value: 'mov' },
 				type: ComponentType.Mnemonic,
 			}));
+
+		test('single ! identified as start of Mnemonic', () =>
+			parsing('!').atIndex(1).hasInfo({
+				component: { start: 0, end: 1, value: '!' },
+				type: ComponentType.Mnemonic
+			}));
+
+		test('single ! after label identified as start of Mnemonic', () =>
+			parsing('test: !').atIndex(6).hasInfo({
+				component: { start: 6, end: 7, value: '!' },
+				type: ComponentType.Mnemonic
+			}));
 	});
 
 	describe('#parseSignature()', () => {

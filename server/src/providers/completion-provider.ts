@@ -15,6 +15,7 @@ import {
 } from "../symbols";
 import { Context } from "../context";
 import {
+	Component,
 	componentAtIndex,
 	ComponentType,
 	parseLine,
@@ -86,7 +87,7 @@ export default class CompletionProvider implements Provider {
 
 		switch (type) {
 			case ComponentType.Mnemonic:
-				return this.completeMnemonics(isUpperCase);
+				return this.completeMnemonics(isUpperCase, position, info?.component);
 			case ComponentType.Operand: {
 				const mnemonic = line.mnemonic?.value.toLowerCase();
 				if (!mnemonic) {
@@ -148,7 +149,7 @@ export default class CompletionProvider implements Provider {
 		return item;
 	}
 
-	async completeMnemonics(isUpperCase: boolean): Promise<lsp.CompletionItem[]> {
+	async completeMnemonics(isUpperCase: boolean, position: lsp.Position, component?: Component): Promise<lsp.CompletionItem[]> {
 
 		const instructions = Object.values(instructionDocs)
 			.filter((doc) =>
@@ -164,16 +165,23 @@ export default class CompletionProvider implements Provider {
 						description: doc.summary
 					},
 					kind: lsp.CompletionItemKind.Method,
+					// When providing textEdit clients typically ignore insertText.
+					// Keep insertText for clients that don't support textEdit on completions.
 					insertText: isUpperCase ? insertText.toUpperCase() : insertText,
-					insertTextFormat: doc.snippet ? lsp.InsertTextFormat.Snippet : lsp.InsertTextFormat.PlainText
+					insertTextFormat: doc.snippet ? lsp.InsertTextFormat.Snippet : lsp.InsertTextFormat.PlainText,
+					data: true
 				};
-				item.data = true;
+				// If we have a component range, replace that range so the completion doesn't simply insert at 
+				// the cursor (which would duplicate any already-typed prefix like '!').
+				if (component) {
+					item.textEdit = lsp.TextEdit.replace(this.getCompletionRange(position, component), item.insertText as string);
+				}
 				return item;
 			});
 
 		const directives = Object.values(directiveDocs).map((doc) => {
 			const insertText = doc.snippet ?? doc.title;
-			return {
+			const item: lsp.CompletionItem = {
 				label: isUpperCase ? doc.title.toUpperCase() : doc.title.toLowerCase(),
 				labelDetails: {
 					description: doc.summary
@@ -184,10 +192,17 @@ export default class CompletionProvider implements Provider {
 				insertTextFormat: doc.snippet ? lsp.InsertTextFormat.Snippet : lsp.InsertTextFormat.PlainText,
 				data: true,
 			};
+			// Attach textEdit to directives as well if we have a range to replace.
+			if (component) {
+				item.textEdit = lsp.TextEdit.replace(this.getCompletionRange(position, component), item.insertText as string);
+			}
+			return item;
 		});
 
 		return [...instructions, ...directives];
 	}
+
+	private getCompletionRange = (position: lsp.Position, component: Component) => lsp.Range.create(lsp.Position.create(position.line, component.start), lsp.Position.create(position.line, component.end));
 
 	completeDefinitions(
 		definitions: Map<string, Definition>
@@ -246,9 +261,9 @@ export default class CompletionProvider implements Provider {
 		connection.onCompletionResolve(this.onCompletionResolve.bind(this));
 		return {
 			completionProvider: {
-				//triggerCharacters: ['.'],
+				triggerCharacters: ['!'],
 				resolveProvider: true,
-			},
+			}
 		};
 	}
 }

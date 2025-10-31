@@ -115,6 +115,23 @@ describe('CompletionProvider', () => {
 			await completionFor('label: !f| ; comment').includes([{ insertText: '!for ${1:i} in range(${2:5}) {\n        ${3:add}\n}' }]);
 		});
 
+		it('selecting a directive replaces the existing "!" (no duplication)', async () => {
+			const textDocument = await createDoc('example.s', '!|');
+			const completions = await provider.onCompletion({
+				position: lsp.Position.create(0, 1),
+				textDocument,
+			});
+
+			const item = completions.find((c) => c.label === '!align');
+			expect(item).toBeTruthy();
+			// Ensure the completion provides a TextEdit that replaces the existing '!'
+			const te = item!.textEdit as lsp.TextEdit | undefined;
+			expect(te).toBeDefined();
+			expect(te!.newText).toBe(item!.insertText as string);
+			expect(te!.range.start.character).toBe(0);
+			expect(te!.range.end.character).toBe(1);
+		});
+
 		test('directive completions have sort order', async () =>
 			await completionFor('|').includes([
 				{ label: '!align', sortText: 'align' },
