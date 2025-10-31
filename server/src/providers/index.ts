@@ -4,12 +4,18 @@ import { Context } from '../context';
 import ConfiguratonProvider from './configuration-provider';
 import CompletionProvider from './completion-provider';
 import TextDocumentSyncProvider from './text-document-sync-provider';
+import HoverProvider from './hover-provider';
 
 export interface Provider {
 	register(connection: Connection, clientCapabilities: ClientCapabilities): ServerCapabilities;
 }
 
-const providers = [ConfiguratonProvider, CompletionProvider, TextDocumentSyncProvider];
+const providers = [
+	ConfiguratonProvider,
+	CompletionProvider,
+	HoverProvider,
+	TextDocumentSyncProvider
+];
 
 export default function registerProviders(
 	connection: Connection,
