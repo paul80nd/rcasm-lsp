@@ -1,9 +1,7 @@
 {
 	"name": "rcasm",
 	"scopeName": "source.rcasm",
-	"fileTypes": [
-		"rcasm"
-	],
+	"fileTypes": ["rcasm"],
 	"uuid": "84bbebec-8c9e-4d81-bd9d-a59542597565",
 	"patterns": [
 		{

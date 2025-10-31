@@ -1,8 +1,8 @@
 import { createConnection, InitializeParams } from 'vscode-languageserver/node';
 import * as lsp from 'vscode-languageserver';
 
-import registerProviders from "./providers";
-import { createContext } from "./context";
+import registerProviders from './providers';
+import { createContext } from './context';
 
 const connection = createConnection(lsp.ProposedFeatures.all);
 

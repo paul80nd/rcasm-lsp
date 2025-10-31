@@ -1,9 +1,9 @@
-import instructionsJson from "./instructions.json";
-import directivesJson from "./directives.json";
-import { AddressingMode, RegisterName } from "../syntax";
+import instructionsJson from './instructions.json';
+import directivesJson from './directives.json';
+import { AddressingMode, RegisterName } from '../syntax';
 import { integer } from 'vscode-languageserver';
 
-export type AluFlag = "z" | "c" | "s";
+export type AluFlag = 'z' | 'c' | 's';
 
 /**
  * ALU flag register states
@@ -11,11 +11,11 @@ export type AluFlag = "z" | "c" | "s";
  * - The bit remains unchanged by the execution of the instruction
  * * The bit is set or cleared according to the outcome of the instruction.
  */
-export type AluFlagState = "-" | "*" | "0" | "U" | "1";
+export type AluFlagState = '-' | '*' | '0' | 'U' | '1';
 
 export type AluFlags = Record<AluFlag, AluFlagState>;
 
-export type InstructionClass = "ALU" | "GOTO" | "MOV8";
+export type InstructionClass = 'ALU' | 'GOTO' | 'MOV8';
 
 /**
  * Supported addressing modes for operand
@@ -32,7 +32,7 @@ export interface MnemonicDoc {
 
 export interface InstructionDoc extends MnemonicDoc {
 	class: InstructionClass;
-	cycles: integer;	
+	cycles: integer;
 	operation?: string;
 	flags?: AluFlags;
 	src?: AddressingModes;
@@ -52,9 +52,7 @@ export interface InstructionVariant {
 	dest?: AddressingModes;
 }
 
-export type Processor =
-	| "rcasm"
-	| "rcasm+div";
+export type Processor = 'rcasm' | 'rcasm+div';
 
 export type Processors = Record<Processor, boolean>;
 
@@ -69,7 +67,7 @@ export const directiveDocs = directivesJson as Record<string, MnemonicDoc>;
 
 export const mnemonicDocs = {
 	...instructionDocs,
-	...directiveDocs,
+	...directiveDocs
 };
 
 // export const addressingModeDocs: Record<AddressingMode, string> = {
@@ -80,9 +78,9 @@ export const mnemonicDocs = {
 // };
 
 export const registerDocs: Record<RegisterName, string> = {
-	ccr: "Condition Code Register",
-	pc: "Program Counter",
-	sr: "Stack Register",
-	usp: "User Stack Pointer",
-	vbr: "Vector Base Register",
+	ccr: 'Condition Code Register',
+	pc: 'Program Counter',
+	sr: 'Stack Register',
+	usp: 'User Stack Pointer',
+	vbr: 'Vector Base Register'
 };

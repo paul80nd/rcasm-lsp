@@ -1,10 +1,13 @@
 module.exports = {
-  transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: {
-        resolveJsonModule: true,
-        esModuleInterop: true
-      }
-    }]
-  }
+	transform: {
+		'^.+\\.tsx?$': [
+			'ts-jest',
+			{
+				tsconfig: {
+					resolveJsonModule: true,
+					esModuleInterop: true
+				}
+			}
+		]
+	}
 };

@@ -1,4 +1,4 @@
-import { Processor } from "./docs";
+import { Processor } from './docs';
 
 export interface Config {
 	processors: Processor[];
@@ -6,7 +6,7 @@ export interface Config {
 }
 
 export const defaultConfig: Config = {
-	processors: ["rcasm"],
+	processors: ['rcasm'],
 	maxNumberOfProblems: 1000
 };
 
