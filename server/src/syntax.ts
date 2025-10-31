@@ -1,7 +1,7 @@
-export type RegisterName = 'pc' | 'sr' | 'ccr' | 'usp' | 'vbr';
+export type RegisterName = 'pc' | 'as' | 'ds';
 
 export type AddressingMode = 'dr' | 'ar' | 'mIndirect' | 'imm';
 
-export const registerNames: RegisterName[] = ['pc', 'sr', 'ccr', 'usp', 'vbr']; // exclude sp
+export const registerNames: RegisterName[] = ['pc', 'as', 'ds'];
 
-export const cpuTypes = ['rcasm', 'rcasm+div'];
+// export const cpuTypes = ['rcasm', 'rcasm+div'];

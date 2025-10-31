@@ -75,9 +75,7 @@ export const mnemonicDocs = {
 // };
 
 export const registerDocs: Record<RegisterName, string> = {
-	ccr: 'Condition Code Register',
 	pc: 'Program Counter',
-	sr: 'Stack Register',
-	usp: 'User Stack Pointer',
-	vbr: 'Vector Base Register'
+	as: 'Address Switches',
+	ds: 'Data Switches'
 };

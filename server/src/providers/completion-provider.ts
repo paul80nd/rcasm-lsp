@@ -3,7 +3,7 @@ import * as lsp from 'vscode-languageserver';
 import { Provider } from '.';
 import * as syntax from '../syntax';
 import { directiveDocs, instructionDocs, mnemonicDocs, registerDocs } from '../docs/index';
-import { Definition, DefinitionType, labelBeforePosition } from '../symbols';
+import { Definition, DefinitionType } from '../symbols';
 import { Context } from '../context';
 import { Component, componentAtIndex, ComponentType, parseLine, parseSignature } from '../parse';
 import { formatMnemonicDoc } from '../formatting';
@@ -69,32 +69,25 @@ export default class CompletionProvider implements Provider {
 				const doc = mnemonic && mnemonicDocs[mnemonic];
 				const signature = doc && doc.syntax.length ? parseSignature(doc.syntax[0]) : null; // TODO: find active
 				switch (signature?.operands[info?.index ?? 0].value) {
-					case '<cpu_type>':
-						return enumValues(syntax.cpuTypes);
-					case '<label>': {
-						const symbols = await this
-							.completeAllDefinitions
-							// processed,
-							// position
-							();
-						return symbols.filter(n => n.detail === '(label)');
-					}
-					case 'Rn':
-					case 'Rx':
-					case 'Ry': {
-						// TODO: register defintions
-						const regs = [...this.addrRegs, ...this.dataRegs];
-						return this.ucItems(regs, isUpperCase);
-					}
-					case 'An':
-					case 'Ax':
-					case 'Ay':
-						return this.ucItems(this.addrRegs, isUpperCase);
-					case 'Dn':
-					case 'Dx':
-					case 'Dy':
+					// case '<cpu_type>':
+					// 	return enumValues(syntax.cpuTypes);
+					case '<label>':
+						return [];
+					// 	const symbols = await this.completeAllDefinitions(processed,position);
+					case '<src:Dr>':
+					case '<dst:Dr>':
 						return this.ucItems(this.dataRegs, isUpperCase);
+					case '<dst:a|b>':
+						return this.ucItems([this.aReg, this.bReg], isUpperCase);
+					case '<dst:a|d>':
+						return this.ucItems([this.aReg, this.dReg], isUpperCase);
+					case '<src:a-d>':
+					case '<dst:a-d>':
+						return this.ucItems(this.abcdRegs, isUpperCase);
+					case '<message>':
+						return [];
 					default:
+						// Any other cases we'll put out what we can to match
 						return this.completeOperands(isUpperCase /*, processed, position*/);
 				}
 			}
@@ -212,26 +205,25 @@ export default class CompletionProvider implements Provider {
 		// processed: ProcessedDocument,
 		// position: lsp.Position
 	) {
-		const symbols = await this.completeAllDefinitions(/*processed, position*/);
-		const registers = this.completeRegisters(isUpperCase);
-		return [...symbols, ...registers];
-	}
-
-	completeRegisters(isUpperCase: boolean) {
-		return this.ucItems([...this.addrRegs, ...this.dataRegs, ...this.namedRegs], isUpperCase);
-	}
-
-	async completeAllDefinitions() {
-		// position: lsp.Position // processed: ProcessedDocument,
-		const globals = Array.from(this.ctx.store.values()).flatMap(({ symbols }) =>
-			this.completeDefinitions(symbols.definitions)
+		//const symbols = await this.completeAllDefinitions(/*processed, position*/);
+		const registers = this.ucItems(
+			[...this.dataRegs, ...this.addrRegs, ...this.namedRegs],
+			isUpperCase
 		);
-
-		const lastLabel = labelBeforePosition(/*processed.symbols, position*/);
-		const locals = lastLabel?.locals ? this.completeDefinitions(lastLabel.locals) : [];
-
-		return [...globals, ...locals];
+		return [/*...symbols, */ ...registers];
 	}
+
+	// async completeAllDefinitions() {
+	// 	// position: lsp.Position // processed: ProcessedDocument,
+	// 	const globals = Array.from(this.ctx.store.values()).flatMap(({ symbols }) =>
+	// 		this.completeDefinitions(symbols.definitions)
+	// 	);
+
+	// 	const lastLabel = labelBeforePosition(/*processed.symbols, position*/);
+	// 	const locals = lastLabel?.locals ? this.completeDefinitions(lastLabel.locals) : [];
+
+	// 	return [...globals, ...locals];
+	// }
 
 	register(connection: lsp.Connection): lsp.ServerCapabilities {
 		connection.onCompletion(this.onCompletion.bind(this));
@@ -244,92 +236,39 @@ export default class CompletionProvider implements Provider {
 		};
 	}
 
+	private createReg = (label: string) =>
+		({
+			label,
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		}) as lsp.CompletionItem;
+
+	private aReg: lsp.CompletionItem = this.createReg('a');
+	private bReg: lsp.CompletionItem = this.createReg('b');
+	private cReg: lsp.CompletionItem = this.createReg('c');
+	private dReg: lsp.CompletionItem = this.createReg('d');
+	private abcdRegs: lsp.CompletionItem[] = [this.aReg, this.bReg, this.cReg, this.dReg];
 	private dataRegs: lsp.CompletionItem[] = [
-		{
-			label: 'd0',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd1',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd2',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd3',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd4',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd5',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd6',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd7',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		}
+		...this.abcdRegs,
+		this.createReg('m1'),
+		this.createReg('m2'),
+		this.createReg('x'),
+		this.createReg('y')
 	];
 	private addrRegs: lsp.CompletionItem[] = [
-		{ label: 'a0', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-		{ label: 'a1', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-		{ label: 'a2', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-		{
-			label: 'a3',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a4',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a5',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a6',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a7',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'sp',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		}
+		this.createReg('m'),
+		this.createReg('xy'),
+		this.createReg('j')
 	];
 	private namedRegs: lsp.CompletionItem[];
 }
 
-function enumValues(values: string[]): lsp.CompletionItem[] {
-	return values.map(label => ({
-		label,
-		kind: lsp.CompletionItemKind.Enum
-	}));
-}
+// function enumValues(values: string[]): lsp.CompletionItem[] {
+// 	return values.map(label => ({
+// 		label,
+// 		kind: lsp.CompletionItemKind.Enum
+// 	}));
+// }
 
 const typeMappings: Record<DefinitionType, lsp.CompletionItemKind> = {
 	[DefinitionType.Section]: lsp.CompletionItemKind.Module,
