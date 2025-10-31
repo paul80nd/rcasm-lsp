@@ -98,9 +98,7 @@ export function parseLine(text: string): ParsedLine {
 
 			const operands: Component[] = [];
 			for (const value of values) {
-				const start = value
-					? end + text.substring(end).indexOf(value)
-					: end + 1;
+				const start = value ? end + text.substring(end).indexOf(value) : end + 1;
 				end = start + value.length;
 				operands.push({ start, end, value });
 			}

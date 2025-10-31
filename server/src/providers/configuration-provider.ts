@@ -45,25 +45,17 @@ export default class ConfiguratonProvider implements Provider {
 
 	async onDidChangeConfiguration() {
 		const oldConfig = this.clientConfig;
-		const newConfig = await this.ctx.connection.workspace.getConfiguration(
-			'languageServerRcasm'
-		);
+		const newConfig = await this.ctx.connection.workspace.getConfiguration('languageServerRcasm');
 		this.clientConfig = mergeConfig(newConfig, oldConfig);
 		this.updateConfig();
 	}
 
 	register(connection: lsp.Connection, capabilities: lsp.ClientCapabilities) {
-		connection.onDidChangeConfiguration(
-			this.onDidChangeConfiguration.bind(this)
-		);
-		const supportsDynamic =
-			capabilities.workspace?.didChangeConfiguration?.dynamicRegistration;
+		connection.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
+		const supportsDynamic = capabilities.workspace?.didChangeConfiguration?.dynamicRegistration;
 		if (supportsDynamic) {
 			connection.onInitialized(() => {
-				connection.client.register(
-					DidChangeConfigurationNotification.type,
-					undefined
-				);
+				connection.client.register(DidChangeConfigurationNotification.type, undefined);
 			});
 		}
 

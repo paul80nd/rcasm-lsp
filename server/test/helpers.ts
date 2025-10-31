@@ -33,12 +33,7 @@ export function createTestContext(config: Partial<Config> = {}) {
 		sendDiagnostics: jest.fn()
 	} as unknown as lsp.Connection;
 
-	return createContext(
-		[{ uri: workspaceUri, name: 'fixtures' }],
-		logger,
-		connection,
-		config
-	);
+	return createContext([{ uri: workspaceUri, name: 'fixtures' }], logger, connection, config);
 }
 
 export const range = (

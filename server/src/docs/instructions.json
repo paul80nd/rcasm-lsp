@@ -430,10 +430,7 @@
 				"cycles": 24,
 				"variant": "16-bit Load Immediate",
 				"description": "Loads a 16-bit constant value into `dst` (register m or j), `value` can be between 0x0000 and 0xFFFF.",
-				"syntax": [
-					"ldi <dst>{m|j} , <value>{0x0000,0xFFFF}",
-					"ldi <dst>{m|j} , <label>"
-				],
+				"syntax": ["ldi <dst>{m|j} , <value>{0x0000,0xFFFF}", "ldi <dst>{m|j} , <label>"],
 				"whenFirstParamIs": ["m", "j"],
 				"src": {
 					"dr": false,

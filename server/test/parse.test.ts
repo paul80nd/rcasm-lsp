@@ -1,9 +1,4 @@
-import {
-	parseLine,
-	componentAtIndex,
-	ComponentType,
-	parseSignature
-} from '../src/parse';
+import { parseLine, componentAtIndex, ComponentType, parseSignature } from '../src/parse';
 
 const parsing = (input: string) => {
 	const line = parseLine(input);
@@ -326,8 +321,7 @@ describe('parse', () => {
 				type: ComponentType.Comment
 			}));
 
-		it('returns undefined for position outside components', () =>
-			line.atIndex(12).isUndefined());
+		it('returns undefined for position outside components', () => line.atIndex(12).isUndefined());
 
 		it('matches the first char of a component', () =>
 			line.atIndex(7).hasInfo({
@@ -360,9 +354,7 @@ describe('parse', () => {
 
 	describe('#parseSignature()', () => {
 		it('parses a single operand', () =>
-			parsingSignature('LSR[.(w)] <ea>').hasOperands([
-				{ start: 10, end: 14, value: '<ea>' }
-			]));
+			parsingSignature('LSR[.(w)] <ea>').hasOperands([{ start: 10, end: 14, value: '<ea>' }]));
 
 		it('parses multiple operands', () =>
 			parsingSignature('MOVE[.(w)] <ea>,<ea>').hasOperands([

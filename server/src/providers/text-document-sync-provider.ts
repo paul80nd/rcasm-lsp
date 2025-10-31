@@ -67,9 +67,7 @@ export default class TextDocumentSyncProvider implements Provider {
 		});
 	}
 
-	async onDidSaveTextDocument({
-		textDocument: { uri }
-	}: lsp.DidSaveTextDocumentParams) {
+	async onDidSaveTextDocument({ textDocument: { uri } }: lsp.DidSaveTextDocumentParams) {
 		this.fileDiagnostics(uri);
 	}
 
@@ -81,9 +79,7 @@ export default class TextDocumentSyncProvider implements Provider {
 		if (!existing) {
 			return;
 		}
-		const rcasmDiagnostics = await this.diagnostics.rcasmDiagnostics(
-			existing.document
-		);
+		const rcasmDiagnostics = await this.diagnostics.rcasmDiagnostics(existing.document);
 		this.connection.sendDiagnostics({
 			uri,
 			diagnostics: [...rcasmDiagnostics]

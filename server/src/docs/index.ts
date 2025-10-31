@@ -59,10 +59,7 @@ export type Processors = Record<Processor, boolean>;
 export const isInstructionDoc = (doc: MnemonicDoc): doc is InstructionDoc =>
 	(doc as InstructionDoc).operation !== undefined;
 
-export const instructionDocs = instructionsJson as Record<
-	string,
-	InstructionDoc
->;
+export const instructionDocs = instructionsJson as Record<string, InstructionDoc>;
 export const directiveDocs = directivesJson as Record<string, MnemonicDoc>;
 
 export const mnemonicDocs = {

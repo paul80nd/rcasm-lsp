@@ -15,10 +15,7 @@ export default class DiagnosticProcessor {
 
 		const { errors, warnings } = rcasm.assemble(textDocument.getText());
 
-		const toDiagnostic = (
-			e: rcasm.Diagnostic,
-			s: DiagnosticSeverity
-		): Diagnostic => {
+		const toDiagnostic = (e: rcasm.Diagnostic, s: DiagnosticSeverity): Diagnostic => {
 			return {
 				severity: s,
 				range: {

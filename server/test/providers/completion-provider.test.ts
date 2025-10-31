@@ -54,9 +54,7 @@ describe('CompletionProvider', () => {
 		}
 
 		public async doesNotInclude<E>(expected: readonly E[]) {
-			expect(await this.doCompletion()).not.toIncludeAllPartialMembers(
-				expected
-			);
+			expect(await this.doCompletion()).not.toIncludeAllPartialMembers(expected);
 		}
 
 		public async hasNothing() {
@@ -83,25 +81,16 @@ describe('CompletionProvider', () => {
 			await completionFor(' |').includes([{ label: 'ldi' }, { label: 'add' }]);
 			await completionFor('ld|').includes([{ label: 'ldi' }]);
 			await completionFor(' l|').includes([{ label: 'ldi' }]);
-			await completionFor('label: |').includes([
-				{ label: 'ldi' },
-				{ label: 'add' }
-			]);
+			await completionFor('label: |').includes([{ label: 'ldi' }, { label: 'add' }]);
 			await completionFor('label: l|').includes([{ label: 'ldi' }]);
 			await completionFor(' ld| a,5').includes([{ label: 'ldi' }]);
 			await completionFor('label: l| ; comment').includes([{ label: 'ldi' }]);
 		});
 
 		test('completes directives', async function () {
-			await completionFor('|').includes([
-				{ label: '!align' },
-				{ label: 'add' }
-			]);
+			await completionFor('|').includes([{ label: '!align' }, { label: 'add' }]);
 			await completionFor('!|').includes([{ label: '!align' }]);
-			await completionFor(' |').includes([
-				{ label: '!word' },
-				{ label: 'add' }
-			]);
+			await completionFor(' |').includes([{ label: '!word' }, { label: 'add' }]);
 			await completionFor(' !|').includes([
 				{ label: '!align' },
 				{ label: '!byte' },
@@ -109,15 +98,9 @@ describe('CompletionProvider', () => {
 				{ label: '!for' },
 				{ label: '!word' }
 			]);
-			await completionFor('label: |').includes([
-				{ label: '!fill' },
-				{ label: 'add' }
-			]);
+			await completionFor('label: |').includes([{ label: '!fill' }, { label: 'add' }]);
 			await completionFor('label: !|').includes([{ label: '!fill' }]);
-			await completionFor('label: !f| ; comment').includes([
-				{ label: '!fill' },
-				{ label: '!for' }
-			]);
+			await completionFor('label: !f| ; comment').includes([{ label: '!fill' }, { label: '!for' }]);
 		});
 
 		test('completion includes label description', async () => {
@@ -138,9 +121,7 @@ describe('CompletionProvider', () => {
 		});
 
 		test('completion includes kind', async () => {
-			await completionFor('bc|').includes([
-				{ label: 'bcs', kind: lsp.CompletionItemKind.Method }
-			]);
+			await completionFor('bc|').includes([{ label: 'bcs', kind: lsp.CompletionItemKind.Method }]);
 			await completionFor('!a|').includes([
 				{ label: '!align', kind: lsp.CompletionItemKind.Keyword }
 			]);
@@ -148,16 +129,10 @@ describe('CompletionProvider', () => {
 
 		test('completion includes snippets', async function () {
 			await completionFor('l|').includes([{ insertText: 'ldi ${1:a},${2:0}' }]);
-			await completionFor('label: ld|').includes([
-				{ insertText: 'ldr ${1:b}' }
-			]);
-			await completionFor('label: b| ; comment').includes([
-				{ insertText: 'beq ${1:label}' }
-			]);
+			await completionFor('label: ld|').includes([{ insertText: 'ldr ${1:b}' }]);
+			await completionFor('label: b| ; comment').includes([{ insertText: 'beq ${1:label}' }]);
 			await completionFor('!|').includes([{ insertText: '!align ${1:8}' }]);
-			await completionFor('label: |').includes([
-				{ insertText: '!fill ${1:8},${2:0x00}' }
-			]);
+			await completionFor('label: |').includes([{ insertText: '!fill ${1:8},${2:0x00}' }]);
 			await completionFor('label: !f| ; comment').includes([
 				{
 					insertText: '!for ${1:i} in range(${2:5}) {\n        ${3:add}\n}'
@@ -207,9 +182,7 @@ describe('CompletionProvider', () => {
 				textDocument
 			});
 
-			expect(completions).toContainEqual(
-				expect.objectContaining({ label: 'div' })
-			);
+			expect(completions).toContainEqual(expect.objectContaining({ label: 'div' }));
 		});
 
 		it('completions match case', async () => {

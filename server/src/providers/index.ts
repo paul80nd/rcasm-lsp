@@ -1,8 +1,4 @@
-import {
-	ClientCapabilities,
-	Connection,
-	ServerCapabilities
-} from 'vscode-languageserver';
+import { ClientCapabilities, Connection, ServerCapabilities } from 'vscode-languageserver';
 import { Context } from '../context';
 
 import ConfiguratonProvider from './configuration-provider';
@@ -10,17 +6,10 @@ import CompletionProvider from './completion-provider';
 import TextDocumentSyncProvider from './text-document-sync-provider';
 
 export interface Provider {
-	register(
-		connection: Connection,
-		clientCapabilities: ClientCapabilities
-	): ServerCapabilities;
+	register(connection: Connection, clientCapabilities: ClientCapabilities): ServerCapabilities;
 }
 
-const providers = [
-	ConfiguratonProvider,
-	CompletionProvider,
-	TextDocumentSyncProvider
-];
+const providers = [ConfiguratonProvider, CompletionProvider, TextDocumentSyncProvider];
 
 export default function registerProviders(
 	connection: Connection,

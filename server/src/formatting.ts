@@ -75,9 +75,7 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 
 		// Flags
 		if (doc.flags) {
-			const cols = Object.values(doc.flags).map(f =>
-				f === '-' ? '-' : '`' + f + '`'
-			);
+			const cols = Object.values(doc.flags).map(f => (f === '-' ? '-' : '`' + f + '`'));
 			value += '\n\n---\n\n';
 			value += '|   |   | Z | C | S |\n';
 			value += '|---|---|:-:|:-:|:-:|\n';
@@ -92,8 +90,7 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 		// Addressing Modes
 		if (doc.src || doc.dest) {
 			value += '\n\n---\n\n';
-			value +=
-				'|     |  | dr&nbsp;&nbsp; | ar&nbsp;&nbsp; | (m)&nbsp; | imm |\n';
+			value += '|     |  | dr&nbsp;&nbsp; | ar&nbsp;&nbsp; | (m)&nbsp; | imm |\n';
 			value += '|-----|--|----|----|-----|-----|';
 			if (doc.src) {
 				let src =
@@ -106,9 +103,7 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 						src = src.map((s, i) => s + vsrc[i]);
 					}
 				});
-				const srcCols = src
-					.map(v => (v === '' ? ' -' : v))
-					.map((v, i) => v.padEnd(widths[i], ' '));
+				const srcCols = src.map(v => (v === '' ? ' -' : v)).map((v, i) => v.padEnd(widths[i], ' '));
 				value += `\n| \`src\`  |&nbsp; &nbsp;|${srcCols.join('|')}|`;
 			}
 			if (doc.dest) {
@@ -118,9 +113,7 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 						: Object.values(doc.dest).map(v => (v ? '  ✓' : ''));
 				vs.forEach((v, i) => {
 					if (v.dest) {
-						const vdest = Object.values(v.dest).map(v =>
-							v ? ' ' + hvs[i] : ''
-						);
+						const vdest = Object.values(v.dest).map(v => (v ? ' ' + hvs[i] : ''));
 						dst = dst.map((s, i) => s + vdest[i]);
 					}
 				});
