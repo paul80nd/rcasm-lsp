@@ -1,4 +1,4 @@
-import * as lsp from "vscode-languageserver";
+import * as lsp from 'vscode-languageserver';
 // import { TextDocument } from "vscode-languageserver-textdocument";
 // import Parser, { SyntaxNode, Query } from "web-tree-sitter";
 // import { getDependencies } from "./files";
@@ -27,14 +27,14 @@ export interface Definition extends NamedSymbol {
 // }
 
 export enum DefinitionType {
-	Section = "section",
-	Label = "label",
-	Constant = "constant",
-	Variable = "variable",
-	Register = "register",
-	RegisterList = "register_list",
-	Offset = "offset",
-	XRef = "xref",
+	Section = 'section',
+	Label = 'label',
+	Constant = 'constant',
+	Variable = 'variable',
+	Register = 'register',
+	RegisterList = 'register_list',
+	Offset = 'offset',
+	XRef = 'xref'
 }
 
 export interface Symbols {
@@ -49,16 +49,15 @@ export interface Symbols {
 /**
  * Process symbols in document
  */
-export function processSymbols(
+export function processSymbols(): Symbols {
 	// uri: string,
 	// tree: Parser.Tree,
 	// ctx: Context
-): Symbols {
 	const symbols: Symbols = {
 		definitions: new Map<string, Definition>(),
 		references: new Map<string, NamedSymbol[]>(),
 		includes: [],
-		incDirs: [],
+		incDirs: []
 	};
 
 	//   let lastGlobalLabel: Definition | undefined;
@@ -422,20 +421,19 @@ export function processSymbols(
 /**
  * Get definition of first global label before position
  */
-export function labelBeforePosition(
-//   docSymbols: Symbols,
-//   position: lsp.Position
-): Definition | undefined {
-  let label: Definition | undefined;
-//   for (const def of docSymbols.definitions.values()) {
-//     if (def.type === DefinitionType.Label && !isLocalLabel(def.name)) {
-//       if (def.selectionRange.start.line > position.line) {
-//         break;
-//       }
-//       label = def;
-//     }
-//   }
-  return label;
+export function labelBeforePosition(): Definition | undefined {
+	//   docSymbols: Symbols,
+	//   position: lsp.Position
+	let label: Definition | undefined;
+	//   for (const def of docSymbols.definitions.values()) {
+	//     if (def.type === DefinitionType.Label && !isLocalLabel(def.name)) {
+	//       if (def.selectionRange.start.line > position.line) {
+	//         break;
+	//       }
+	//       label = def;
+	//     }
+	//   }
+	return label;
 }
 
 // /**

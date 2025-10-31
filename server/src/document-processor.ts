@@ -1,9 +1,9 @@
-import { TextDocument } from "vscode-languageserver-textdocument";
+import { TextDocument } from 'vscode-languageserver-textdocument';
 // import Parser from "web-tree-sitter";
 
 // import { readDocumentFromUri, resolveReferencedUris } from "./files";
-import { processSymbols, Symbols } from "./symbols";
-import { Context } from "./context";
+import { processSymbols, Symbols } from './symbols';
+import { Context } from './context';
 
 export interface ProcessedDocument {
 	document: TextDocument;
@@ -23,10 +23,10 @@ export default class DocumentProcessor {
 	}
 
 	async process(
-		document: TextDocument,
+		document: TextDocument
 		//     oldTree?: Parser.Tree
 	): Promise<ProcessedDocument> {
-		this.ctx.logger.log("processDocument: " + document.uri);
+		this.ctx.logger.log('processDocument: ' + document.uri);
 
 		//     const tree = this.parser.parse(document.getText(), oldTree);
 
@@ -37,7 +37,7 @@ export default class DocumentProcessor {
 		const processed: ProcessedDocument = {
 			document,
 			//       tree,
-			symbols: processSymbols(/*document.uri, tree, this.ctx*/),
+			symbols: processSymbols(/*document.uri, tree, this.ctx*/)
 			//       referencedUris: [],
 		};
 

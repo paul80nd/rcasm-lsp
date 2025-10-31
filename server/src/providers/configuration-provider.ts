@@ -1,10 +1,10 @@
-import * as lsp from "vscode-languageserver";
-import { DidChangeConfigurationNotification } from "vscode-languageserver";
-import { URI } from "vscode-uri";
-import { Provider } from ".";
-import { Config, mergeConfig } from "../config";
-import { Context } from "../context";
-import { readdirSync, readFileSync, watch } from "fs";
+import * as lsp from 'vscode-languageserver';
+import { DidChangeConfigurationNotification } from 'vscode-languageserver';
+import { URI } from 'vscode-uri';
+import { Provider } from '.';
+import { Config, mergeConfig } from '../config';
+import { Context } from '../context';
+import { readdirSync, readFileSync, watch } from 'fs';
 
 export default class ConfiguratonProvider implements Provider {
 	protected clientConfig: Config;
@@ -25,28 +25,28 @@ export default class ConfiguratonProvider implements Provider {
 		for (const { uri } of this.ctx.workspaceFolders) {
 			const path = URI.parse(uri).fsPath;
 			const contents = readdirSync(path);
-			const foundPath = contents.find((file) => file.match(/\.rcasmrc/i));
+			const foundPath = contents.find(file => file.match(/\.rcasmrc/i));
 
 			if (foundPath) {
-				this.ctx.logger.info("Found workspace config " + foundPath);
+				this.ctx.logger.info('Found workspace config ' + foundPath);
 				try {
 					const configJson = readFileSync(foundPath).toString();
 					return JSON.parse(configJson);
 				} catch (err) {
 					if (err instanceof Error) {
-						this.ctx.logger.error("Error loading config: " + err.message);
+						this.ctx.logger.error('Error loading config: ' + err.message);
 					}
 				}
 			}
 		}
-		this.ctx.logger.info("No workspace config found");
+		this.ctx.logger.info('No workspace config found');
 		return null;
 	}
 
 	async onDidChangeConfiguration() {
 		const oldConfig = this.clientConfig;
 		const newConfig = await this.ctx.connection.workspace.getConfiguration(
-			"languageServerRcasm"
+			'languageServerRcasm'
 		);
 		this.clientConfig = mergeConfig(newConfig, oldConfig);
 		this.updateConfig();
@@ -60,7 +60,10 @@ export default class ConfiguratonProvider implements Provider {
 			capabilities.workspace?.didChangeConfiguration?.dynamicRegistration;
 		if (supportsDynamic) {
 			connection.onInitialized(() => {
-				connection.client.register(DidChangeConfigurationNotification.type, undefined);
+				connection.client.register(
+					DidChangeConfigurationNotification.type,
+					undefined
+				);
 			});
 		}
 

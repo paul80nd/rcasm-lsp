@@ -1,11 +1,11 @@
-import * as lsp from "vscode-languageserver";
-import { TextDocument } from "vscode-languageserver-textdocument";
+import * as lsp from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 // import Parser from "web-tree-sitter";
 
-import { Provider } from ".";
-import { Context } from "../context";
-import DiagnosticProcessor from "../diagnostics";
-import DocumentProcessor from "../document-processor";
+import { Provider } from '.';
+import { Context } from '../context';
+import DiagnosticProcessor from '../diagnostics';
+import DocumentProcessor from '../document-processor';
 // import { positionToPoint } from "../geometry";
 
 export default class TextDocumentSyncProvider implements Provider {
@@ -20,7 +20,7 @@ export default class TextDocumentSyncProvider implements Provider {
 	}
 
 	onDidOpenTextDocument({
-		textDocument: { uri, languageId, text, version },
+		textDocument: { uri, languageId, text, version }
 	}: lsp.DidOpenTextDocumentParams) {
 		const document = TextDocument.create(uri, languageId, version, text);
 		this.processor.process(document).then(() => {
@@ -28,7 +28,10 @@ export default class TextDocumentSyncProvider implements Provider {
 		});
 	}
 
-	onDidChangeTextDocument({ textDocument: { uri, version }, contentChanges, }: lsp.DidChangeTextDocumentParams) {
+	onDidChangeTextDocument({
+		textDocument: { uri, version },
+		contentChanges
+	}: lsp.DidChangeTextDocumentParams) {
 		const existing = this.ctx.store.get(uri);
 		if (!existing) {
 			return;
@@ -59,12 +62,14 @@ export default class TextDocumentSyncProvider implements Provider {
 			const diagnostics = this.diagnostics.rcasmDiagnostics(document);
 			this.connection.sendDiagnostics({
 				uri,
-				diagnostics,
+				diagnostics
 			});
 		});
 	}
 
-	async onDidSaveTextDocument({ textDocument: { uri } }: lsp.DidSaveTextDocumentParams) {
+	async onDidSaveTextDocument({
+		textDocument: { uri }
+	}: lsp.DidSaveTextDocumentParams) {
 		this.fileDiagnostics(uri);
 	}
 
@@ -76,10 +81,12 @@ export default class TextDocumentSyncProvider implements Provider {
 		if (!existing) {
 			return;
 		}
-		const rcasmDiagnostics = await this.diagnostics.rcasmDiagnostics(existing.document);
+		const rcasmDiagnostics = await this.diagnostics.rcasmDiagnostics(
+			existing.document
+		);
 		this.connection.sendDiagnostics({
 			uri,
-			diagnostics: [...rcasmDiagnostics],
+			diagnostics: [...rcasmDiagnostics]
 		});
 	}
 
@@ -109,7 +116,7 @@ export default class TextDocumentSyncProvider implements Provider {
 		connection.onDidChangeTextDocument(this.onDidChangeTextDocument.bind(this));
 		connection.onDidSaveTextDocument(this.onDidSaveTextDocument.bind(this));
 		return {
-			textDocumentSync: lsp.TextDocumentSyncKind.Incremental,
+			textDocumentSync: lsp.TextDocumentSyncKind.Incremental
 		};
 	}
 }

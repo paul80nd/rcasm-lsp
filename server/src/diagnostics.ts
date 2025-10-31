@@ -1,12 +1,11 @@
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver";
+import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
 import * as rcasm from '@paul80nd/rcasm';
 
-import { Context } from "./context";
+import { Context } from './context';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export default class DiagnosticProcessor {
-	constructor(protected readonly ctx: Context) {
-	}
+	constructor(protected readonly ctx: Context) {}
 
 	/**
 	 * Diagnostic messages provided by rcasm assembling the current source file
@@ -16,7 +15,10 @@ export default class DiagnosticProcessor {
 
 		const { errors, warnings } = rcasm.assemble(textDocument.getText());
 
-		const toDiagnostic = (e: rcasm.Diagnostic, s: DiagnosticSeverity): Diagnostic => {
+		const toDiagnostic = (
+			e: rcasm.Diagnostic,
+			s: DiagnosticSeverity
+		): Diagnostic => {
 			return {
 				severity: s,
 				range: {
@@ -30,10 +32,18 @@ export default class DiagnosticProcessor {
 
 		const entries: Diagnostic[] = [];
 		let maxProblems = conf.maxNumberOfProblems;
-		entries.push(...errors.filter((_, idx) => idx <= maxProblems).map(e => toDiagnostic(e, DiagnosticSeverity.Error)));
+		entries.push(
+			...errors
+				.filter((_, idx) => idx <= maxProblems)
+				.map(e => toDiagnostic(e, DiagnosticSeverity.Error))
+		);
 		maxProblems -= errors.length;
 		if (maxProblems > 0) {
-			entries.push(...warnings.filter((_, idx) => idx <= maxProblems).map(e => toDiagnostic(e, DiagnosticSeverity.Warning)));
+			entries.push(
+				...warnings
+					.filter((_, idx) => idx <= maxProblems)
+					.map(e => toDiagnostic(e, DiagnosticSeverity.Warning))
+			);
 		}
 
 		return entries;

@@ -5,10 +5,7 @@
 		"class": "ALU",
 		"cycles": 8,
 		"operation": "[dst] ← [B] + [C]",
-		"syntax": [
-			"add",
-			"add <dst>{a|d}"
-		],
+		"syntax": ["add", "add <dst>{a|d}"],
 		"description": "Adds the contents of register `b` and `c` placing the result in `dst` (a or d).  If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
@@ -32,10 +29,7 @@
 		"cycles": 8,
 		"summary": "Logical And",
 		"operation": "[dst] ← [B] . [C]",
-		"syntax": [
-			"and",
-			"and <dst>{a|d}"
-		],
+		"syntax": ["and", "and <dst>{a|d}"],
 		"description": "Performs a bitwise AND on register `b` and `c` placing the result in `dst` (a or d).  If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
@@ -59,9 +53,7 @@
 		"cycles": 24,
 		"summary": "Branch Conditionally: Carry Set",
 		"operation": "If C THEN [PC] ← (label)",
-		"syntax": [
-			"bcs <label>"
-		],
+		"syntax": ["bcs <label>"],
 		"snippet": "bcs ${1:label}",
 		"description": "Jumps to label if C is set (last ALU operation resulted in a carry).",
 		"flags": {
@@ -80,9 +72,7 @@
 		"cycles": 24,
 		"summary": "Branch Conditionally: Equal",
 		"operation": "If Z THEN [PC] ← (label)",
-		"syntax": [
-			"beq <label>"
-		],
+		"syntax": ["beq <label>"],
 		"snippet": "beq ${1:label}",
 		"description": "Jumps to label if Z flag is set (last ALU operation result was 0).",
 		"flags": {
@@ -101,9 +91,7 @@
 		"cycles": 24,
 		"summary": "Branch Conditionally: Less or Equal",
 		"operation": "If Z + S THEN [PC] ← (label)",
-		"syntax": [
-			"ble <label>"
-		],
+		"syntax": ["ble <label>"],
 		"snippet": "ble ${1:label}",
 		"description": "Jumps to label if S or Z is set (last ALU operation resulted in a zero or negative value).",
 		"flags": {
@@ -122,9 +110,7 @@
 		"cycles": 24,
 		"summary": "Branch Conditionally: Less Than",
 		"operation": "If S THEN [PC] ← (label)",
-		"syntax": [
-			"blt <label>"
-		],
+		"syntax": ["blt <label>"],
 		"snippet": "blt ${1:label}",
 		"description": "Jumps to label if S is set (last ALU operation has most significant bit set / is negative). Synonym of `bmi`.",
 		"flags": {
@@ -143,9 +129,7 @@
 		"cycles": 24,
 		"summary": "Branch Conditionally: Minus",
 		"operation": "If S THEN [PC] ← (label))",
-		"syntax": [
-			"bmi <label>"
-		],
+		"syntax": ["bmi <label>"],
 		"snippet": "bmi ${1:label}",
 		"description": "Jumps to label if S is set (last ALU operation has most significant bit set / is negative). Synonym of `blt`.",
 		"flags": {
@@ -164,9 +148,7 @@
 		"cycles": 24,
 		"summary": "Branch Conditionally: Not Equal",
 		"operation": "If Z̅ THEN [PC] ← (label)",
-		"syntax": [
-			"beq <label>"
-		],
+		"syntax": ["beq <label>"],
 		"snippet": "bne ${1:label}",
 		"description": "Jumps to label if Z is not set (last ALU operation result was not 0).",
 		"flags": {
@@ -186,9 +168,7 @@
 		"summary": "Register Clear",
 		"variant": "8-bit Register Clear",
 		"operation": "[dst] ← 0",
-		"syntax": [
-			"clr <dst>{a|b|c|d|m1|m2|x|y}"
-		],
+		"syntax": ["clr <dst>{a|b|c|d|m1|m2|x|y}"],
 		"description": "Clears (sets to 0) general purpose 8-bit register dst. This is the equivalent of `mov dst,dst`.",
 		"dest": {
 			"dr": true,
@@ -211,18 +191,14 @@
 				"cycles": 10,
 				"variant": "16-bit Register Clear",
 				"description": "Clears (sets to 0) 16-bit register xy. This is the equivalent of `mov xy,xy`.",
-				"syntax": [
-					"clr xy"
-				],
+				"syntax": ["clr xy"],
 				"dest": {
 					"dr": false,
 					"ar": true,
 					"mIndirect": false,
 					"imm": false
 				},
-				"whenFirstParamIs": [
-					"xy"
-				]
+				"whenFirstParamIs": ["xy"]
 			}
 		]
 	},
@@ -232,10 +208,7 @@
 		"cycles": 8,
 		"summary": "Compare (Logic Xor)",
 		"operation": "[dst] ← [B] - [C]",
-		"syntax": [
-			"cmp",
-			"cmp <dest>{a|d}"
-		],
+		"syntax": ["cmp", "cmp <dest>{a|d}"],
 		"description": "Compares the values in register b and c setting condition flag Z (zero) if the values are the same. Overwrites dst (a or d). If dst is not specified then register a is assumed. Affects Z (zero) and S (sign) flags. Synonym of `eor`.",
 		"dest": {
 			"dr": true,
@@ -259,10 +232,7 @@
 		"cycles": 24,
 		"summary": "Unsigned Integer Division ⚠️EXPERIMENTAL⚠️",
 		"operation": "[dst] ← [B]/[C]",
-		"syntax": [
-			"div",
-			"div <dest>{a|d}"
-		],
+		"syntax": ["div", "div <dest>{a|d}"],
 		"description": "Performs an integer division of register b by register c placing the quotient result in dst (a or d). If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
@@ -286,10 +256,7 @@
 		"cycles": 24,
 		"summary": "Remainder Division ⚠️EXPERIMENTAL⚠️",
 		"operation": "[dst] ← R / [C]",
-		"syntax": [
-			"dvr",
-			"dvr <dest>{a|d}"
-		],
+		"syntax": ["dvr", "dvr <dest>{a|d}"],
 		"description": "Performs a further division of the last `div` or `mod` remainder by register c placing the quotient result in dst (a or d). Register B should be set to 0. If dst is not specified then register a is assumed.",
 		"dst": {
 			"dr": true,
@@ -313,10 +280,7 @@
 		"cycles": 8,
 		"summary": "Logical Exclusive-OR",
 		"operation": "[dst] ← [B] ⊕ [C]",
-		"syntax": [
-			"eor",
-			"eor <dst>{a|d}"
-		],
+		"syntax": ["eor", "eor <dst>{a|d}"],
 		"description": "Performs a bitwise XOR (exlusive OR) on register `b` and `c` placing the result in `dst` (a or d). If dst is not specified then register a is assumed. Synonym of `cmp`.",
 		"dest": {
 			"dr": true,
@@ -340,10 +304,7 @@
 		"class": "ALU",
 		"cycles": 8,
 		"operation": "[dst] ← [B] + 1",
-		"syntax": [
-			"inc",
-			"inc <dst>{a|d}"
-		],
+		"syntax": ["inc", "inc <dst>{a|d}"],
 		"description": "Adds one to the contents of register `b` (register `c` is ignored) placing the result in `dst` (a or d). If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
@@ -367,9 +328,7 @@
 		"cycles": 10,
 		"summary": "Halt",
 		"operation": "HALT and [PC] ← [PC] + 1",
-		"syntax": [
-			"hlt"
-		],
+		"syntax": ["hlt"],
 		"description": "Halts execution of the program.",
 		"flags": {
 			"z": "-",
@@ -387,9 +346,7 @@
 		"cycles": 10,
 		"summary": "Halt and Reload",
 		"operation": "HALT and [PC] ← [AS]",
-		"syntax": [
-			"hlr"
-		],
+		"syntax": ["hlr"],
 		"description": "Halts execution of the program and sets the program counter to the value on the primary switches.",
 		"flags": {
 			"z": "-",
@@ -407,9 +364,7 @@
 		"class": "INCXY",
 		"cycles": 14,
 		"operation": "[XY] ← [XY] + 1",
-		"syntax": [
-			"ixy"
-		],
+		"syntax": ["ixy"],
 		"description": "Increments the 16-bit value in the `xy` register by 1.",
 		"flags": {
 			"z": "-",
@@ -427,9 +382,7 @@
 		"cycles": 24,
 		"summary": "Unconditional Jump",
 		"operation": "[PC] ← (label))",
-		"syntax": [
-			"jmp <label>"
-		],
+		"syntax": ["jmp <label>"],
 		"snippet": "jmp ${1:label}",
 		"description": "Unconditionally jumps to `label` (via register j).",
 		"flags": {
@@ -448,9 +401,7 @@
 		"cycles": 24,
 		"summary": "Jump to Subroutine",
 		"operation": "[XY] ← [PC]; [PC] ← (label)",
-		"syntax": [
-			"jsr <label>"
-		],
+		"syntax": ["jsr <label>"],
 		"snippet": "jsr ${1:label}",
 		"description": "Saves the address of the next instruction into register `xy` and then unconditionally jumps to `label` (via register j). Notionally behaves as a 'call subroutine' operation.",
 		"flags": {
@@ -469,9 +420,7 @@
 		"cycles": 8,
 		"summary": "Load Immediate",
 		"operation": "[dst] ← value",
-		"syntax": [
-			"ldi <dst>{a|b} , <value>{-16,15}"
-		],
+		"syntax": ["ldi <dst>{a|b} , <value>{-16,15}"],
 		"snippet": "ldi ${1:a},${2:0}",
 		"description": "Loads an 8-bit constant value into `dst` (register a or b), `value` must be between -16 and 15.",
 		"variant": "8-bit Load Immediate",
@@ -485,10 +434,7 @@
 					"ldi <dst>{m|j} , <value>{0x0000,0xFFFF}",
 					"ldi <dst>{m|j} , <label>"
 				],
-				"whenFirstParamIs": [
-					"m",
-					"j"
-				],
+				"whenFirstParamIs": ["m", "j"],
 				"src": {
 					"dr": false,
 					"ar": false,
@@ -531,9 +477,7 @@
 		"cycles": 10,
 		"summary": "Load Register from Switches",
 		"operation": "[dst] ← [DS]",
-		"syntax": [
-			"lds <dst>{a|d}"
-		],
+		"syntax": ["lds <dst>{a|d}"],
 		"snippet": "lds ${1:a}",
 		"description": "Loads register `dst` (a or d) from the front panel switches.",
 		"dest": {
@@ -558,9 +502,7 @@
 		"cycles": 12,
 		"summary": "Load Register from Memory",
 		"operation": "[dst] ← (M)",
-		"syntax": [
-			"ldr <dst>{a|b|c|d}"
-		],
+		"syntax": ["ldr <dst>{a|b|c|d}"],
 		"snippet": "ldr ${1:b}",
 		"description": "Loads register `dst` (a, b, c or d) with the byte in memory currently referenced by register `m`.",
 		"src": {
@@ -591,10 +533,7 @@
 		"cycles": 24,
 		"summary": "Unsigned Modulo Operation ⚠️EXPERIMENTAL⚠️",
 		"operation": "[dst] ← [B]%[C]",
-		"syntax": [
-			"mod",
-			"mod <dest>{a|d}"
-		],
+		"syntax": ["mod", "mod <dest>{a|d}"],
 		"description": "Performs an integer division of register b by register c placing the remainder result in dst (a or d). If dst is not specified then register a is assumed.",
 		"dst": {
 			"dr": true,
@@ -618,10 +557,7 @@
 		"cycles": 24,
 		"summary": "Remainder Modulo ⚠️EXPERIMENTAL⚠️",
 		"operation": "[dst] ← R % [C]",
-		"syntax": [
-			"mdr",
-			"mdr <dest>{a|d}"
-		],
+		"syntax": ["mdr", "mdr <dest>{a|d}"],
 		"description": "Performs a further modulo of the last `div` or `mod` remainder by register c placing the remainder result in dst (a or d). Register B should be set to 0. If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
@@ -645,9 +581,7 @@
 		"cycles": 8,
 		"summary": "Register to Register Copy",
 		"operation": "[dst] ← [src]",
-		"syntax": [
-			"mov <dst>{a-d|m1|m2|x|y} , <src>{a-d|m1|m2|x|y}"
-		],
+		"syntax": ["mov <dst>{a-d|m1|m2|x|y} , <src>{a-d|m1|m2|x|y}"],
 		"snippet": "mov ${1:b},${2:a}",
 		"description": "Copies a value from `src` to `dst` between any of the eight general purpose 8-bit registers. If dst and src are the same then dst will be set to 0.",
 		"variant": "8-bit Register to Register Copy",
@@ -657,13 +591,8 @@
 				"cycles": 10,
 				"variant": "16-bit Register to Register Copy",
 				"description": "Copies a value between the 16-bit `src` registers (m, xy or j) and `dst` (xy or the program counter pc). If dst and src are the same then dst will be set to 0.",
-				"syntax": [
-					"mov <dst>{xy|pc} , <src>{m|xy|j|as}"
-				],
-				"whenFirstParamIs": [
-					"xy",
-					"pc"
-				],
+				"syntax": ["mov <dst>{xy|pc} , <src>{m|xy|j|as}"],
+				"whenFirstParamIs": ["xy", "pc"],
 				"src": {
 					"dr": false,
 					"ar": true,
@@ -706,10 +635,7 @@
 		"cycles": 8,
 		"summary": "Logical Complement",
 		"operation": "[dst] ← ~[B]",
-		"syntax": [
-			"not <dst>",
-			"not <dst>{a|d}"
-		],
+		"syntax": ["not <dst>", "not <dst>{a|d}"],
 		"description": "Performs a bitwise NOT on register `b` (register `c` is ignored) placing the result in `dst` (a or d). If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
@@ -733,10 +659,7 @@
 		"cycles": 8,
 		"summary": "Logical Inclusive-OR",
 		"operation": "[dst] ← [B] + [C]",
-		"syntax": [
-			"or",
-			"or <dest>{a|d}"
-		],
+		"syntax": ["or", "or <dest>{a|d}"],
 		"description": "Performs a bitwise OR on register `b` and `c` placing the result in `dst` (a or d). If dst is not specified then register a is assumed.",
 		"dest": {
 			"dr": true,
@@ -760,10 +683,7 @@
 		"cycles": 8,
 		"summary": "Rotate Left",
 		"operation": "[dst] ← [B] rotated by 1",
-		"syntax": [
-			"rol",
-			"rol <dst>{a|d}"
-		],
+		"syntax": ["rol", "rol <dst>{a|d}"],
 		"description": "Performs a bitwise left-rotation on register `b` (register `c` is ignored) placing the result in `dst` (a or d). If dst is not specified then register a is assumed. Every bit shifts one place to the left with the left most bit rotated around to right.",
 		"dest": {
 			"dr": true,
@@ -787,9 +707,7 @@
 		"cycles": 10,
 		"summary": "Return from Subroutine",
 		"operation": "[PC] ← [XY]",
-		"syntax": [
-			"rts"
-		],
+		"syntax": ["rts"],
 		"description": "Copies the value in register `xy` to the program counter `pc`. Notionally behaves as a 'return' operation to a previous jsr call.",
 		"flags": {
 			"z": "-",
@@ -819,9 +737,7 @@
 		"cycles": 12,
 		"summary": "Store Register into Memory",
 		"operation": "(M) ← [src]",
-		"syntax": [
-			"str <src>{a|b|c|d}"
-		],
+		"syntax": ["str <src>{a|b|c|d}"],
 		"snippet": "str ${1:a}",
 		"description": "Stores register `src` (a, b, c or d) into the byte of memory currently referenced by register `m`.",
 		"src": {

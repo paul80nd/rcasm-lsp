@@ -1,13 +1,13 @@
 import {
 	ClientCapabilities,
 	Connection,
-	ServerCapabilities,
-} from "vscode-languageserver";
-import { Context } from "../context";
+	ServerCapabilities
+} from 'vscode-languageserver';
+import { Context } from '../context';
 
-import ConfiguratonProvider from "./configuration-provider";
-import CompletionProvider from "./completion-provider";
-import TextDocumentSyncProvider from "./text-document-sync-provider";
+import ConfiguratonProvider from './configuration-provider';
+import CompletionProvider from './completion-provider';
+import TextDocumentSyncProvider from './text-document-sync-provider';
 
 export interface Provider {
 	register(

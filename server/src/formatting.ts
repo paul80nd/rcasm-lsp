@@ -1,10 +1,10 @@
-import { MarkupContent, MarkupKind } from "vscode-languageserver-types";
+import { MarkupContent, MarkupKind } from 'vscode-languageserver-types';
 import {
 	//   addressingModeDocs,
 	//   AddressingModes,
 	isInstructionDoc,
-	MnemonicDoc,
-} from "./docs";
+	MnemonicDoc
+} from './docs';
 // import { AddressingMode } from "./syntax";
 
 // export function formatDeclaration(definitionLine: string) {
@@ -46,11 +46,9 @@ import {
 // }
 
 export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
-
 	let value = ``;
 
 	if (isInstructionDoc(doc)) {
-
 		const vs = doc.variants ?? [];
 		const hva = vs.length > 0 ? '🄰 ' : '';
 		const hvs = ['🄱 '];
@@ -64,7 +62,7 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 		value += '\n```\n\n---\n';
 
 		// Description
-		value += `${hva}**${vs.length > 0 ? doc.variant ?? doc.summary : doc.summary}**`;
+		value += `${hva}**${vs.length > 0 ? (doc.variant ?? doc.summary) : doc.summary}**`;
 		if (doc.description) {
 			value += `  \n${doc.description}`;
 		}
@@ -77,13 +75,15 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 
 		// Flags
 		if (doc.flags) {
-			const cols = Object.values(doc.flags).map(f => f === '-' ? '-' : '`' + f + '`');
+			const cols = Object.values(doc.flags).map(f =>
+				f === '-' ? '-' : '`' + f + '`'
+			);
 			value += '\n\n---\n\n';
 			value += '|   |   | Z | C | S |\n';
 			value += '|---|---|:-:|:-:|:-:|\n';
-			value += `| ${hva}\`${doc.class}\` \`${doc.cycles}\` | &nbsp;&nbsp; | ${cols.join(" | ")} |`;
+			value += `| ${hva}\`${doc.class}\` \`${doc.cycles}\` | &nbsp;&nbsp; | ${cols.join(' | ')} |`;
 			vs.forEach((v, i) => {
-				value += `\n| ${hvs[i]}\`${v.class}\` \`${v.cycles}\` | &nbsp;&nbsp; | ${cols.join(" | ")} |`;
+				value += `\n| ${hvs[i]}\`${v.class}\` \`${v.cycles}\` | &nbsp;&nbsp; | ${cols.join(' | ')} |`;
 			});
 		}
 
@@ -92,40 +92,49 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 		// Addressing Modes
 		if (doc.src || doc.dest) {
 			value += '\n\n---\n\n';
-			value += '|     |  | dr&nbsp;&nbsp; | ar&nbsp;&nbsp; | (m)&nbsp; | imm |\n';
+			value +=
+				'|     |  | dr&nbsp;&nbsp; | ar&nbsp;&nbsp; | (m)&nbsp; | imm |\n';
 			value += '|-----|--|----|----|-----|-----|';
 			if (doc.src) {
-				let src = vs.length > 0
-					? Object.values(doc.src).map(v => (v ? ' ' + hva : ''))
-					: Object.values(doc.src).map(v => (v ? '  ✓' : ''));
+				let src =
+					vs.length > 0
+						? Object.values(doc.src).map(v => (v ? ' ' + hva : ''))
+						: Object.values(doc.src).map(v => (v ? '  ✓' : ''));
 				vs.forEach((v, i) => {
 					if (v.src) {
 						const vsrc = Object.values(v.src).map(v => (v ? ' ' + hvs[i] : ''));
 						src = src.map((s, i) => s + vsrc[i]);
 					}
 				});
-				const srcCols = src.map(v => v === '' ? ' -' : v).map((v, i) => v.padEnd(widths[i], " "));
-				value += `\n| \`src\`  |&nbsp; &nbsp;|${srcCols.join("|")}|`;
+				const srcCols = src
+					.map(v => (v === '' ? ' -' : v))
+					.map((v, i) => v.padEnd(widths[i], ' '));
+				value += `\n| \`src\`  |&nbsp; &nbsp;|${srcCols.join('|')}|`;
 			}
 			if (doc.dest) {
-				let dst = vs.length > 0
-					? Object.values(doc.dest).map(v => (v ? ' ' + hva: ''))
-					: Object.values(doc.dest).map(v => (v ? '  ✓'  : ''));
+				let dst =
+					vs.length > 0
+						? Object.values(doc.dest).map(v => (v ? ' ' + hva : ''))
+						: Object.values(doc.dest).map(v => (v ? '  ✓' : ''));
 				vs.forEach((v, i) => {
 					if (v.dest) {
-						const vdest = Object.values(v.dest).map(v => (v ? ' ' + hvs[i] : ''));
+						const vdest = Object.values(v.dest).map(v =>
+							v ? ' ' + hvs[i] : ''
+						);
 						dst = dst.map((s, i) => s + vdest[i]);
 					}
 				});
-				const destCols = dst.map(v => v === '' ? ' -' : v).map((v, i) => v.padEnd(widths[i], " "));
-				value += `\n| \`dst\` |&nbsp; &nbsp;|${destCols.join("|")}|`;
+				const destCols = dst
+					.map(v => (v === '' ? ' -' : v))
+					.map((v, i) => v.padEnd(widths[i], ' '));
+				value += `\n| \`dst\` |&nbsp; &nbsp;|${destCols.join('|')}|`;
 			}
 		}
 	}
 
 	return {
 		kind: MarkupKind.Markdown,
-		value,
+		value
 	};
 }
 

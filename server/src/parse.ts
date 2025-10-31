@@ -15,7 +15,7 @@ export enum ComponentType {
 	Label,
 	Mnemonic,
 	Operand,
-	Comment,
+	Comment
 }
 
 export interface ComponentInfo {
@@ -77,7 +77,7 @@ export function parseLine(text: string): ParsedLine {
 
 		if (groups.label) {
 			let value = groups.label.trim();
-			while (value.endsWith(":")) {
+			while (value.endsWith(':')) {
 				value = value.substring(0, value.length - 1);
 			}
 			const start = text.indexOf(value);
@@ -129,13 +129,13 @@ export function componentAtIndex(
 	if (label && containsIndex(label, index)) {
 		return {
 			component: label,
-			type: ComponentType.Label,
+			type: ComponentType.Label
 		};
 	}
 	if (mnemonic && containsIndex(mnemonic, index)) {
 		return {
 			component: mnemonic,
-			type: ComponentType.Mnemonic,
+			type: ComponentType.Mnemonic
 		};
 	}
 	if (operands) {
@@ -145,7 +145,7 @@ export function componentAtIndex(
 				return {
 					component: operand,
 					type: ComponentType.Operand,
-					index: Number(i),
+					index: Number(i)
 				};
 			}
 		}
@@ -153,7 +153,7 @@ export function componentAtIndex(
 	if (comment && containsIndex(comment, index)) {
 		return {
 			component: comment,
-			type: ComponentType.Comment,
+			type: ComponentType.Comment
 		};
 	}
 
@@ -176,11 +176,11 @@ export function parseSignature(text: string): SignatureInfo {
 	const info: SignatureInfo = { label: text, operands: [] };
 	let end = 0;
 
-	const [, opList] = text.split(" ");
+	const [, opList] = text.split(' ');
 
 	if (opList) {
-		for (const op of opList.split(",")) {
-			const value = op.replace(/[[\]]/g, "");
+		for (const op of opList.split(',')) {
+			const value = op.replace(/[[\]]/g, '');
 			const start = end + text.substring(end).indexOf(value);
 			end = start + value.length;
 			info.operands.push({ start, end, value });
