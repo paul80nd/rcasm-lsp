@@ -10,97 +10,6 @@ import { formatMnemonicDoc } from '../formatting';
 //import { ProcessedDocument } from "../document-processor";
 
 export default class CompletionProvider implements Provider {
-	private dataRegs: lsp.CompletionItem[] = [
-		{
-			label: 'd0',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd1',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd2',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd3',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd4',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd5',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd6',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'd7',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		}
-	];
-	private addrRegs: lsp.CompletionItem[] = [
-		{
-			label: 'a0',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a1',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a2',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a3',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a4',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a5',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a6',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'a7',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		},
-		{
-			label: 'sp',
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		}
-	];
-	private namedRegs: lsp.CompletionItem[];
-
 	constructor(protected readonly ctx: Context) {
 		this.namedRegs = syntax.registerNames.map(label => ({
 			label,
@@ -334,6 +243,85 @@ export default class CompletionProvider implements Provider {
 			}
 		};
 	}
+
+	private dataRegs: lsp.CompletionItem[] = [
+		{
+			label: 'd0',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'd1',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'd2',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'd3',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'd4',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'd5',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'd6',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'd7',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		}
+	];
+	private addrRegs: lsp.CompletionItem[] = [
+		{ label: 'a0', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
+		{ label: 'a1', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
+		{ label: 'a2', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
+		{
+			label: 'a3',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'a4',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'a5',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'a6',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'a7',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		},
+		{
+			label: 'sp',
+			detail: '(register)',
+			kind: lsp.CompletionItemKind.Keyword
+		}
+	];
+	private namedRegs: lsp.CompletionItem[];
 }
 
 function enumValues(values: string[]): lsp.CompletionItem[] {

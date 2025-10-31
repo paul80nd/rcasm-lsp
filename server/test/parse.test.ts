@@ -353,19 +353,69 @@ describe('parse', () => {
 	});
 
 	describe('#parseSignature()', () => {
-		it('parses a single operand', () =>
-			parsingSignature('LSR[.(w)] <ea>').hasOperands([{ start: 10, end: 14, value: '<ea>' }]));
+		it('parses with no operands', () => parsingSignature('rts').hasOperands([]));
 
-		it('parses multiple operands', () =>
-			parsingSignature('MOVE[.(w)] <ea>,<ea>').hasOperands([
-				{ start: 11, end: 15, value: '<ea>' },
-				{ start: 16, end: 20, value: '<ea>' }
+		it('parses a single operand', () => {
+			parsingSignature('blt <label>').hasOperands([{ start: 4, end: 11, value: '<label>' }]);
+			parsingSignature('clr <dst:Dr>').hasOperands([{ start: 4, end: 12, value: '<dst:Dr>' }]);
+			parsingSignature('lds <dst:a|d>').hasOperands([{ start: 4, end: 13, value: '<dst:a|d>' }]);
+			parsingSignature('ldr <dst:a-d>').hasOperands([{ start: 4, end: 13, value: '<dst:a-d>' }]);
+			parsingSignature('str <src:a-d>').hasOperands([{ start: 4, end: 13, value: '<src:a-d>' }]);
+			parsingSignature('!error <message>').hasOperands([{ start: 7, end: 16, value: '<message>' }]);
+			parsingSignature('!align <value:2|4|8|16|...>').hasOperands([
+				{ start: 7, end: 27, value: '<value:2|4|8|16|...>' }
+			]);
+		});
+
+		it('parses multiple operands', () => {
+			parsingSignature('mov <dst:Dr>,<src:Dr>').hasOperands([
+				{ start: 4, end: 12, value: '<dst:Dr>' },
+				{ start: 13, end: 21, value: '<src:Dr>' }
+			]);
+			parsingSignature('mov <dst:xy|pc>,<src:m|xy|j|as>').hasOperands([
+				{ start: 4, end: 15, value: '<dst:xy|pc>' },
+				{ start: 16, end: 31, value: '<src:m|xy|j|as>' }
+			]);
+			parsingSignature('ldi <dst:a|b>,<value:-16..15>').hasOperands([
+				{ start: 4, end: 13, value: '<dst:a|b>' },
+				{ start: 14, end: 29, value: '<value:-16..15>' }
+			]);
+			parsingSignature('ldi <dst:m|j>,<value:0x0000..0xFFFF>').hasOperands([
+				{ start: 4, end: 13, value: '<dst:m|j>' },
+				{ start: 14, end: 36, value: '<value:0x0000..0xFFFF>' }
+			]);
+			parsingSignature('!fill <count:0..255>,<value:0x00..0xFF>').hasOperands([
+				{ start: 6, end: 20, value: '<count:0..255>' },
+				{ start: 21, end: 39, value: '<value:0x00..0xFF>' }
+			]);
+		});
+
+		it('parses optional operand', () =>
+			parsingSignature('add [<dst:a|d>]').hasOperands([{ start: 5, end: 14, value: '<dst:a|d>' }]));
+
+		it('parses optional operands', () => {
+			parsingSignature('!byte <value:0x00..0xFF>[,...]').hasOperands([
+				{ start: 6, end: 24, value: '<value:0x00..0xFF>' },
+				{ start: 26, end: 29, value: '...' }
+			]);
+			parsingSignature('!word <value:0x0000..0xFFFF>[,...]').hasOperands([
+				{ start: 6, end: 28, value: '<value:0x0000..0xFFFF>' },
+				{ start: 30, end: 33, value: '...' }
+			]);
+		});
+
+		it('ignores further items after operands', () =>
+			parsingSignature('!for <variable> in range([<start>,]<end>)').hasOperands([
+				{ start: 5, end: 15, value: '<variable>' }
 			]));
 
-		it('parses optional operands', () =>
-			parsingSignature('MOVE[.(w)] <ea>[,<ea>]').hasOperands([
-				{ start: 11, end: 15, value: '<ea>' },
-				{ start: 17, end: 21, value: '<ea>' }
-			]));
+		it('performs best-effort on complex directives', () => {
+			parsingSignature('!if (<condition>)').hasOperands([
+				{ start: 4, end: 17, value: '(<condition>)' }
+			]);
+			parsingSignature('!let <variable> = <value>').hasOperands([
+				{ start: 5, end: 15, value: '<variable>' }
+			]);
+		});
 	});
 });
