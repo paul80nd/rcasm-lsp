@@ -5,7 +5,7 @@ import { directiveDocs, instructionDocs, mnemonicDocs, registerDocs } from '../d
 import { Definition, DefinitionType } from '../symbols';
 import { Context } from '../context';
 import { Component, componentAtIndex, ComponentType, parseLine, parseSignature } from '../parse';
-import { formatMnemonicDoc } from '../formatting';
+import { formatMnemonicDoc, formatRegisterDoc } from '../formatting';
 import { RegisterName } from '../syntax';
 //import { ProcessedDocument } from "../document-processor";
 
@@ -104,6 +104,11 @@ export default class CompletionProvider implements Provider {
 			const doc = mnemonicDocs[item.label.toLowerCase()];
 			if (doc) {
 				item.documentation = formatMnemonicDoc(doc);
+			} else {
+				const rdoc = registerDocs[item.label.toLowerCase() as RegisterName];
+				if (rdoc) {
+					item.documentation = formatRegisterDoc(rdoc);
+				}
 			}
 		}
 		return item;

@@ -3,8 +3,10 @@ import {
 	//   addressingModeDocs,
 	//   AddressingModes,
 	isInstructionDoc,
-	MnemonicDoc
+	MnemonicDoc,
+	RegisterDoc
 } from './docs';
+import { RegisterName } from './syntax';
 // import { AddressingMode } from "./syntax";
 
 // export function formatDeclaration(definitionLine: string) {
@@ -135,6 +137,80 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 			value += `  \n${doc.description}`;
 		}
 	}
+
+	return {
+		kind: MarkupKind.Markdown,
+		value
+	};
+}
+
+export function formatRegisterDoc(doc: RegisterDoc): MarkupContent {
+	let value = ``;
+
+	// Description
+	value += `**${doc.summary}**`;
+	if (doc.description) {
+		value += `  \n${doc.description}`;
+	}
+
+	// Features
+	value += '\n\n---\n\n';
+	value += '| Size | Rd | Wr |\n';
+	value += '|------|:--:|:--:|\n';
+	value += `| \`${doc.size}-bit\` | ${doc.canRead ? '  ✓' : ''} | ${doc.canWrite ? '  ✓' : ''} |`;
+
+	// Layout
+	value += '\n\n---\n```';
+	switch (doc.title.toLowerCase()) {
+		case 'm':
+		case 'm1':
+		case 'm2':
+			value += `
+╻    ┌─────────────┐    ╻
+┃◀━━▶│  M1    ──╮  │    ┃
+┃    ├╌╌╌╌╌╌╌╌╌ M ╌┤━━━▶┃ 
+┃◀━━▶│  M2    ──╯  │    ┃
+┃    └─────────────┘    ┃
+┖ Data   < Bus >   Addr ┚`;
+			break;
+		case 'xy':
+		case 'x':
+		case 'y':
+			value += `
+╻    ┌─────────────┐    ╻
+┃◀━━▶│  X    ──╮   │    ┃
+┃    ├╌╌╌╌╌╌╌╌ XY ╌┤◀━━▶┃ 
+┃◀━━▶│  Y    ──╯   │    ┃
+┃    └─────────────┘    ┃
+┖ Data   < Bus >   Addr ┚`;
+			break;
+		case 'j':
+		case 'j1':
+		case 'j2':
+			value += `
+╻    ┌─────────────┐    ╻
+┃━━━▶│  J1    ──╮  │    ┃
+┃    ├╌╌╌╌╌╌╌╌╌ J ╌┤━━━▶┃ 
+┃━━━▶│  J2    ──╯  │    ┃
+┃    └─────────────┘    ┃
+┖ Data   < Bus >   Addr ┚`;
+			break;
+		case 'b':
+		case 'c':
+			value += `
+╻    ┌─────────────┐
+┃◀━━▶│  ${doc.title.toUpperCase()}          │━━━▶ ALU
+┃    └─────────────┘
+┖ Data Bus`;
+			break;
+		default:
+			value += `
+╻    ┌─────────────┐
+┃◀━━▶│  ${doc.title.toUpperCase()}          │
+┃    └─────────────┘
+┖ Data Bus`;
+	}
+	value += '\n```\n';
 
 	return {
 		kind: MarkupKind.Markdown,

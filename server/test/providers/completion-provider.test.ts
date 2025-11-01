@@ -407,25 +407,27 @@ describe('CompletionProvider', () => {
 
 	describe('#onCompletionResolve()', () => {
 		it('adds instruction documentation', () => {
-			const item = provider.onCompletionResolve({
-				label: 'mov',
-				data: true
+			const item = provider.onCompletionResolve({ label: 'mov', data: true });
+			expect(item.documentation).toEqual({
+				kind: 'markdown',
+				value: expect.stringMatching(/Register to Register Copy/)
 			});
-			expect(item.documentation).toBeTruthy();
-			expect(lsp.MarkupContent.is(item.documentation)).toBe(true);
-			lsp.MarkupContent.is(item.documentation);
-			expect((item.documentation! as lsp.MarkupContent).value).toContain('mov');
 		});
 
 		it('adds directive documentation', () => {
-			const item = provider.onCompletionResolve({
-				label: '!byte',
-				data: true
+			const item = provider.onCompletionResolve({ label: '!byte', data: true });
+			expect(item.documentation).toEqual({
+				kind: 'markdown',
+				value: expect.stringMatching(/Define Byte Data/)
 			});
-			expect(item.documentation).toBeTruthy();
-			expect(lsp.MarkupContent.is(item.documentation)).toBe(true);
-			lsp.MarkupContent.is(item.documentation);
-			expect((item.documentation! as lsp.MarkupContent).value).toContain('!byte');
+		});
+
+		it('adds register documentation', () => {
+			const item = provider.onCompletionResolve({ label: 'xy', data: true });
+			expect(item.documentation).toEqual({
+				kind: 'markdown',
+				value: expect.stringMatching(/XY Register/)
+			});
 		});
 	});
 });
