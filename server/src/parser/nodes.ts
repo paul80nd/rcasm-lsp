@@ -164,12 +164,12 @@ class Line extends Node {
 				case 'align':
 					this.adoptChild(new AlignDirective(l.stmt));
 					break;
-				// 				case 'for':
-				// 					this.adoptChild(new ForDirective(l.stmt));
-				// 					break;
-				// 				case 'if':
-				// 					this.adoptChild(new IfDirective(l.stmt));
-				// 					break;
+				case 'for':
+					this.adoptChild(new ForDirective(l.stmt));
+					break;
+				case 'if':
+					this.adoptChild(new IfDirective(l.stmt));
+					break;
 				// 				case 'let':
 				// 					this.adoptChild(new LetDirective(l.stmt));
 				// 					break;
@@ -236,28 +236,28 @@ export class AlignDirective extends Directive {
 // export class LetDirective extends Node { constructor(d: rcasm.StmtLet) { super(d, NodeType.Directive); } }
 // export class ErrorDirective extends Node { constructor(d: rcasm.StmtError) { super(d, NodeType.Directive); } }
 
-// export class ForDirective extends Node {
-// 	constructor(ss: rcasm.StmtFor) {
-// 		super(ss, NodeType.Directive);
-// 		ss.body!.forEach(s => {
-// 			this.adoptChild(new Line(s));
-// 		});
-// 	}
-// }
+export class ForDirective extends Directive {
+	constructor(ss: rcasm.StmtFor) {
+		super(ss, '!for');
+		ss.body!.forEach(s => {
+			this.adoptChild(new Line(s));
+		});
+	}
+}
 
-// export class IfDirective extends Node {
-// 	constructor(ss: rcasm.StmtIfElse) {
-// 		super(ss, NodeType.Directive);
-// 		ss.cases.forEach(c => {
-// 			c[1].forEach(s => {
-// 				this.adoptChild(new Line(s));
-// 			});
-// 		});
-// 		ss.elseBranch?.forEach(s => {
-// 			this.adoptChild(new Line(s));
-// 		});
-// 	}
-// }
+export class IfDirective extends Directive {
+	constructor(ss: rcasm.StmtIfElse) {
+		super(ss, '!if');
+		ss.cases.forEach(c => {
+			c[1].forEach(s => {
+				this.adoptChild(new Line(s));
+			});
+		});
+		ss.elseBranch?.forEach(s => {
+			this.adoptChild(new Line(s));
+		});
+	}
+}
 
 export class Instruction extends Node {
 	public mnemonic: string;

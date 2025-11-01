@@ -74,104 +74,146 @@ describe('HoverProvider', () => {
 	});
 
 	describe('#onHover()', () => {
-		it('provides hover info for instructions', async () =>
-			await hoverFor('label: m|ov a,b ; test').is({
-				range: range(0, 7, 0, 15),
-				contents: {
-					kind: 'markdown',
-					value: expect.stringMatching(/8-bit Register to Register Copy/)
-				}
-			}));
+		describe('mnemonic hovers', () => {
+			it('provides hover info for instructions', async () =>
+				await hoverFor('label: m|ov a,b ; test').is({
+					range: range(0, 7, 0, 15),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/8-bit Register to Register Copy/)
+					}
+				}));
 
-		it('provides hover info for instructions within scopes', async () =>
-			await hoverForAt('test: {\nlabel: mov a,b ; test\n}', 1, 8).is({
-				range: range(1, 7, 1, 15),
-				contents: {
-					kind: 'markdown',
-					value: expect.stringMatching(/8-bit Register to Register Copy/)
-				}
-			}));
+			it('provides hover info for instructions within scopes', async () =>
+				await hoverForAt('test: {\nlabel: mov a,b ; test\n}', 1, 8).is({
+					range: range(1, 7, 1, 15),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/8-bit Register to Register Copy/)
+					}
+				}));
 
-		it('provides hover info for positions within instruction', async () => {
-			const contents = {
-				kind: 'markdown',
-				value: expect.stringMatching(/Arithmetic Add/)
-			};
-			await hoverFor('| add').isUndefined();
-			await hoverFor('|add').is({ range: range(0, 0, 0, 3), contents });
-			await hoverFor('a|dd').is({ range: range(0, 0, 0, 3), contents });
-			await hoverFor('add|').is({ range: range(0, 0, 0, 3), contents });
-			await hoverForAt('add \n add', 1, 2).is({ range: range(1, 1, 1, 4), contents });
-		});
-
-		it('provides hover info for data', async () => {
-			await hoverFor('!by|te 0x01, 0x02').is({
-				range: range(0, 0, 0, 16),
-				contents: {
+			it('provides hover info for positions within instruction', async () => {
+				const contents = {
 					kind: 'markdown',
-					value: expect.stringMatching(/Define Byte Data/)
-				}
-			});
-			await hoverFor('!wor|d 0x01, 0x02').is({
-				range: range(0, 0, 0, 16),
-				contents: {
-					kind: 'markdown',
-					value: expect.stringMatching(/Define Word Data/)
-				}
+					value: expect.stringMatching(/Arithmetic Add/)
+				};
+				await hoverFor('| add').isUndefined();
+				await hoverFor('|add').is({ range: range(0, 0, 0, 3), contents });
+				await hoverFor('a|dd').is({ range: range(0, 0, 0, 3), contents });
+				await hoverFor('add|').is({ range: range(0, 0, 0, 3), contents });
+				await hoverForAt('add \n add', 1, 2).is({ range: range(1, 1, 1, 4), contents });
 			});
 		});
 
-		it('provides hover info for fill', async () =>
-			await hoverFor('!fi|ll 8, 0x01').is({
-				range: range(0, 0, 0, 13),
-				contents: {
-					kind: 'markdown',
-					value: expect.stringMatching(/Define Fill Space/)
-				}
-			}));
+		describe('directive hovers', () => {
+			it('provides hover info for !data', async () => {
+				await hoverFor('!by|te 0x01, 0x02').is({
+					range: range(0, 0, 0, 16),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define Byte Data/)
+					}
+				});
+				await hoverFor('!wor|d 0x01, 0x02').is({
+					range: range(0, 0, 0, 16),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define Word Data/)
+					}
+				});
+			});
 
-		it('provides hover info for align', async () =>
-			await hoverFor('!a|lign 8').is({
-				range: range(0, 0, 0, 8),
-				contents: {
-					kind: 'markdown',
-					value: expect.stringMatching(/Define Align/)
-				}
-			}));
+			it('provides hover info for !fill', async () =>
+				await hoverFor('!fi|ll 8, 0x01').is({
+					range: range(0, 0, 0, 13),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define Fill Space/)
+					}
+				}));
 
-		//     it("provide hover info for directives", async () => {
-		//       const textDocument = await createDoc("example.s", ` section foo,bss`);
+			it('provides hover info for !align', async () =>
+				await hoverFor('!a|lign 8').is({
+					range: range(0, 0, 0, 8),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define Align/)
+					}
+				}));
 
-		//       const hover = await provider.onHover({
-		//         textDocument,
-		//         position: lsp.Position.create(0, 3),
-		//       });
+			it('provides hover info for !for', async () =>
+				await hoverFor('!fo|r i in range(0,2) {\n add\n}').is({
+					range: range(0, 0, 2, 1),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define For Loop/)
+					}
+				}));
 
-		//       expect(hover).toEqual({
-		//         range: range(0, 1, 0, 8),
-		//         contents: {
-		//           kind: "markdown",
-		//           value: expect.stringMatching(/Starts a new section/),
-		//         },
-		//       });
-		//     });
+			it('provides hover info for !for within block', async () =>
+				await hoverForAt('!for i in range(0,2) {\n add\n}', 1, 0).is({
+					range: range(0, 0, 2, 1),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define For Loop/)
+					}
+				}));
 
-		//     it("provide hover info for size qualifier", async () => {
-		//       const textDocument = await createDoc("example.s", ` move.w d0,d1`);
+			it('mnemonic hover overrides outer !for block', async () =>
+				await hoverForAt('!for i in range(0,2) {\n add\n}', 1, 2).is({
+					range: range(1, 1, 1, 4),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Arithmetic Add/)
+					}
+				}));
 
-		//       const hover = await provider.onHover({
-		//         textDocument,
-		//         position: lsp.Position.create(0, 6),
-		//       });
+			it('provides hover info for !if', async () =>
+				await hoverFor('!i|f (0==1) {\n add\n} else {\n inc\n}').is({
+					range: range(0, 0, 4, 1),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define Conditional Block/)
+					}
+				}));
 
-		//       expect(hover).toEqual({
-		//         range: range(0, 6, 0, 7),
-		//         contents: {
-		//           kind: "plaintext",
-		//           value: expect.stringMatching(/Word/),
-		//         },
-		//       });
-		//     });
+			it('provides hover info for !if within if block', async () =>
+				await hoverForAt('!if (0==1) {\n add\n} else {\n inc\n}', 1, 0).is({
+					range: range(0, 0, 4, 1),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define Conditional Block/)
+					}
+				}));
+
+			it('mnemonic hover overrides outer !if block', async () =>
+				await hoverForAt('!if (0==1) {\n add\n} else {\n inc\n}', 1, 2).is({
+					range: range(1, 1, 1, 4),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Arithmetic Add/)
+					}
+				}));
+
+			it('provides hover info for !if within else block', async () =>
+				await hoverForAt('!if (0==1) {\n add\n} else {\n inc\n}', 3, 0).is({
+					range: range(0, 0, 4, 1),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define Conditional Block/)
+					}
+				}));
+
+			it('mnemonic hover overrides outer !if block', async () =>
+				await hoverForAt('!if (0==1) {\n add\n} else {\n inc\n}', 3, 2).is({
+					range: range(3, 1, 3, 4),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Arithmetic Increment/)
+					}
+				}));
+		});
 
 		//     it("provide hover info for symbol reference", async () => {
 		//       const textDocument = await createDoc(
