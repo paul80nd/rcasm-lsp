@@ -104,6 +104,15 @@ describe('HoverProvider', () => {
 				await hoverFor('add|').is({ range: range(0, 0, 0, 3), contents });
 				await hoverForAt('add \n add', 1, 2).is({ range: range(1, 1, 1, 4), contents });
 			});
+
+			it('provides basic hover info for org', async () =>
+				await hoverFor('label: o|rg 0xfedc ; test').is({
+					range: range(0, 7, 0, 18),
+					contents: {
+						kind: 'plaintext',
+						value: '(instruction) org'
+					}
+				}));
 		});
 
 		describe('directive hovers', () => {

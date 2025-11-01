@@ -10,7 +10,7 @@ export enum NodeType {
 	Instruction,
 	// Literal,
 	// 	Register,
-	// 	SetPC,
+	SetPC,
 	// 	Expr,
 	Directive,
 	// 	Fill,
@@ -152,9 +152,9 @@ class Line extends Node {
 				case 'insn':
 					this.adoptChild(new Instruction(l.stmt));
 					break;
-				// 				case 'setpc':
-				// 					this.adoptChild(new SetPC(l.stmt));
-				// 					break;
+				case 'setpc':
+					this.adoptChild(new SetPC(l.stmt));
+					break;
 				case 'data':
 					this.adoptChild(new DataDirective(l.stmt));
 					break;
@@ -201,15 +201,14 @@ export class Scope extends Node {
 	}
 }
 
-// export class SetPC extends Node {
+export class SetPC extends Node {
+	// public pcExpr: Expression;
 
-// 	public pcExpr: Expression;
-
-// 	constructor(spc: rcasm.StmtSetPC) {
-// 		super(spc, NodeType.SetPC);
-// 		this.pcExpr = this.adoptChild(new Expression(spc.pc));
-// 	}
-// }
+	constructor(spc: rcasm.StmtSetPC) {
+		super(spc, NodeType.SetPC);
+		// this.pcExpr = this.adoptChild(new Expression(spc.pc));
+	}
+}
 
 export class Directive extends Node {
 	public mnemonic: string;

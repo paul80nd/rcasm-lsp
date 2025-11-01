@@ -45,6 +45,8 @@ export default class HoverProvider implements Provider {
 					return this.hoverInstructionMnemonic(node as nodes.Instruction, getRange(node));
 				case nodes.NodeType.Directive:
 					return this.hoverDirectiveMnemonic(node as nodes.Directive, getRange(node));
+				case nodes.NodeType.SetPC:
+					return this.hoverSetPC(node as nodes.SetPC, getRange(node));
 				//       case "symbol":
 				//         return this.hoverSymbol(node, processed.document, position);
 				//       case "string_literal":
@@ -77,26 +79,6 @@ export default class HoverProvider implements Provider {
 	// 			break;
 	// 		}
 
-	// 		if (node instanceof nodes.LetDirective || node instanceof nodes.ErrorDirective) {
-	// 			// Only respond if on first line of node (node includes the for directive and the body)
-	// 			const range = getRange(node);
-	// 			if (position.line !== range.start.line) {
-	// 				continue;
-	// 			}
-
-	// 			const dtype = node.getText().slice(0, 4).toLowerCase().trim();
-	// 			const entry = this.rcasmDataManager.getDirective(dtype);
-	// 			if (entry) {
-	// 				const contents = languageFacts.getEntryDescription(entry, this.doesSupportMarkdown());
-	// 				if (contents) {
-	// 					hover = { contents, range: getRange(node), };
-	// 				} else {
-	// 					hover = null;
-	// 				}
-	// 			}
-	// 			break;
-	// 		}
-
 	register(connection: lsp.Connection) {
 		connection.onHover(this.onHover.bind(this));
 		return {
@@ -122,6 +104,17 @@ export default class HoverProvider implements Provider {
 			contents: docs || {
 				kind: lsp.MarkupKind.PlainText,
 				value: '(directive) ' + node.mnemonic
+			}
+		};
+	}
+
+	private hoverSetPC(node: nodes.SetPC, range: lsp.Range) {
+		const docs = lookupMnemonicDoc('org');
+		return {
+			range,
+			contents: docs || {
+				kind: lsp.MarkupKind.PlainText,
+				value: '(set program counter)'
 			}
 		};
 	}
