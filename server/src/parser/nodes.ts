@@ -158,12 +158,12 @@ class Line extends Node {
 				case 'data':
 					this.adoptChild(new DataDirective(l.stmt));
 					break;
-				// 				case 'fill':
-				// 					this.adoptChild(new FillDirective(l.stmt));
-				// 					break;
-				// 				case 'align':
-				// 					this.adoptChild(new AlignDirective(l.stmt));
-				// 					break;
+				case 'fill':
+					this.adoptChild(new FillDirective(l.stmt));
+					break;
+				case 'align':
+					this.adoptChild(new AlignDirective(l.stmt));
+					break;
 				// 				case 'for':
 				// 					this.adoptChild(new ForDirective(l.stmt));
 				// 					break;
@@ -223,8 +223,16 @@ export class DataDirective extends Directive {
 		super(d, d.dataSize === rcasm.DataSize.Byte ? '!byte' : '!word');
 	}
 }
-// export class FillDirective extends Node { constructor(d: rcasm.StmtFill) { super(d, NodeType.Directive); } }
-// export class AlignDirective extends Node { constructor(d: rcasm.StmtAlign) { super(d, NodeType.Directive); } }
+export class FillDirective extends Directive {
+	constructor(d: rcasm.StmtFill) {
+		super(d, '!fill');
+	}
+}
+export class AlignDirective extends Directive {
+	constructor(d: rcasm.StmtAlign) {
+		super(d, '!align');
+	}
+}
 // export class LetDirective extends Node { constructor(d: rcasm.StmtLet) { super(d, NodeType.Directive); } }
 // export class ErrorDirective extends Node { constructor(d: rcasm.StmtError) { super(d, NodeType.Directive); } }
 

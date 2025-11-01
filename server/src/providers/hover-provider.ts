@@ -45,8 +45,6 @@ export default class HoverProvider implements Provider {
 					return this.hoverInstructionMnemonic(node as nodes.Instruction, getRange(node));
 				case nodes.NodeType.Directive:
 					return this.hoverDirectiveMnemonic(node as nodes.Directive, getRange(node));
-				//       case "size":
-				//         return this.hoverSize(node);
 				//       case "symbol":
 				//         return this.hoverSymbol(node, processed.document, position);
 				//       case "path":
@@ -67,6 +65,67 @@ export default class HoverProvider implements Provider {
 		}
 	}
 
+	// if (node instanceof nodes.SetPC) {
+	// 			const entry = this.rcasmDataManager.getMnemonic('org');
+	// 			if (entry) {
+	// 				const paramNames = [node.pcExpr.getText()];
+	// 				const contents = languageFacts.getEntrySpecificDescription(entry, paramNames, this.doesSupportMarkdown());
+	// 				if (contents) {
+	// 					hover = { contents, range: getRange(node) };
+	// 				} else {
+	// 					hover = null;
+	// 				}
+	// 			}
+	// 			break;
+	// 		}
+
+	// 		if (node instanceof nodes.ForDirective || node instanceof nodes.IfDirective || node instanceof nodes.LetDirective || node instanceof nodes.ErrorDirective) {
+	// 			// Only respond if on first line of node (node includes the for directive and the body)
+	// 			const range = getRange(node);
+	// 			if (position.line !== range.start.line) {
+	// 				continue;
+	// 			}
+
+	// 			const dtype = node.getText().slice(0, 4).toLowerCase().trim();
+	// 			const entry = this.rcasmDataManager.getDirective(dtype);
+	// 			if (entry) {
+	// 				const contents = languageFacts.getEntryDescription(entry, this.doesSupportMarkdown());
+	// 				if (contents) {
+	// 					hover = { contents, range: getRange(node), };
+	// 				} else {
+	// 					hover = null;
+	// 				}
+	// 			}
+	// 			break;
+	// 		}
+
+	// 		if (node instanceof nodes.DataDirective || node instanceof nodes.FillDirective) {
+	// 			const dtype = node.getText().slice(0, 5).toLowerCase();
+	// 			const entry = this.rcasmDataManager.getDirective(dtype);
+	// 			if (entry) {
+	// 				const contents = languageFacts.getEntryDescription(entry, this.doesSupportMarkdown());
+	// 				if (contents) {
+	// 					hover = { contents, range: getRange(node), };
+	// 				} else {
+	// 					hover = null;
+	// 				}
+	// 			}
+	// 			break;
+	// 		}
+
+	// 		if (node instanceof nodes.AlignDirective) {
+	// 			const dtype = node.getText().slice(0, 6).toLowerCase();
+	// 			const entry = this.rcasmDataManager.getDirective(dtype);
+	// 			if (entry) {
+	// 				const contents = languageFacts.getEntryDescription(entry, this.doesSupportMarkdown());
+	// 				if (contents) {
+	// 					hover = { contents, range: getRange(node), };
+	// 				} else {
+	// 					hover = null;
+	// 				}
+	// 			}
+	// 			break;
+	// 		}
 	register(connection: lsp.Connection) {
 		connection.onHover(this.onHover.bind(this));
 		return {
@@ -95,17 +154,6 @@ export default class HoverProvider implements Provider {
 			}
 		};
 	}
-
-	//   private async hoverSize(node: SyntaxNode) {
-	//     const sizeDoc = sizeDocs[node.text.toLowerCase() as Size];
-	//     return {
-	//       range: nodeAsRange(node),
-	//       contents: {
-	//         kind: lsp.MarkupKind.PlainText,
-	//         value: sizeDoc || "(size)",
-	//       },
-	//     };
-	//   }
 
 	//   private async hoverSymbol(
 	//     node: SyntaxNode,

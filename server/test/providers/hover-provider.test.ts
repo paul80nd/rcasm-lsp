@@ -120,6 +120,25 @@ describe('HoverProvider', () => {
 				}
 			});
 		});
+
+		it('provides hover info for fill', async () =>
+			await hoverFor('!fi|ll 8, 0x01').is({
+				range: range(0, 0, 0, 13),
+				contents: {
+					kind: 'markdown',
+					value: expect.stringMatching(/Define Fill Space/)
+				}
+			}));
+
+		it('provides hover info for align', async () =>
+			await hoverFor('!a|lign 8').is({
+				range: range(0, 0, 0, 8),
+				contents: {
+					kind: 'markdown',
+					value: expect.stringMatching(/Define Align/)
+				}
+			}));
+
 		//     it("provide hover info for directives", async () => {
 		//       const textDocument = await createDoc("example.s", ` section foo,bss`);
 

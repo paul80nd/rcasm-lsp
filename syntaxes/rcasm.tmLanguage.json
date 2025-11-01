@@ -39,12 +39,7 @@
 		},
 		{
 			"name": "meta.other.rcasm",
-			"match": "(?i)^[ \t]*(!if|!let|!align|!for|!fill|!byte|!word|!error)[ \t]*",
-			"captures": {
-				"1": {
-					"name": "variable.other.pseudo.rcam"
-				}
-			}
+			"match": "(?i)\\b[!](if|let|align|for|fill|byte|word|error)\\b"
 		},
 		{
 			"name": "meta.definition.label.rcasm",
