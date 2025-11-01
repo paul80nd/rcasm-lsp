@@ -11,8 +11,8 @@ import * as nodes from '../parser/nodes';
 import {
 	//   formatDeclaration,
 	formatMnemonicDoc,
-	formatRegisterDoc
-	//   formatNumeric,
+	formatRegisterDoc,
+	formatNumeric
 } from '../formatting';
 import { MarkupContent } from 'vscode-languageserver';
 import { RegisterName } from '../syntax';
@@ -51,12 +51,8 @@ export default class HoverProvider implements Provider {
 					return this.hoverSetPC(node as nodes.SetPC, getRange(node));
 				//       case "symbol":
 				//         return this.hoverSymbol(node, processed.document, position);
-				//       case "string_literal":
-				//       case "decimal_literal":
-				//       case "hexadecimal_literal":
-				//       case "octal_literal":
-				//       case "binary_literal":
-				//         return this.hoverNumber(node);
+				case nodes.NodeType.Literal:
+					return this.hoverNumber(node as nodes.Literal, getRange(node));
 				case nodes.NodeType.Register:
 					return this.hoverRegister(node as nodes.Register, getRange(node));
 			}
@@ -145,15 +141,15 @@ export default class HoverProvider implements Provider {
 	//     }
 	//   }
 
-	//   private async hoverNumber(node: SyntaxNode) {
-	//     return {
-	//       range: nodeAsRange(node),
-	//       contents: {
-	//         kind: lsp.MarkupKind.Markdown,
-	//         value: formatNumeric(node.text),
-	//       },
-	//     };
-	//   }
+	private async hoverNumber(node: nodes.Literal, range: lsp.Range) {
+		return {
+			range,
+			contents: {
+				kind: lsp.MarkupKind.Markdown,
+				value: typeof node.value === 'number' ? formatNumeric(node.value) : `XXX ${node.value}`
+			}
+		};
+	}
 
 	private async hoverRegister(node: nodes.Register, range: lsp.Range) {
 		const docs = lookupRegisterDoc(node.value);

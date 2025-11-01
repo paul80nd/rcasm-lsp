@@ -6,7 +6,6 @@ import {
 	MnemonicDoc,
 	RegisterDoc
 } from './docs';
-import { RegisterName } from './syntax';
 // import { AddressingMode } from "./syntax";
 
 // export function formatDeclaration(definitionLine: string) {
@@ -16,17 +15,13 @@ import { RegisterName } from './syntax';
 //     .trimEnd();
 // }
 
-// export function formatNumeric(text: string): string {
-//   const value = Number(
-//     text.replace("$", "0x").replace("%", "0b").replace("@", "0o")
-//   );
-//   const hex = value.toString(16);
-//   const oct = value.toString(8);
-//   const bin = value.toString(2);
-//   const ascii = asciiValue(value);
+export function formatNumeric(value: number): string {
+	const hex = value.toString(16);
+	const bin = value.toString(2);
+	//const ascii = asciiValue(value);
 
-//   return `${value} | $${hex} | %${bin} | @${oct} | "${ascii}"`;
-// }
+	return `${value} | 0x${hex} | ${bin}b`; //| "${ascii}"`;
+}
 
 // export function asciiValue(num: number) {
 //   const bytes = [

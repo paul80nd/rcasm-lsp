@@ -14,8 +14,8 @@ export enum NodeType {
 	// 	Expr,
 	Directive,
 	// 	Fill,
-	Scope
-	// 	Expression
+	Scope,
+	Expression
 }
 
 // export enum ReferenceType {
@@ -281,8 +281,8 @@ export class Instruction extends Node {
 					return this.adoptChild(new Register(p)) as Operand;
 				// 				case 'qualified-ident':
 				// 					return this.adoptChild(new LabelRef(p));
-				//default:
-				//	return this.adoptChild(new Expression(p));
+				default:
+					return this.adoptChild(new Expression(p)) as Operand;
 			}
 		};
 		this.mnemonic = si.mnemonic.toLowerCase();
@@ -313,9 +313,25 @@ export class Literal extends Node {
 	}
 }
 
-// export class Expression extends Node {
-// 	constructor(e: rcasm.Expr) { super(e, NodeType.Expression); }
-// }
+export class Expression extends Node {
+	constructor(e: rcasm.Expr) {
+		super(e, NodeType.Expression);
+		switch (e.type) {
+			case 'literal':
+				this.adoptChild(new Literal(e));
+				break;
+			case 'register':
+				this.adoptChild(new Register(e));
+				break;
+			case 'binary':
+				this.adoptChild(new Expression(e.left));
+				this.adoptChild(new Expression(e.right));
+				break;
+			// 				case 'qualified-ident':
+			// 					return this.adoptChild(new LabelRef(p));
+		}
+	}
+}
 
 export class Register extends Node {
 	public value: string;
