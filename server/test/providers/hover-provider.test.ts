@@ -44,7 +44,7 @@ describe('HoverProvider', () => {
 		private constructor(
 			private value: string,
 			private position: lsp.Position
-		) { }
+		) {}
 
 		private async doHover(): Promise<lsp.Hover | undefined> {
 			const textDocument = await createDoc('example.s', this.value);
@@ -62,6 +62,11 @@ describe('HoverProvider', () => {
 		}
 	}
 
+	const between = (startChar: number, endChar: number): lsp.Range => ({
+		start: { line: 0, character: startChar },
+		end: { line: 0, character: endChar }
+	});
+
 	describe('#register()', () => {
 		it('regsiters', () => {
 			const conn = { onHover: jest.fn() };
@@ -75,7 +80,7 @@ describe('HoverProvider', () => {
 		describe('mnemonic hovers', () => {
 			it('provides hover for instructions', async () =>
 				await hoverFor('label: m|ov a,b ; test').is({
-					range: range(0, 7, 0, 15),
+					range: between(7, 15),
 					contents: {
 						kind: 'markdown',
 						value: expect.stringMatching(/8-bit Register to Register Copy/)
@@ -94,153 +99,108 @@ describe('HoverProvider', () => {
 			it('provides hover for positions within instruction', async () => {
 				const contents = { kind: 'markdown', value: expect.stringMatching(/Arithmetic Add/) };
 				await hoverFor('| add').isUndefined();
-				await hoverFor('|add').is({ range: range(0, 0, 0, 3), contents });
-				await hoverFor('a|dd').is({ range: range(0, 0, 0, 3), contents });
-				await hoverFor('add|').is({ range: range(0, 0, 0, 3), contents });
+				await hoverFor('|add').is({ range: between(0, 3), contents });
+				await hoverFor('a|dd').is({ range: between(0, 3), contents });
+				await hoverFor('add|').is({ range: between(0, 3), contents });
 				await hoverForAt('add \n add', 1, 2).is({ range: range(1, 1, 1, 4), contents });
 			});
 
 			it('provides basic hover for org', async () =>
 				await hoverFor('label: o|rg 0xfedc ; test').is({
-					range: range(0, 7, 0, 18),
-					contents: {
-						kind: 'plaintext',
-						value: '(instruction) org'
-					}
+					range: between(7, 18),
+					contents: { kind: 'plaintext', value: '(instruction) org' }
 				}));
 		});
 
 		describe('directive hovers', () => {
 			it('provides hover for !data', async () => {
 				await hoverFor('!by|te 0x01, 0x02').is({
-					range: range(0, 0, 0, 16),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define Byte Data/)
-					}
+					range: between(0, 16),
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define Byte Data/) }
 				});
 				await hoverFor('!wor|d 0x01, 0x02').is({
-					range: range(0, 0, 0, 16),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define Word Data/)
-					}
+					range: between(0, 16),
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define Word Data/) }
 				});
 			});
 
 			it('provides hover for !fill', async () =>
 				await hoverFor('!fi|ll 8, 0x01').is({
-					range: range(0, 0, 0, 13),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define Fill Space/)
-					}
+					range: between(0, 13),
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define Fill Space/) }
 				}));
 
 			it('provides hover for !align', async () =>
 				await hoverFor('!a|lign 8').is({
-					range: range(0, 0, 0, 8),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define Align/)
-					}
+					range: between(0, 8),
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define Align/) }
 				}));
 
 			it('provides hover for !for', async () =>
 				await hoverFor('!fo|r i in range(0,2) {\n add\n}').is({
 					range: range(0, 0, 2, 1),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define For Loop/)
-					}
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define For Loop/) }
 				}));
 
 			it('provides hover for !for within block', async () =>
 				await hoverForAt('!for i in range(0,2) {\n add\n}', 1, 0).is({
 					range: range(0, 0, 2, 1),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define For Loop/)
-					}
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define For Loop/) }
 				}));
 
 			it('mnemonic hover overrides outer !for block', async () =>
 				await hoverForAt('!for i in range(0,2) {\n add\n}', 1, 2).is({
 					range: range(1, 1, 1, 4),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Arithmetic Add/)
-					}
+					contents: { kind: 'markdown', value: expect.stringMatching(/Arithmetic Add/) }
 				}));
 
 			it('provides hover for !if', async () =>
 				await hoverFor('!i|f (0==1) {\n add\n} else {\n inc\n}').is({
 					range: range(0, 0, 4, 1),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define Conditional Block/)
-					}
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define Conditional Block/) }
 				}));
 
 			it('provides hover for !if within if block', async () =>
 				await hoverForAt('!if (0==1) {\n add\n} else {\n inc\n}', 1, 0).is({
 					range: range(0, 0, 4, 1),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define Conditional Block/)
-					}
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define Conditional Block/) }
 				}));
 
 			it('mnemonic hover overrides outer !if block', async () =>
 				await hoverForAt('!if (0==1) {\n add\n} else {\n inc\n}', 1, 2).is({
 					range: range(1, 1, 1, 4),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Arithmetic Add/)
-					}
+					contents: { kind: 'markdown', value: expect.stringMatching(/Arithmetic Add/) }
 				}));
 
 			it('provides hover for !if within else block', async () =>
 				await hoverForAt('!if (0==1) {\n add\n} else {\n inc\n}', 3, 0).is({
 					range: range(0, 0, 4, 1),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define Conditional Block/)
-					}
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define Conditional Block/) }
 				}));
 
 			it('mnemonic hover overrides outer !if block', async () =>
 				await hoverForAt('!if (0==1) {\n add\n} else {\n inc\n}', 3, 2).is({
 					range: range(3, 1, 3, 4),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Arithmetic Increment/)
-					}
+					contents: { kind: 'markdown', value: expect.stringMatching(/Arithmetic Increment/) }
 				}));
 
 			it('provides hover for !let', async () =>
 				await hoverFor('!l|et a=5').is({
-					range: range(0, 0, 0, 8),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Define Variable/)
-					}
+					range: between(0, 8),
+					contents: { kind: 'markdown', value: expect.stringMatching(/Define Variable/) }
 				}));
 
 			it('provides hover for !error', async () =>
 				await hoverFor('!e|rror "broken"').is({
-					range: range(0, 0, 0, 15),
-					contents: {
-						kind: 'markdown',
-						value: expect.stringMatching(/Throw Assembly Error/)
-					}
+					range: between(0, 15),
+					contents: { kind: 'markdown', value: expect.stringMatching(/Throw Assembly Error/) }
 				}));
 		});
 
 		describe('register hovers', () => {
 			it('provides hover for register', async () =>
 				await hoverFor('label: mov a|,b ; test').is({
-					range: range(0, 11, 0, 12),
+					range: between(11, 12),
 					contents: { kind: 'markdown', value: expect.stringMatching(/A Register/) }
 				}));
 
@@ -253,41 +213,41 @@ describe('HoverProvider', () => {
 			it('provides hover for positions within register', async () => {
 				const mContents = { kind: 'markdown', value: expect.stringMatching(/M Register/) };
 				const xyContents = { kind: 'markdown', value: expect.stringMatching(/XY Register/) };
-				await hoverFor('mov |xy,m').is({ range: range(0, 4, 0, 6), contents: xyContents });
-				await hoverFor('mov x|y,m').is({ range: range(0, 4, 0, 6), contents: xyContents });
-				await hoverFor('mov xy|,m').is({ range: range(0, 4, 0, 6), contents: xyContents });
-				await hoverFor('mov xy,|m').is({ range: range(0, 7, 0, 8), contents: mContents });
-				await hoverFor('mov xy,m|').is({ range: range(0, 7, 0, 8), contents: mContents });
+				await hoverFor('mov |xy,m').is({ range: between(4, 6), contents: xyContents });
+				await hoverFor('mov x|y,m').is({ range: between(4, 6), contents: xyContents });
+				await hoverFor('mov xy|,m').is({ range: between(4, 6), contents: xyContents });
+				await hoverFor('mov xy,|m').is({ range: between(7, 8), contents: mContents });
+				await hoverFor('mov xy,m|').is({ range: between(7, 8), contents: mContents });
 			});
 		});
 
 		describe('literal hovers', () => {
 			it('provides hover for literals on instruction params', async () => {
 				await hoverFor('ldi m,|5').is({
-					range: range(0, 6, 0, 7),
+					range: between(6, 7),
 					contents: { kind: 'markdown', value: '5 | 0x5 | 101b' }
 				});
 				await hoverFor('ldi m,0xf|e').is({
-					range: range(0, 6, 0, 10),
+					range: between(6, 10),
 					contents: { kind: 'markdown', value: '254 | 0xfe | 11111110b' }
 				});
 				await hoverFor('ldi m,0110110|0b').is({
-					range: range(0, 6, 0, 15),
+					range: between(6, 15),
 					contents: { kind: 'markdown', value: '108 | 0x6c | 1101100b' }
 				});
 			});
 
 			it('provides hover for literals within expressions', async () => {
 				await hoverFor('ldi m,(2|+4)/6').is({
-					range: range(0, 7, 0, 8),
+					range: between(7, 8),
 					contents: { kind: 'markdown', value: '2 | 0x2 | 10b' }
 				});
 				await hoverFor('ldi m,(2+4|)/6').is({
-					range: range(0, 9, 0, 10),
+					range: between(9, 10),
 					contents: { kind: 'markdown', value: '4 | 0x4 | 100b' }
 				});
 				await hoverFor('ldi m,(2+4)/|6').is({
-					range: range(0, 12, 0, 13),
+					range: between(12, 13),
 					contents: { kind: 'markdown', value: '6 | 0x6 | 110b' }
 				});
 			});
@@ -295,18 +255,30 @@ describe('HoverProvider', () => {
 			it('provdes hover for literals within data directives', async () => {
 				const line = `!byte 0x39, 123, "ABC"`;
 				await hoverForAt(line, 0, 7).is({
-					range: range(0, 6, 0, 10),
+					range: between(6, 10),
 					contents: { kind: 'markdown', value: '57 | 0x39 | 111001b' }
 				});
 				await hoverForAt(line, 0, 14).is({
-					range: range(0, 12, 0, 15),
+					range: between(12, 15),
 					contents: { kind: 'markdown', value: '123 | 0x7b | 1111011b' }
 				});
 				await hoverForAt(line, 0, 27).is({
-					range: range(0, 17, 0, 22),
+					range: between(17, 22),
 					contents: { kind: 'markdown', value: 'ABC' }
 				});
 			});
+
+			it('provides hover for literals within fill directives', async () =>
+				await hoverFor('!fill 9,0|xaa').is({
+					range: between(8, 12),
+					contents: { kind: 'markdown', value: '170 | 0xaa | 10101010b' }
+				}));
+
+			it('provides hover for literals within align directives', async () =>
+				await hoverFor('!align 20|-4').is({
+					range: between(7, 9),
+					contents: { kind: 'markdown', value: '20 | 0x14 | 10100b' }
+				}));
 		});
 		//     it("provide hover  for symbol reference", async () => {
 		//       const textDocument = await createDoc(

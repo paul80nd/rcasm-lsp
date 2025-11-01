@@ -228,11 +228,14 @@ export class DataDirective extends Directive {
 export class FillDirective extends Directive {
 	constructor(d: rcasm.StmtFill) {
 		super(d, '!fill');
+		this.adoptChild(new Expression(d.numBytes));
+		this.adoptChild(new Expression(d.fillValue));
 	}
 }
 export class AlignDirective extends Directive {
 	constructor(d: rcasm.StmtAlign) {
 		super(d, '!align');
+		this.adoptChild(new Expression(d.alignBytes));
 	}
 }
 export class LetDirective extends Directive {
