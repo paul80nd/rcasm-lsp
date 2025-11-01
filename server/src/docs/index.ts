@@ -1,5 +1,6 @@
 import instructionsJson from './instructions.json';
 import directivesJson from './directives.json';
+import registersJson from './registers.json';
 import { AddressingMode, RegisterName } from '../syntax';
 import { integer } from 'vscode-languageserver';
 
@@ -67,15 +68,20 @@ export const mnemonicDocs = {
 	...directiveDocs
 };
 
+export interface RegisterDoc {
+	title: string;
+	summary: string;
+	size: number;
+	canRead: boolean;
+	canWrite: boolean;
+	description: string;
+}
+
+export const registerDocs = registersJson as Record<RegisterName, RegisterDoc>;
+
 // export const addressingModeDocs: Record<AddressingMode, string> = {
 //   dr: "Dr",
 //   ar: "Ar",
 //   mIndirect: "(m)",
 //   imm: "imm",
 // };
-
-export const registerDocs: Record<RegisterName, string> = {
-	pc: 'Program Counter',
-	as: 'Address Switches',
-	ds: 'Data Switches'
-};

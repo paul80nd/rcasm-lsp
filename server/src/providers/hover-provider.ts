@@ -4,7 +4,7 @@ import { Provider } from '.';
 // import { nodeAsRange, positionToPoint } from "../geometry";
 // import { resolveInclude } from "../files";
 // import { DefinitionType, getDefinitions, processPath } from "../symbols";
-import { mnemonicDocs /*, registerDocs, sizeDocs*/ } from '../docs/index';
+import { mnemonicDocs, registerDocs } from '../docs/index';
 // import { RegisterName, Size } from "../syntax";
 import { Context } from '../context';
 import * as nodes from '../parser/nodes';
@@ -50,34 +50,16 @@ export default class HoverProvider implements Provider {
 				//       case "symbol":
 				//         return this.hoverSymbol(node, processed.document, position);
 				//       case "string_literal":
-				//         if (node.parent?.type === "path") {
-				//           return this.hoverPath(node.parent, textDocument.uri);
-				//         }
-				//         break;
 				//       case "decimal_literal":
 				//       case "hexadecimal_literal":
 				//       case "octal_literal":
 				//       case "binary_literal":
 				//         return this.hoverNumber(node);
-				//       case "named_register":
-				//         return this.hoverRegister(node);
+				case nodes.NodeType.Register:
+					return this.hoverRegister(node as nodes.Register, getRange(node));
 			}
 		}
 	}
-
-	// if (node instanceof nodes.SetPC) {
-	// 			const entry = this.rcasmDataManager.getMnemonic('org');
-	// 			if (entry) {
-	// 				const paramNames = [node.pcExpr.getText()];
-	// 				const contents = languageFacts.getEntrySpecificDescription(entry, paramNames, this.doesSupportMarkdown());
-	// 				if (contents) {
-	// 					hover = { contents, range: getRange(node) };
-	// 				} else {
-	// 					hover = null;
-	// 				}
-	// 			}
-	// 			break;
-	// 		}
 
 	register(connection: lsp.Connection) {
 		connection.onHover(this.onHover.bind(this));
@@ -161,19 +143,6 @@ export default class HoverProvider implements Provider {
 	//     }
 	//   }
 
-	//   private async hoverPath(node: SyntaxNode, uri: string) {
-	//     const path = processPath(node.text);
-	//     const resolved = await resolveInclude(uri, path, this.ctx);
-
-	//     return {
-	//       range: nodeAsRange(node),
-	//       contents: {
-	//         kind: lsp.MarkupKind.Markdown,
-	//         value: resolved || path,
-	//       },
-	//     };
-	//   }
-
 	//   private async hoverNumber(node: SyntaxNode) {
 	//     return {
 	//       range: nodeAsRange(node),
@@ -184,18 +153,18 @@ export default class HoverProvider implements Provider {
 	//     };
 	//   }
 
-	//   private async hoverRegister(node: SyntaxNode) {
-	//     const doc = registerDocs[<RegisterName>node.text.toLowerCase()];
-	//     if (doc) {
-	//       return {
-	//         range: nodeAsRange(node),
-	//         contents: {
-	//           kind: lsp.MarkupKind.Markdown,
-	//           value: registerDocs[<RegisterName>node.text.toLowerCase()],
-	//         },
-	//       };
-	//     }
-	//   }
+	private async hoverRegister(node: nodes.Register, range: lsp.Range) {
+		// const doc = registerDocs[node.value];
+		// if (doc) {
+		return {
+			range,
+			contents: {
+				kind: lsp.MarkupKind.Markdown,
+				value: node.value.toLowerCase()
+			}
+		};
+		// }
+	}
 }
 
 function lookupMnemonicDoc(mnemonic: string): MarkupContent | undefined {

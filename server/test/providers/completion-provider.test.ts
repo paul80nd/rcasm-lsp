@@ -203,55 +203,67 @@ describe('CompletionProvider', () => {
 		describe('operands', () => {
 			it('completes <dst:Dr> register operands', async () =>
 				await completionFor('clr |').is([
-					{ label: 'a', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'b', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'c', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'd', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'm1', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'm2', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'x', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'y', detail: '(register)', kind: lsp.CompletionItemKind.Keyword }
+					{ label: 'a' },
+					{ label: 'b' },
+					{ label: 'c' },
+					{ label: 'd' },
+					{ label: 'm1' },
+					{ label: 'm2' },
+					{ label: 'x' },
+					{ label: 'y' }
 				]));
 
 			it('completes <src:Dr> register operands', async () =>
 				await completionFor('  mov a,|').is([
-					{ label: 'a', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'b', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'c', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'd', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'm1', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'm2', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'x', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'y', detail: '(register)', kind: lsp.CompletionItemKind.Keyword }
+					{ label: 'a' },
+					{ label: 'b' },
+					{ label: 'c' },
+					{ label: 'd' },
+					{ label: 'm1' },
+					{ label: 'm2' },
+					{ label: 'x' },
+					{ label: 'y' }
 				]));
 
 			it('completes <dst:a-d> register operands', async () =>
 				await completionFor('  ldr |').is([
-					{ label: 'a', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'b', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'c', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'd', detail: '(register)', kind: lsp.CompletionItemKind.Keyword }
+					{ label: 'a' },
+					{ label: 'b' },
+					{ label: 'c' },
+					{ label: 'd' }
 				]));
 
 			it('completes <src:a-d> register operands', async () =>
 				await completionFor('str |').is([
-					{ label: 'a', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'b', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'c', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'd', detail: '(register)', kind: lsp.CompletionItemKind.Keyword }
+					{ label: 'a' },
+					{ label: 'b' },
+					{ label: 'c' },
+					{ label: 'd' }
 				]));
 
 			it('completes <dst:a|b> register operands', async () =>
-				await completionFor('ldi |').is([
-					{ label: 'a', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'b', detail: '(register)', kind: lsp.CompletionItemKind.Keyword }
-				]));
+				await completionFor('ldi |').is([{ label: 'a' }, { label: 'b' }]));
 
 			it('completes <dst:a|d> register operands', async () =>
-				await completionFor('lds |').is([
-					{ label: 'a', detail: '(register)', kind: lsp.CompletionItemKind.Keyword },
-					{ label: 'd', detail: '(register)', kind: lsp.CompletionItemKind.Keyword }
-				]));
+				await completionFor('lds |').is([{ label: 'a' }, { label: 'd' }]));
+
+			test('register completion includes label description', async () => {
+				await completionFor('lds |').includes([
+					{ label: 'a', labelDetails: { description: 'A Register' } }
+				]);
+				await completionFor(' mov a,|').includes([
+					{ label: 'x', labelDetails: { description: 'X Register' } }
+				]);
+			});
+
+			test('register completion includes kind', async () => {
+				await completionFor('ldr |').includes([
+					{ label: 'b', kind: lsp.CompletionItemKind.Keyword }
+				]);
+				await completionFor('clr |').includes([
+					{ label: 'c', kind: lsp.CompletionItemKind.Keyword }
+				]);
+			});
 
 			it('has no completions (currently) for <label>', async () =>
 				await completionFor('blt |').is([]));

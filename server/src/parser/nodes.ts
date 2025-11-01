@@ -8,8 +8,8 @@ export enum NodeType {
 	// 	Label,
 	// 	LabelRef,
 	Instruction,
-	// Literal,
-	// 	Register,
+	Literal,
+	Register,
 	SetPC,
 	// 	Expr,
 	Directive,
@@ -268,30 +268,34 @@ export class IfDirective extends Directive {
 
 export class Instruction extends Node {
 	public mnemonic: string;
-	// 	public p1?: Operand;
-	// 	public p2?: Operand;
+	public p1?: Operand;
+	public p2?: Operand;
 
 	constructor(si: rcasm.StmtInsn) {
 		super(si, NodeType.Instruction);
-		// 		const addParam = (p: rcasm.Expr): Node | undefined => {
-		// 			switch (p.type) {
-		// 				case 'literal':
-		// 					return this.adoptChild(new Literal(p));
-		// 				case 'register':
-		// 					return this.adoptChild(new Register(p));
-		// 				case 'qualified-ident':
-		// 					return this.adoptChild(new LabelRef(p));
-		// 				default:
-		// 					return this.adoptChild(new Expression(p));
-		// 			}
-		// 		};
+		const addParam = (p: rcasm.Expr): Operand | undefined => {
+			switch (p.type) {
+				case 'literal':
+					return this.adoptChild(new Literal(p)) as Operand;
+				case 'register':
+					return this.adoptChild(new Register(p)) as Operand;
+				// 				case 'qualified-ident':
+				// 					return this.adoptChild(new LabelRef(p));
+				//default:
+				//	return this.adoptChild(new Expression(p));
+			}
+		};
 		this.mnemonic = si.mnemonic.toLowerCase();
-		// 		if (si.p1) { this.p1 = addParam(si.p1); }
-		// 		if (si.p2) { this.p2 = addParam(si.p2); }
+		if (si.p1) {
+			this.p1 = addParam(si.p1);
+		}
+		if (si.p2) {
+			this.p2 = addParam(si.p2);
+		}
 	}
 }
 
-// export type Operand = LabelRef | Literal | Register;
+export type Operand = /*LabelRef |*/ Literal | Register;
 
 // export class LabelRef extends Node {
 // 	constructor(sqi: rcasm.ScopeQualifiedIdent) {
@@ -300,29 +304,27 @@ export class Instruction extends Node {
 // 	}
 // }
 
-// export class Literal extends Node {
+export class Literal extends Node {
+	public value: number | string;
 
-// 	public value: number | string;
-
-// 	constructor(l: rcasm.Literal) {
-// 		super(l, NodeType.Literal);
-// 		this.value = l.lit;
-// 	}
-// }
+	constructor(l: rcasm.Literal) {
+		super(l, NodeType.Literal);
+		this.value = l.lit;
+	}
+}
 
 // export class Expression extends Node {
 // 	constructor(e: rcasm.Expr) { super(e, NodeType.Expression); }
 // }
 
-// export class Register extends Node {
+export class Register extends Node {
+	public value: string;
 
-// 	public value: string;
-
-// 	constructor(r: rcasm.Register) {
-// 		super(r, NodeType.Register);
-// 		this.value = r.value.toUpperCase();
-// 	}
-// }
+	constructor(r: rcasm.Register) {
+		super(r, NodeType.Register);
+		this.value = r.value.toUpperCase();
+	}
+}
 
 // export interface IVisitor {
 // 	visitNode: (node: Node) => boolean;

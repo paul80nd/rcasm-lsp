@@ -1,22 +1,16 @@
 import * as lsp from 'vscode-languageserver';
 
 import { Provider } from '.';
-import * as syntax from '../syntax';
 import { directiveDocs, instructionDocs, mnemonicDocs, registerDocs } from '../docs/index';
 import { Definition, DefinitionType } from '../symbols';
 import { Context } from '../context';
 import { Component, componentAtIndex, ComponentType, parseLine, parseSignature } from '../parse';
 import { formatMnemonicDoc } from '../formatting';
+import { RegisterName } from '../syntax';
 //import { ProcessedDocument } from "../document-processor";
 
 export default class CompletionProvider implements Provider {
-	constructor(protected readonly ctx: Context) {
-		this.namedRegs = syntax.registerNames.map(label => ({
-			label,
-			detail: registerDocs[label],
-			kind: lsp.CompletionItemKind.Keyword
-		}));
-	}
+	constructor(protected readonly ctx: Context) {}
 
 	async onCompletion({
 		position,
@@ -76,14 +70,14 @@ export default class CompletionProvider implements Provider {
 					// 	const symbols = await this.completeAllDefinitions(processed,position);
 					case '<src:Dr>':
 					case '<dst:Dr>':
-						return this.ucItems(this.dataRegs, isUpperCase);
+						return this.completeRegisters(isUpperCase, this.dataRegs);
 					case '<dst:a|b>':
-						return this.ucItems([this.aReg, this.bReg], isUpperCase);
+						return this.completeRegisters(isUpperCase, ['a', 'b']);
 					case '<dst:a|d>':
-						return this.ucItems([this.aReg, this.dReg], isUpperCase);
+						return this.completeRegisters(isUpperCase, ['a', 'd']);
 					case '<src:a-d>':
 					case '<dst:a-d>':
-						return this.ucItems(this.abcdRegs, isUpperCase);
+						return this.completeRegisters(isUpperCase, this.abcdRegs);
 					case '<message>':
 						return [];
 					default:
@@ -206,10 +200,7 @@ export default class CompletionProvider implements Provider {
 		// position: lsp.Position
 	) {
 		//const symbols = await this.completeAllDefinitions(/*processed, position*/);
-		const registers = this.ucItems(
-			[...this.dataRegs, ...this.addrRegs, ...this.namedRegs],
-			isUpperCase
-		);
+		const registers = await this.completeRegisters(isUpperCase);
 		return [/*...symbols, */ ...registers];
 	}
 
@@ -225,6 +216,26 @@ export default class CompletionProvider implements Provider {
 	// 	return [...globals, ...locals];
 	// }
 
+	async completeRegisters(
+		isUpperCase: boolean,
+		registers?: RegisterName[]
+	): Promise<lsp.CompletionItem[]> {
+		const selectedRegisters = registers
+			? registers.map(r => registerDocs[r])
+			: Object.values(registerDocs);
+		return selectedRegisters.map(
+			doc =>
+				({
+					label: isUpperCase ? doc.title.toUpperCase() : doc.title.toLowerCase(),
+					labelDetails: {
+						description: doc.summary
+					},
+					kind: lsp.CompletionItemKind.Keyword,
+					data: true
+				}) as lsp.CompletionItem
+		);
+	}
+
 	register(connection: lsp.Connection): lsp.ServerCapabilities {
 		connection.onCompletion(this.onCompletion.bind(this));
 		connection.onCompletionResolve(this.onCompletionResolve.bind(this));
@@ -236,31 +247,9 @@ export default class CompletionProvider implements Provider {
 		};
 	}
 
-	private createReg = (label: string) =>
-		({
-			label,
-			detail: '(register)',
-			kind: lsp.CompletionItemKind.Keyword
-		}) as lsp.CompletionItem;
-
-	private aReg: lsp.CompletionItem = this.createReg('a');
-	private bReg: lsp.CompletionItem = this.createReg('b');
-	private cReg: lsp.CompletionItem = this.createReg('c');
-	private dReg: lsp.CompletionItem = this.createReg('d');
-	private abcdRegs: lsp.CompletionItem[] = [this.aReg, this.bReg, this.cReg, this.dReg];
-	private dataRegs: lsp.CompletionItem[] = [
-		...this.abcdRegs,
-		this.createReg('m1'),
-		this.createReg('m2'),
-		this.createReg('x'),
-		this.createReg('y')
-	];
-	private addrRegs: lsp.CompletionItem[] = [
-		this.createReg('m'),
-		this.createReg('xy'),
-		this.createReg('j')
-	];
-	private namedRegs: lsp.CompletionItem[];
+	private abcdRegs: RegisterName[] = ['a', 'b', 'c', 'd'];
+	private dataRegs: RegisterName[] = [...this.abcdRegs, 'm1', 'm2', 'x', 'y'];
+	private addrRegs: RegisterName[] = ['m', 'xy', 'j'];
 }
 
 // function enumValues(values: string[]): lsp.CompletionItem[] {
