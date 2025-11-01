@@ -170,12 +170,12 @@ class Line extends Node {
 				case 'if':
 					this.adoptChild(new IfDirective(l.stmt));
 					break;
-				// 				case 'let':
-				// 					this.adoptChild(new LetDirective(l.stmt));
-				// 					break;
-				// 				case 'error':
-				// 					this.adoptChild(new ErrorDirective(l.stmt));
-				// 					break;
+				case 'let':
+					this.adoptChild(new LetDirective(l.stmt));
+					break;
+				case 'error':
+					this.adoptChild(new ErrorDirective(l.stmt));
+					break;
 			}
 		}
 	}
@@ -233,8 +233,16 @@ export class AlignDirective extends Directive {
 		super(d, '!align');
 	}
 }
-// export class LetDirective extends Node { constructor(d: rcasm.StmtLet) { super(d, NodeType.Directive); } }
-// export class ErrorDirective extends Node { constructor(d: rcasm.StmtError) { super(d, NodeType.Directive); } }
+export class LetDirective extends Directive {
+	constructor(d: rcasm.StmtLet) {
+		super(d, '!let');
+	}
+}
+export class ErrorDirective extends Directive {
+	constructor(d: rcasm.StmtError) {
+		super(d, '!error');
+	}
+}
 
 export class ForDirective extends Directive {
 	constructor(ss: rcasm.StmtFor) {

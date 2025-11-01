@@ -47,8 +47,6 @@ export default class HoverProvider implements Provider {
 					return this.hoverDirectiveMnemonic(node as nodes.Directive, getRange(node));
 				//       case "symbol":
 				//         return this.hoverSymbol(node, processed.document, position);
-				//       case "path":
-				//         return this.hoverPath(node, textDocument.uri);
 				//       case "string_literal":
 				//         if (node.parent?.type === "path") {
 				//           return this.hoverPath(node.parent, textDocument.uri);
@@ -79,7 +77,7 @@ export default class HoverProvider implements Provider {
 	// 			break;
 	// 		}
 
-	// 		if (node instanceof nodes.ForDirective || node instanceof nodes.IfDirective || node instanceof nodes.LetDirective || node instanceof nodes.ErrorDirective) {
+	// 		if (node instanceof nodes.LetDirective || node instanceof nodes.ErrorDirective) {
 	// 			// Only respond if on first line of node (node includes the for directive and the body)
 	// 			const range = getRange(node);
 	// 			if (position.line !== range.start.line) {

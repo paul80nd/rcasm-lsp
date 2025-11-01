@@ -213,6 +213,24 @@ describe('HoverProvider', () => {
 						value: expect.stringMatching(/Arithmetic Increment/)
 					}
 				}));
+
+			it('provides hover info for !let', async () =>
+				await hoverFor('!l|et a=5').is({
+					range: range(0, 0, 0, 8),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Define Variable/)
+					}
+				}));
+
+			it('provides hover info for !error', async () =>
+				await hoverFor('!e|rror "broken"').is({
+					range: range(0, 0, 0, 15),
+					contents: {
+						kind: 'markdown',
+						value: expect.stringMatching(/Throw Assembly Error/)
+					}
+				}));
 		});
 
 		//     it("provide hover info for symbol reference", async () => {
