@@ -146,7 +146,7 @@ export default class HoverProvider implements Provider {
 			range,
 			contents: {
 				kind: lsp.MarkupKind.Markdown,
-				value: typeof node.value === 'number' ? formatNumeric(node.value) : `XXX ${node.value}`
+				value: typeof node.value === 'number' ? formatNumeric(node.value) : node.value
 			}
 		};
 	}

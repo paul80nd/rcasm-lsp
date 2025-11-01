@@ -44,7 +44,7 @@ describe('HoverProvider', () => {
 		private constructor(
 			private value: string,
 			private position: lsp.Position
-		) {}
+		) { }
 
 		private async doHover(): Promise<lsp.Hover | undefined> {
 			const textDocument = await createDoc('example.s', this.value);
@@ -289,6 +289,22 @@ describe('HoverProvider', () => {
 				await hoverFor('ldi m,(2+4)/|6').is({
 					range: range(0, 12, 0, 13),
 					contents: { kind: 'markdown', value: '6 | 0x6 | 110b' }
+				});
+			});
+
+			it('provdes hover for literals within data directives', async () => {
+				const line = `!byte 0x39, 123, "ABC"`;
+				await hoverForAt(line, 0, 7).is({
+					range: range(0, 6, 0, 10),
+					contents: { kind: 'markdown', value: '57 | 0x39 | 111001b' }
+				});
+				await hoverForAt(line, 0, 14).is({
+					range: range(0, 12, 0, 15),
+					contents: { kind: 'markdown', value: '123 | 0x7b | 1111011b' }
+				});
+				await hoverForAt(line, 0, 27).is({
+					range: range(0, 17, 0, 22),
+					contents: { kind: 'markdown', value: 'ABC' }
 				});
 			});
 		});

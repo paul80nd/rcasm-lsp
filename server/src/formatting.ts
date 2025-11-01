@@ -18,29 +18,9 @@ import {
 export function formatNumeric(value: number): string {
 	const hex = value.toString(16);
 	const bin = value.toString(2);
-	//const ascii = asciiValue(value);
 
 	return `${value} | 0x${hex} | ${bin}b`; //| "${ascii}"`;
 }
-
-// export function asciiValue(num: number) {
-//   const bytes = [
-//     (num & 0xff000000) >> 24,
-//     (num & 0x00ff0000) >> 16,
-//     (num & 0x0000ff00) >> 8,
-//     num & 0x000000ff,
-//   ];
-//   const firstByte = bytes.findIndex((b) => b > 0);
-
-//   return bytes
-//     .slice(firstByte)
-//     .map((byte) =>
-//       byte < 32 || (byte > 127 && byte < 161) || byte > 255
-//         ? "."
-//         : String.fromCharCode(byte)
-//     )
-//     .join("");
-// }
 
 export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 	let value = ``;

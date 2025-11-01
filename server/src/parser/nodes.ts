@@ -220,6 +220,9 @@ export class Directive extends Node {
 export class DataDirective extends Directive {
 	constructor(d: rcasm.StmtData) {
 		super(d, d.dataSize === rcasm.DataSize.Byte ? '!byte' : '!word');
+		d.values.forEach(v => {
+			this.adoptChild(new Expression(v));
+		});
 	}
 }
 export class FillDirective extends Directive {
