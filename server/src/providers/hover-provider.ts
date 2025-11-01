@@ -10,10 +10,12 @@ import { Context } from '../context';
 import * as nodes from '../parser/nodes';
 import {
 	//   formatDeclaration,
-	formatMnemonicDoc
+	formatMnemonicDoc,
+	formatRegisterDoc
 	//   formatNumeric,
 } from '../formatting';
 import { MarkupContent } from 'vscode-languageserver';
+import { RegisterName } from '../syntax';
 
 export default class HoverProvider implements Provider {
 	constructor(protected readonly ctx: Context) {}
@@ -154,16 +156,14 @@ export default class HoverProvider implements Provider {
 	//   }
 
 	private async hoverRegister(node: nodes.Register, range: lsp.Range) {
-		// const doc = registerDocs[node.value];
-		// if (doc) {
+		const docs = lookupRegisterDoc(node.value);
 		return {
 			range,
-			contents: {
-				kind: lsp.MarkupKind.Markdown,
-				value: node.value.toLowerCase()
+			contents: docs || {
+				kind: lsp.MarkupKind.PlainText,
+				value: '(register) ' + node.value
 			}
 		};
-		// }
 	}
 }
 
@@ -171,5 +171,12 @@ function lookupMnemonicDoc(mnemonic: string): MarkupContent | undefined {
 	mnemonic = mnemonic.toLowerCase();
 	if (mnemonicDocs[mnemonic]) {
 		return formatMnemonicDoc(mnemonicDocs[mnemonic]);
+	}
+}
+
+function lookupRegisterDoc(reg: string): MarkupContent | undefined {
+	const register = reg.toLowerCase() as RegisterName;
+	if (registerDocs[register]) {
+		return formatRegisterDoc(registerDocs[register]);
 	}
 }

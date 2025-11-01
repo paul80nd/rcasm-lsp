@@ -64,9 +64,7 @@ describe('HoverProvider', () => {
 
 	describe('#register()', () => {
 		it('regsiters', () => {
-			const conn = {
-				onHover: jest.fn()
-			};
+			const conn = { onHover: jest.fn() };
 			const capabilities = provider.register(conn as unknown as lsp.Connection);
 			expect(conn.onHover).toHaveBeenCalled();
 			expect(capabilities).toHaveProperty('hoverProvider');
@@ -94,10 +92,7 @@ describe('HoverProvider', () => {
 				}));
 
 			it('provides hover info for positions within instruction', async () => {
-				const contents = {
-					kind: 'markdown',
-					value: expect.stringMatching(/Arithmetic Add/)
-				};
+				const contents = { kind: 'markdown', value: expect.stringMatching(/Arithmetic Add/) };
 				await hoverFor('| add').isUndefined();
 				await hoverFor('|add').is({ range: range(0, 0, 0, 3), contents });
 				await hoverFor('a|dd').is({ range: range(0, 0, 0, 3), contents });
@@ -240,6 +235,30 @@ describe('HoverProvider', () => {
 						value: expect.stringMatching(/Throw Assembly Error/)
 					}
 				}));
+		});
+
+		describe('register hovers', () => {
+			it('provides hover info for register', async () =>
+				await hoverFor('label: mov a|,b ; test').is({
+					range: range(0, 11, 0, 12),
+					contents: { kind: 'markdown', value: expect.stringMatching(/A Register/) }
+				}));
+
+			it('provides hover info for register within scopes', async () =>
+				await hoverForAt('test: {\nlabel: mov a,b ; test\n}', 1, 13).is({
+					range: range(1, 13, 1, 15),
+					contents: { kind: 'markdown', value: expect.stringMatching(/B Register/) }
+				}));
+
+			it('provides hover info for positions within register', async () => {
+				const mContents = { kind: 'markdown', value: expect.stringMatching(/M Register/) };
+				const xyContents = { kind: 'markdown', value: expect.stringMatching(/XY Register/) };
+				await hoverFor('mov |xy,m').is({ range: range(0, 4, 0, 6), contents: xyContents });
+				await hoverFor('mov x|y,m').is({ range: range(0, 4, 0, 6), contents: xyContents });
+				await hoverFor('mov xy|,m').is({ range: range(0, 4, 0, 6), contents: xyContents });
+				await hoverFor('mov xy,|m').is({ range: range(0, 7, 0, 8), contents: mContents });
+				await hoverFor('mov xy,m|').is({ range: range(0, 7, 0, 8), contents: mContents });
+			});
 		});
 
 		//     it("provide hover info for symbol reference", async () => {
