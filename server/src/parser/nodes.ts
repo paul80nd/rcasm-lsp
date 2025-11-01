@@ -202,11 +202,9 @@ export class Scope extends Node {
 }
 
 export class SetPC extends Node {
-	// public pcExpr: Expression;
-
 	constructor(spc: rcasm.StmtSetPC) {
 		super(spc, NodeType.SetPC);
-		// this.pcExpr = this.adoptChild(new Expression(spc.pc));
+		this.adoptChild(new Expression(spc.pc));
 	}
 }
 
@@ -241,6 +239,7 @@ export class AlignDirective extends Directive {
 export class LetDirective extends Directive {
 	constructor(d: rcasm.StmtLet) {
 		super(d, '!let');
+		this.adoptChild(new Expression(d.value));
 	}
 }
 export class ErrorDirective extends Directive {
@@ -262,6 +261,7 @@ export class IfDirective extends Directive {
 	constructor(ss: rcasm.StmtIfElse) {
 		super(ss, '!if');
 		ss.cases.forEach(c => {
+			this.adoptChild(new Expression(c[0]));
 			c[1].forEach(s => {
 				this.adoptChild(new Line(s));
 			});
