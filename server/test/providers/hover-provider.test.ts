@@ -4,7 +4,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Context } from '../../src/context';
 import DocumentProcessor from '../../src/document-processor';
 import HoverProvider from '../../src/providers/hover-provider';
-import { createTestContext, range } from '../helpers';
+import { createTestContext, range, between } from '../helpers';
 import assert from 'assert';
 
 describe('HoverProvider', () => {
@@ -61,11 +61,6 @@ describe('HoverProvider', () => {
 			expect(await this.doHover()).toBeUndefined();
 		}
 	}
-
-	const between = (startChar: number, endChar: number): lsp.Range => ({
-		start: { line: 0, character: startChar },
-		end: { line: 0, character: endChar }
-	});
 
 	describe('#register()', () => {
 		it('regsiters', () => {

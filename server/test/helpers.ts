@@ -46,6 +46,10 @@ export const range = (
 	end: { line: endLine, character: endChar }
 });
 
+export const between = (startChar: number, endChar: number): lsp.Range => ({
+	start: { line: 0, character: startChar },
+	end: { line: 0, character: endChar }
+});
 // export async function parseTree(src: string) {
 //   await Parser.init();
 //   const language = await Parser.Language.load(

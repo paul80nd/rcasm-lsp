@@ -5,6 +5,7 @@ import ConfiguratonProvider from './configuration-provider';
 import CompletionProvider from './completion-provider';
 import TextDocumentSyncProvider from './text-document-sync-provider';
 import HoverProvider from './hover-provider';
+import DefinitionProvider from './definition-provider';
 
 export interface Provider {
 	register(connection: Connection, clientCapabilities: ClientCapabilities): ServerCapabilities;
@@ -13,6 +14,7 @@ export interface Provider {
 const providers = [
 	ConfiguratonProvider,
 	CompletionProvider,
+	DefinitionProvider,
 	HoverProvider,
 	TextDocumentSyncProvider
 ];
