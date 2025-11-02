@@ -1,29 +1,29 @@
 import * as lsp from 'vscode-languageserver';
-//import { TextDocument } from "vscode-languageserver-textdocument";
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { Context } from '../../src/context';
-// import DocumentProcessor from "../../src/DocumentProcessor";
+import DocumentProcessor from '../../src/document-processor';
 import DefinitionProvider from '../../src/providers/definition-provider';
-import { createTestContext /*, range */ } from '../helpers';
+import { createTestContext, range } from '../helpers';
 
 describe('DefinitionProvider', () => {
 	let provider: DefinitionProvider;
 	let ctx: Context;
-	//   let processor: DocumentProcessor;
+	let processor: DocumentProcessor;
 
 	beforeAll(async () => {
 		ctx = await createTestContext();
-		// processor = new DocumentProcessor(ctx);
+		processor = new DocumentProcessor(ctx);
 		provider = new DefinitionProvider(ctx);
 	});
 
 	// Create and process text doc
-	//   const createDoc = async (filename: string, text: string) => {
-	// const uri = ctx.workspaceFolders[0].uri + "/" + filename;
-	// const textDocument = TextDocument.create(uri, "vasmmot", 0, text);
-	// await processor.process(textDocument);
-	// return textDocument;
-	//   };
+	const createDoc = async (filename: string, text: string) => {
+		const uri = ctx.workspaceFolders[0].uri + '/' + filename;
+		const textDocument = TextDocument.create(uri, 'vasmmot', 0, text);
+		await processor.process(textDocument);
+		return textDocument;
+	};
 
 	describe('#register()', () => {
 		it('regsiters', () => {
@@ -36,68 +36,59 @@ describe('DefinitionProvider', () => {
 		});
 	});
 
-	//   describe("#onDefinition()", () => {
-	//     it("returns a constant definition in same doc", async () => {
-	//       const textDocument = await createDoc(
-	//         "example.s",
-	//         `foo = 123
-	//  move #foo,d0`
-	//       );
+	describe('#onDefinition()', () => {
+		it('returns a definition for a label', async () =>
+			await given(`test: add\njmp test`)
+				.symbolAt(1, 6)
+				.hasDefinitionAt(range(0, 0, 0, 4)));
 
-	//       const definitions = await provider.onDefinition({
-	//         position: lsp.Position.create(1, 8),
-	//         textDocument,
-	//       });
+		it('finds definition if label follows after', async () =>
+			await given(`jmp test\ntest: add`)
+				.symbolAt(0, 6)
+				.hasDefinitionAt(range(1, 0, 1, 4)));
 
-	//       expect(definitions).toHaveLength(1);
-	//       expect(definitions[0].uri).toBe(textDocument.uri);
-	//       expect(definitions[0].range).toEqual(range(0, 0, 0, 9));
-	//     });
+		// it('returns a definition for a label outside scope', async () =>
+		// 	await given(`test: add\nscope: {\njmp ::test\n}`)
+		// 		.symbolAt(2, 7)
+		// 		.hasDefinitionAt(range(0, 0, 0, 4)));
+		//     it("returns no definition if not in word", async () => {
+		//       const textDocument = await createDoc("example123.s", ` move #foo,d0`);
 
-	//     it("returns a definition for a local label", async () => {
-	//       const textDocument = await createDoc(
-	//         "example.s",
-	//         `global:
-	// .local:
-	//  bra .local`
-	//       );
+		//       const definitions = await provider.onDefinition({
+		//         position: lsp.Position.create(1, 5),
+		//         textDocument,
+		//       });
 
-	//       const definitions = await provider.onDefinition({
-	//         position: lsp.Position.create(2, 8),
-	//         textDocument,
-	//       });
+		//       expect(definitions).toHaveLength(0);
+		//     });
+	});
 
-	//       expect(definitions).toHaveLength(1);
-	//       expect(definitions[0].uri).toBe(textDocument.uri);
-	//       expect(definitions[0].range).toEqual(range(1, 0, 1, 7));
-	//     });
-
-	//     it("returns a contant definition in included doc", async () => {
-	//       const textDocument = await createDoc(
-	//         "example123.s",
-	//         ` include example.i
-	//  move #foo,d0`
-	//       );
-
-	//       const definitions = await provider.onDefinition({
-	//         position: lsp.Position.create(1, 8),
-	//         textDocument,
-	//       });
-
-	//       expect(definitions).toHaveLength(1);
-	//       expect(definitions[0].uri).toMatch(/example.i/);
-	//       expect(definitions[0].range).toEqual(range(1, 0, 1, 9));
-	//     });
-
-	//     it("returns no definition if not in word", async () => {
-	//       const textDocument = await createDoc("example123.s", ` move #foo,d0`);
-
-	//       const definitions = await provider.onDefinition({
-	//         position: lsp.Position.create(1, 5),
-	//         textDocument,
-	//       });
-
-	//       expect(definitions).toHaveLength(0);
-	//     });
-	//   });
+	// Test Director
+	const given = (code: string) => {
+		// Arrange: document from code
+		const docProvider = async () => await createDoc('example.rcasm', code);
+		return {
+			// Filter: symbol at position
+			symbolAt: (r: number, c: number) => {
+				// Action: provide definitions
+				const defsProvider = async () => {
+					const doc = await docProvider();
+					return {
+						defs: await provider.onDefinition({
+							position: lsp.Position.create(r, c),
+							textDocument: doc
+						}),
+						doc
+					};
+				};
+				return {
+					// Assert: definition for symbol
+					hasDefinitionAt: async (range: lsp.Range) => {
+						const actual = await defsProvider();
+						expect(actual.defs).toEqual([{ range, uri: actual.doc.uri }]);
+					}
+				};
+			}
+		};
+	};
 });

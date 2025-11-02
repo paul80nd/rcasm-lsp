@@ -1,24 +1,26 @@
 import * as lsp from 'vscode-languageserver';
-// import { TextDocument } from "vscode-languageserver-textdocument";
-// import Parser, { SyntaxNode, Query } from "web-tree-sitter";
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as parser from './parser/nodes';
 // import { getDependencies } from "./files";
-// import { containsPosition, nodeAsRange } from "./geometry";
-// import { Context } from "./context";
+// import { containsPosition, nodeAsRange } from './geometry';
+import { Context } from './context';
+import { ParsedSymbols } from './parser';
+import { ProcessedDocument } from './document-processor';
 
 export interface NamedSymbol {
 	location: lsp.Location;
 	name: string;
 }
 
-export interface Literal {
-	location: lsp.Location;
-	text: string;
-}
+// export interface Literal {
+// 	location: lsp.Location;
+// 	text: string;
+// }
 
 export interface Definition extends NamedSymbol {
 	type: DefinitionType;
 	selectionRange: lsp.Range;
-	locals?: Map<string, Definition>;
+	// locals?: Map<string, Definition>;
 	comment?: string;
 }
 
@@ -27,21 +29,22 @@ export interface Definition extends NamedSymbol {
 // }
 
 export enum DefinitionType {
-	Section = 'section',
-	Label = 'label',
-	Constant = 'constant',
-	Variable = 'variable',
-	Register = 'register',
-	RegisterList = 'register_list',
-	Offset = 'offset',
-	XRef = 'xref'
+	// Section = 'section',
+	Label = 'label'
+	// Constant = 'constant',
+	// Variable = 'variable',
+	// Register = 'register',
+	// RegisterList = 'register_list',
+	// Offset = 'offset',
+	// XRef = 'xref'
 }
 
 export interface Symbols {
-	definitions: Map<string, Definition>;
-	references: Map<string, NamedSymbol[]>;
-	includes: Literal[];
-	incDirs: Literal[];
+	parsedSymbols: ParsedSymbols;
+	// definitions: Map<string, Definition>;
+	// references: Map<string, NamedSymbol[]>;
+	// includes: Literal[];
+	// incDirs: Literal[];
 }
 
 // let symbolsQuery: Query | undefined;
@@ -49,15 +52,19 @@ export interface Symbols {
 /**
  * Process symbols in document
  */
-export function processSymbols(): Symbols {
+export function processSymbols(
 	// uri: string,
-	// tree: Parser.Tree,
+	tree: parser.Program
 	// ctx: Context
+): Symbols {
+	const pSymbols = new ParsedSymbols(tree);
+
 	const symbols: Symbols = {
-		definitions: new Map<string, Definition>(),
-		references: new Map<string, NamedSymbol[]>(),
-		includes: [],
-		incDirs: []
+		parsedSymbols: pSymbols
+		// definitions: new Map<string, Definition>(),
+		// references: new Map<string, NamedSymbol[]>(),
+		// includes: [],
+		// incDirs: []
 	};
 
 	//   let lastGlobalLabel: Definition | undefined;
@@ -235,34 +242,48 @@ export function processSymbols(): Symbols {
 //   return path;
 // }
 
-// /**
-//  * Get symbol at position
-//  */
-// export function symbolAtPosition(
-//   symbols: Symbols,
-//   position: lsp.Position
-// ): NamedSymbol | undefined {
-//   return (
-//     definitionAtPosition(symbols, position) ||
-//     referenceAtPosition(symbols, position)
-//   );
-// }
+/**
+ * Get symbol at position
+ */
+export function symbolAtPosition(
+	processed: ProcessedDocument,
+	position: lsp.Position
+): NamedSymbol | undefined {
+	const offset = processed.document.offsetAt(position);
+	const node = parser.getNodeAtOffset(processed.tree, offset);
+
+	if (!node) {
+		return undefined;
+	}
+
+	const symbol = processed.symbols.parsedSymbols.findSymbolFromNode(node);
+	if (!symbol) {
+		return undefined;
+	}
+
+	return {
+		name: symbol.name,
+		location: { uri: processed.document.uri, range: getRange(symbol.node, processed.document) }
+	};
+	// return (
+	// 		//     definitionAtPosition(symbols, position) ||
+	// 		referenceAtPosition(symbols, position)
+	// );
+}
 
 // /**
 //  * Get reference symbol at position
 //  */
 // export function referenceAtPosition(
-//   symbols: Symbols,
-//   position: lsp.Position
+// 	symbols: Symbols,
+// 	position: lsp.Position
 // ): NamedSymbol | undefined {
-//   for (const [, refs] of symbols.references) {
-//     const foundRef = refs.find((ref) =>
-//       containsPosition(ref.location.range, position)
-//     );
-//     if (foundRef) {
-//       return foundRef;
-//     }
-//   }
+// 	for (const [, refs] of symbols.references) {
+// 		const foundRef = refs.find(ref => containsPosition(ref.location.range, position));
+// 		if (foundRef) {
+// 			return foundRef;
+// 		}
+// 	}
 // }
 
 // /**
@@ -372,51 +393,60 @@ export function processSymbols(): Symbols {
 //   endLabel?: Definition;
 // }
 
-// /**
-//  * Get definitions of word at position
-//  */
-// export async function getDefinitions(
-//   uri: string,
-//   position: lsp.Position,
-//   ctx: Context
-// ): Promise<Definition[]> {
-//   const processed = ctx.store.get(uri);
-//   if (!processed) {
-//     return [];
-//   }
+/**
+ * Get definitions of word at position
+ */
+export async function getDefinitions(
+	uri: string,
+	position: lsp.Position,
+	ctx: Context
+): Promise<Definition[]> {
+	const processed = ctx.store.get(uri);
+	if (!processed) {
+		return [];
+	}
 
-//   const symbol = symbolAtPosition(processed.symbols, position);
-//   if (!symbol) {
-//     return [];
-//   }
+	const symbol = symbolAtPosition(processed, position);
+	if (!symbol) {
+		return [];
+	}
 
-//   if (isLocalLabel(symbol.name)) {
-//     const globalLabel = labelBeforePosition(processed.symbols, position);
-//     const def = globalLabel?.locals?.get(symbol.name);
-//     return def ? [def] : [];
-//   }
+	return [
+		{
+			name: symbol.name,
+			type: DefinitionType.Label,
+			location: symbol.location,
+			selectionRange: symbol.location.range
+		}
+	];
 
-//   // Definition in current doc
-//   const def = processed.symbols.definitions.get(symbol.name);
-//   if (def) {
-//     return [def];
-//   }
+	// if (isLocalLabel(symbol.name)) {
+	//     const globalLabel = labelBeforePosition(processed.symbols, position);
+	//     const def = globalLabel?.locals?.get(symbol.name);
+	//     return def ? [def] : [];
+	// }
 
-//   const defs: Definition[] = [];
+	//   // Definition in current doc
+	//   const def = processed.symbols.definitions.get(symbol.name);
+	//   if (def) {
+	//     return [def];
+	//   }
 
-//   const deps = await getDependencies(uri, ctx);
-//   for (const depUri of deps) {
-//     const processedDoc = ctx.store.get(depUri);
-//     if (processedDoc) {
-//       const def = processedDoc.symbols.definitions.get(symbol.name);
-//       if (def) {
-//         defs.push(def);
-//       }
-//     }
-//   }
+	// const defs: Definition[] = [];
 
-//   return defs;
-// }
+	//   const deps = await getDependencies(uri, ctx);
+	//   for (const depUri of deps) {
+	//     const processedDoc = ctx.store.get(depUri);
+	//     if (processedDoc) {
+	//       const def = processedDoc.symbols.definitions.get(symbol.name);
+	//       if (def) {
+	//         defs.push(def);
+	//       }
+	//     }
+	//   }
+
+	// return defs;
+}
 
 /**
  * Get definition of first global label before position
@@ -493,3 +523,7 @@ export function labelBeforePosition(): Definition | undefined {
 //   [DefinitionType.Offset]: lsp.SymbolKind.Constant,
 //   [DefinitionType.XRef]: lsp.SymbolKind.Field,
 // };
+
+function getRange(node: parser.Node, document: TextDocument): lsp.Range {
+	return lsp.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
+}

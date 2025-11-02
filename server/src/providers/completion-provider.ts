@@ -265,12 +265,12 @@ export default class CompletionProvider implements Provider {
 // }
 
 const typeMappings: Record<DefinitionType, lsp.CompletionItemKind> = {
-	[DefinitionType.Section]: lsp.CompletionItemKind.Module,
-	[DefinitionType.Label]: lsp.CompletionItemKind.Field,
-	[DefinitionType.Constant]: lsp.CompletionItemKind.Constant,
-	[DefinitionType.Variable]: lsp.CompletionItemKind.Variable,
-	[DefinitionType.Register]: lsp.CompletionItemKind.Constant,
-	[DefinitionType.RegisterList]: lsp.CompletionItemKind.Constant,
-	[DefinitionType.Offset]: lsp.CompletionItemKind.Constant,
-	[DefinitionType.XRef]: lsp.CompletionItemKind.Field
+	// [DefinitionType.Section]: lsp.CompletionItemKind.Module,
+	[DefinitionType.Label]: lsp.CompletionItemKind.Field
+	// [DefinitionType.Constant]: lsp.CompletionItemKind.Constant,
+	// [DefinitionType.Variable]: lsp.CompletionItemKind.Variable,
+	// [DefinitionType.Register]: lsp.CompletionItemKind.Constant,
+	// [DefinitionType.RegisterList]: lsp.CompletionItemKind.Constant,
+	// [DefinitionType.Offset]: lsp.CompletionItemKind.Constant,
+	// [DefinitionType.XRef]: lsp.CompletionItemKind.Field
 };

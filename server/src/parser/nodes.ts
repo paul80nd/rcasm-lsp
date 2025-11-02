@@ -5,22 +5,20 @@ import * as rcasm from '@paul80nd/rcasm';
 export enum NodeType {
 	Program,
 	Line,
-	// 	Label,
-	// 	LabelRef,
+	Label,
+	LabelRef,
 	Instruction,
 	Literal,
 	Register,
 	SetPC,
-	// 	Expr,
 	Directive,
-	// 	Fill,
 	Scope,
 	Expression
 }
 
-// export enum ReferenceType {
-// 	Label
-// }
+export enum ReferenceType {
+	Label
+}
 
 export function getNodeAtOffset(node: Node, offset: number): Node | null {
 	let candidate: Node | null = null;
@@ -69,7 +67,7 @@ export class Node {
 		return this.offset + this.length;
 	}
 
-	// public textProvider: ITextProvider | undefined; // only set on the root node
+	public textProvider: ITextProvider | undefined; // only set on the root node
 
 	private children: Node[] | undefined;
 
@@ -86,21 +84,23 @@ export class Node {
 		return this.nodeType;
 	}
 
-	// private getTextProvider(): ITextProvider {
-	// 	// eslint-disable-next-line @typescript-eslint/no-this-alias
-	// 	let node: Node | null = this;
-	// 	while (node && !node.textProvider) {
-	// 		node = node.parent;
-	// 	}
-	// 	if (node) {
-	// 		return node.textProvider!;
-	// 	}
-	// 	return () => { return 'unknown'; };
-	// }
+	private getTextProvider(): ITextProvider {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		let node: Node | null = this;
+		while (node && !node.textProvider) {
+			node = node.parent;
+		}
+		if (node) {
+			return node.textProvider!;
+		}
+		return () => {
+			return 'unknown';
+		};
+	}
 
-	// public getText(): string {
-	// 	return this.getTextProvider()(this.offset, this.length);
-	// }
+	public getText(): string {
+		return this.getTextProvider()(this.offset, this.length);
+	}
 
 	// 	public matches(str: string): boolean {
 	// 		return this.length === str.length && this.getTextProvider()(this.offset, this.length) === str;
@@ -114,9 +114,9 @@ export class Node {
 		}
 	}
 
-	// 	public acceptVisitor(visitor: IVisitor): void {
-	// 		this.accept(visitor.visitNode.bind(visitor));
-	// 	}
+	public acceptVisitor(visitor: IVisitor): void {
+		this.accept(visitor.visitNode.bind(visitor));
+	}
 
 	protected adoptChild(node: Node): Node {
 		node.parent = this;
@@ -143,7 +143,9 @@ export class Program extends Node {
 class Line extends Node {
 	constructor(l: rcasm.Line) {
 		super(l, NodeType.Line);
-		// 		if (l.label) { this.adoptChild(new Label(l.label)); }
+		if (l.label) {
+			this.adoptChild(new Label(l.label));
+		}
 		if (l.scopedStmts) {
 			this.adoptChild(new Scope(l));
 		}
@@ -181,16 +183,16 @@ class Line extends Node {
 	}
 }
 
-// export class Label extends Node {
-// 	constructor(l: rcasm.Label) {
-// 		super(l, NodeType.Label);
-// 		this.length = l.name.length;	// Ignore colon and any whitespace
-// 	}
+export class Label extends Node {
+	constructor(l: rcasm.Label) {
+		super(l, NodeType.Label);
+		this.length = l.name.length; // Ignore colon and any whitespace
+	}
 
-// 	public getName(): string {
-// 		return this.getText();
-// 	}
-// }
+	public getName(): string {
+		return this.getText();
+	}
+}
 
 export class Scope extends Node {
 	constructor(ss: rcasm.Line) {
@@ -285,8 +287,8 @@ export class Instruction extends Node {
 					return this.adoptChild(new Literal(p)) as Operand;
 				case 'register':
 					return this.adoptChild(new Register(p)) as Operand;
-				// 				case 'qualified-ident':
-				// 					return this.adoptChild(new LabelRef(p));
+				case 'qualified-ident':
+					return this.adoptChild(new LabelRef(p)) as Operand;
 				default:
 					return this.adoptChild(new Expression(p)) as Operand;
 			}
@@ -301,14 +303,14 @@ export class Instruction extends Node {
 	}
 }
 
-export type Operand = /*LabelRef |*/ Literal | Register;
+export type Operand = LabelRef | Literal | Register;
 
-// export class LabelRef extends Node {
-// 	constructor(sqi: rcasm.ScopeQualifiedIdent) {
-// 		super(sqi, NodeType.LabelRef);
-// 		this.length = sqi.path.at(-1)!.length;
-// 	}
-// }
+export class LabelRef extends Node {
+	constructor(sqi: rcasm.ScopeQualifiedIdent) {
+		super(sqi, NodeType.LabelRef);
+		this.length = sqi.path.at(-1)!.length;
+	}
+}
 
 export class Literal extends Node {
 	public value: number | string;
@@ -333,8 +335,8 @@ export class Expression extends Node {
 				this.adoptChild(new Expression(e.left));
 				this.adoptChild(new Expression(e.right));
 				break;
-			// 				case 'qualified-ident':
-			// 					return this.adoptChild(new LabelRef(p));
+			case 'qualified-ident':
+				return this.adoptChild(new LabelRef(e));
 		}
 	}
 }
@@ -348,8 +350,8 @@ export class Register extends Node {
 	}
 }
 
-// export interface IVisitor {
-// 	visitNode: (node: Node) => boolean;
-// }
+export interface IVisitor {
+	visitNode: (node: Node) => boolean;
+}
 
 export type IVisitorFunction = (node: Node) => boolean;

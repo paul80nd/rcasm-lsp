@@ -37,7 +37,7 @@ export default class DocumentProcessor {
 		const processed: ProcessedDocument = {
 			document,
 			tree,
-			symbols: processSymbols(/*document.uri, tree, this.ctx*/)
+			symbols: processSymbols(/*document.uri,*/ tree /*, this.ctx*/)
 			//       referencedUris: [],
 		};
 
