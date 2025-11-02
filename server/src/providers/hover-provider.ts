@@ -1,9 +1,9 @@
 import * as lsp from 'vscode-languageserver';
-// import { TextDocument } from "vscode-languageserver-textdocument";
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Provider } from '.';
 // import { nodeAsRange, positionToPoint } from "../geometry";
 // import { resolveInclude } from "../files";
-// import { DefinitionType, getDefinitions, processPath } from "../symbols";
+import { /* DefinitionType,*/ getDefinitions /*, processPath */ } from '../symbols';
 import { mnemonicDocs, registerDocs } from '../docs/index';
 // import { RegisterName, Size } from "../syntax";
 import { Context } from '../context';
@@ -49,8 +49,8 @@ export default class HoverProvider implements Provider {
 					return this.hoverDirectiveMnemonic(node as nodes.Directive, getRange(node));
 				case nodes.NodeType.SetPC:
 					return this.hoverSetPC(node as nodes.SetPC, getRange(node));
-				//       case "symbol":
-				//         return this.hoverSymbol(node, processed.document, position);
+				case nodes.NodeType.LabelRef:
+					return this.hoverSymbol(processed.document, position, getRange(node));
 				case nodes.NodeType.Literal:
 					return this.hoverNumber(node as nodes.Literal, getRange(node));
 				case nodes.NodeType.Register:
@@ -99,47 +99,46 @@ export default class HoverProvider implements Provider {
 		};
 	}
 
-	//   private async hoverSymbol(
-	//     node: SyntaxNode,
-	//     document: TextDocument,
-	//     position: lsp.Position
-	//   ) {
-	//     const [def] = await getDefinitions(document.uri, position, this.ctx);
-	//     const contents: lsp.MarkedString[] = [];
+	private async hoverSymbol(document: TextDocument, position: lsp.Position, range: lsp.Range) {
+		const [def] = await getDefinitions(document.uri, position, this.ctx);
+		let content = '';
 
-	//     if (def) {
-	//       if (def.comment) {
-	//         contents.push(def.comment); // TODO
-	//       }
+		if (def) {
+			//       if (def.comment) {
+			//         contents.push(def.comment); // TODO
+			//       }
 
-	//       switch (def.type) {
-	//         case DefinitionType.Register:
-	//         case DefinitionType.RegisterList:
-	//         case DefinitionType.Constant:
-	//         case DefinitionType.Variable: {
-	//           // Find Declaration and add code block
-	//           const startLine = def.location.range.start.line;
-	//           const defDoc = this.ctx.store.get(def.location.uri)?.document;
-	//           if (defDoc) {
-	//             const lines = defDoc.getText().split(/\r?\n/g);
-	//             const definitionLine = lines[startLine];
-	//             contents.push({
-	//               language: document.languageId,
-	//               value: formatDeclaration(definitionLine),
-	//             });
-	//           }
-	//           break;
-	//         }
-	//         default:
-	//           contents.push(`(${def.type}) ${def.name}`);
-	//       }
+			switch (def.type) {
+				//         case DefinitionType.Register:
+				//         case DefinitionType.RegisterList:
+				//         case DefinitionType.Constant:
+				//         case DefinitionType.Variable: {
+				//           // Find Declaration and add code block
+				//           const startLine = def.location.range.start.line;
+				//           const defDoc = this.ctx.store.get(def.location.uri)?.document;
+				//           if (defDoc) {
+				//             const lines = defDoc.getText().split(/\r?\n/g);
+				//             const definitionLine = lines[startLine];
+				//             contents.push({
+				//               language: document.languageId,
+				//               value: formatDeclaration(definitionLine),
+				//             });
+				//           }
+				//           break;
+				//         }
+				default:
+					content = `(${def.type}) ${def.name}`;
+			}
+		}
 
-	//       return {
-	//         range: nodeAsRange(node),
-	//         contents,
-	//       };
-	//     }
-	//   }
+		return {
+			range,
+			contents: {
+				kind: lsp.MarkupKind.Markdown,
+				value: content
+			}
+		};
+	}
 
 	private async hoverNumber(node: nodes.Literal, range: lsp.Range) {
 		return {
