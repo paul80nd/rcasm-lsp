@@ -17,14 +17,6 @@ describe('DefinitionProvider', () => {
 		provider = new DefinitionProvider(ctx);
 	});
 
-	// Create and process text doc
-	const createDoc = async (filename: string, text: string) => {
-		const uri = ctx.workspaceFolders[0].uri + '/' + filename;
-		const textDocument = TextDocument.create(uri, 'vasmmot', 0, text);
-		await processor.process(textDocument);
-		return textDocument;
-	};
-
 	describe('#register()', () => {
 		it('regsiters', () => {
 			const conn = {
@@ -66,7 +58,12 @@ describe('DefinitionProvider', () => {
 	// Test Director
 	const given = (code: string) => {
 		// Arrange: document from code
-		const docProvider = async () => await createDoc('example.rcasm', code);
+		const docProvider = async () => {
+			const uri = ctx.workspaceFolders[0].uri + '/example.rcasm';
+			const textDocument = TextDocument.create(uri, 'rcasm', 0, code);
+			await processor.process(textDocument);
+			return textDocument;
+		};
 		return {
 			// Filter: symbol at position
 			symbolAt: (r: number, c: number) => {

@@ -18,54 +18,6 @@ describe('CompletionProvider', () => {
 		provider = new CompletionProvider(ctx);
 	});
 
-	// Create and process text doc
-	const createDoc = async (filename: string, text: string) => {
-		const uri = ctx.workspaceFolders[0].uri + '/' + filename;
-		const textDocument = TextDocument.create(uri, 'vasmmot', 0, text);
-		await processor.process(textDocument);
-		return textDocument;
-	};
-
-	const completionFor = (v: string) => CompletionTest.for(v);
-
-	class CompletionTest {
-		public static for(value: string): CompletionTest {
-			const offset = value.indexOf('|');
-			assert.ok(offset !== -1, `| missing in '${value}'`);
-			value = value.substring(0, offset) + value.substring(offset + 1);
-			return new CompletionTest(value, offset);
-		}
-
-		private constructor(
-			private value: string,
-			private offset: number
-		) {}
-
-		private async doCompletion(): Promise<lsp.CompletionItem[]> {
-			const textDocument = await createDoc('example.s', this.value);
-			return await provider.onCompletion({
-				position: lsp.Position.create(0, this.offset),
-				textDocument
-			});
-		}
-
-		public async includes<E>(expected: readonly E[]) {
-			expect(await this.doCompletion()).toIncludeAllPartialMembers(expected);
-		}
-
-		public async is<E>(expected: readonly E[]) {
-			expect(await this.doCompletion()).toIncludeSamePartialMembers(expected);
-		}
-
-		public async doesNotInclude<E>(expected: readonly E[]) {
-			expect(await this.doCompletion()).not.toIncludeAllPartialMembers(expected);
-		}
-
-		public async hasNothing() {
-			expect(await this.doCompletion()).toHaveLength(0);
-		}
-	}
-
 	describe('#register()', () => {
 		it('regsiters', () => {
 			const conn = {
@@ -82,37 +34,37 @@ describe('CompletionProvider', () => {
 	describe('#onCompletion()', () => {
 		describe('mnemonics and directives', () => {
 			test('completes mnemonics', async function () {
-				await completionFor('|').includes([{ label: 'ldi' }, { label: 'add' }]);
-				await completionFor(' |').includes([{ label: 'ldi' }, { label: 'add' }]);
-				await completionFor('ld|').includes([{ label: 'ldi' }]);
-				await completionFor(' l|').includes([{ label: 'ldi' }]);
-				await completionFor('label: |').includes([{ label: 'ldi' }, { label: 'add' }]);
-				await completionFor('label: l|').includes([{ label: 'ldi' }]);
-				await completionFor(' ld| a,5').includes([{ label: 'ldi' }]);
-				await completionFor('label: l| ; comment').includes([{ label: 'ldi' }]);
+				await completionsFor('|').includes([{ label: 'ldi' }, { label: 'add' }]);
+				await completionsFor(' |').includes([{ label: 'ldi' }, { label: 'add' }]);
+				await completionsFor('ld|').includes([{ label: 'ldi' }]);
+				await completionsFor(' l|').includes([{ label: 'ldi' }]);
+				await completionsFor('label: |').includes([{ label: 'ldi' }, { label: 'add' }]);
+				await completionsFor('label: l|').includes([{ label: 'ldi' }]);
+				await completionsFor(' ld| a,5').includes([{ label: 'ldi' }]);
+				await completionsFor('label: l| ; comment').includes([{ label: 'ldi' }]);
 			});
 
 			test('completes directives', async function () {
-				await completionFor('|').includes([{ label: '!align' }, { label: 'add' }]);
-				await completionFor('!|').includes([{ label: '!align' }]);
-				await completionFor(' |').includes([{ label: '!word' }, { label: 'add' }]);
-				await completionFor(' !|').includes([
+				await completionsFor('|').includes([{ label: '!align' }, { label: 'add' }]);
+				await completionsFor('!|').includes([{ label: '!align' }]);
+				await completionsFor(' |').includes([{ label: '!word' }, { label: 'add' }]);
+				await completionsFor(' !|').includes([
 					{ label: '!align' },
 					{ label: '!byte' },
 					{ label: '!fill' },
 					{ label: '!for' },
 					{ label: '!word' }
 				]);
-				await completionFor('label: |').includes([{ label: '!fill' }, { label: 'add' }]);
-				await completionFor('label: !|').includes([{ label: '!fill' }]);
-				await completionFor('label: !f| ; comment').includes([
+				await completionsFor('label: |').includes([{ label: '!fill' }, { label: 'add' }]);
+				await completionsFor('label: !|').includes([{ label: '!fill' }]);
+				await completionsFor('label: !f| ; comment').includes([
 					{ label: '!fill' },
 					{ label: '!for' }
 				]);
 			});
 
 			test('completion includes label description', async () => {
-				await completionFor('bc|').includes([
+				await completionsFor('bc|').includes([
 					{
 						label: 'bcs',
 						labelDetails: {
@@ -120,7 +72,7 @@ describe('CompletionProvider', () => {
 						}
 					}
 				]);
-				await completionFor('!a|').includes([
+				await completionsFor('!a|').includes([
 					{
 						label: '!align',
 						labelDetails: { description: 'Define Align' }
@@ -129,21 +81,21 @@ describe('CompletionProvider', () => {
 			});
 
 			test('completion includes kind', async () => {
-				await completionFor('bc|').includes([
+				await completionsFor('bc|').includes([
 					{ label: 'bcs', kind: lsp.CompletionItemKind.Method }
 				]);
-				await completionFor('!a|').includes([
+				await completionsFor('!a|').includes([
 					{ label: '!align', kind: lsp.CompletionItemKind.Keyword }
 				]);
 			});
 
 			test('completion includes snippets', async function () {
-				await completionFor('l|').includes([{ insertText: 'ldi ${1:a},${2:0}' }]);
-				await completionFor('label: ld|').includes([{ insertText: 'ldr ${1:b}' }]);
-				await completionFor('label: b| ; comment').includes([{ insertText: 'beq ${1:label}' }]);
-				await completionFor('!|').includes([{ insertText: '!align ${1:8}' }]);
-				await completionFor('label: |').includes([{ insertText: '!fill ${1:8},${2:0x00}' }]);
-				await completionFor('label: !f| ; comment').includes([
+				await completionsFor('l|').includes([{ insertText: 'ldi ${1:a},${2:0}' }]);
+				await completionsFor('label: ld|').includes([{ insertText: 'ldr ${1:b}' }]);
+				await completionsFor('label: b| ; comment').includes([{ insertText: 'beq ${1:label}' }]);
+				await completionsFor('!|').includes([{ insertText: '!align ${1:8}' }]);
+				await completionsFor('label: |').includes([{ insertText: '!fill ${1:8},${2:0x00}' }]);
+				await completionsFor('label: !f| ; comment').includes([
 					{
 						insertText: '!for ${1:i} in range(${2:5}) {\n        ${3:add}\n}'
 					}
@@ -167,13 +119,13 @@ describe('CompletionProvider', () => {
 			});
 
 			test('directive completions have sort order', async () =>
-				await completionFor('|').includes([
+				await completionsFor('|').includes([
 					{ label: '!align', sortText: 'align' },
 					{ label: '!byte', sortText: 'byte' }
 				]));
 
 			it('excludes unsupported mnemonics', async () =>
-				await completionFor('  di|').doesNotInclude([{ label: 'div' }]));
+				await completionsFor('  di|').doesNotInclude([{ label: 'div' }]));
 
 			it('includes supported mnemonics', async () => {
 				const textDocument = await createDoc('example.s', '  di');
@@ -195,14 +147,14 @@ describe('CompletionProvider', () => {
 			});
 
 			it('completions match case', async () => {
-				await completionFor('MO|').includes([{ label: 'MOV' }]);
-				await completionFor('!A|').includes([{ label: '!ALIGN' }]);
+				await completionsFor('MO|').includes([{ label: 'MOV' }]);
+				await completionsFor('!A|').includes([{ label: '!ALIGN' }]);
 			});
 		});
 
 		describe('operands', () => {
 			it('completes <dst:Dr> register operands', async () =>
-				await completionFor('clr |').is([
+				await completionsFor('clr |').are([
 					{ label: 'a' },
 					{ label: 'b' },
 					{ label: 'c' },
@@ -214,7 +166,7 @@ describe('CompletionProvider', () => {
 				]));
 
 			it('completes <src:Dr> register operands', async () =>
-				await completionFor('  mov a,|').is([
+				await completionsFor('  mov a,|').are([
 					{ label: 'a' },
 					{ label: 'b' },
 					{ label: 'c' },
@@ -226,7 +178,7 @@ describe('CompletionProvider', () => {
 				]));
 
 			it('completes <dst:a-d> register operands', async () =>
-				await completionFor('  ldr |').is([
+				await completionsFor('  ldr |').are([
 					{ label: 'a' },
 					{ label: 'b' },
 					{ label: 'c' },
@@ -234,7 +186,7 @@ describe('CompletionProvider', () => {
 				]));
 
 			it('completes <src:a-d> register operands', async () =>
-				await completionFor('str |').is([
+				await completionsFor('str |').are([
 					{ label: 'a' },
 					{ label: 'b' },
 					{ label: 'c' },
@@ -242,45 +194,45 @@ describe('CompletionProvider', () => {
 				]));
 
 			it('completes <dst:a|b> register operands', async () =>
-				await completionFor('ldi |').is([{ label: 'a' }, { label: 'b' }]));
+				await completionsFor('ldi |').are([{ label: 'a' }, { label: 'b' }]));
 
 			it('completes <dst:a|d> register operands', async () =>
-				await completionFor('lds |').is([{ label: 'a' }, { label: 'd' }]));
+				await completionsFor('lds |').are([{ label: 'a' }, { label: 'd' }]));
 
 			test('register completion includes label description', async () => {
-				await completionFor('lds |').includes([
+				await completionsFor('lds |').includes([
 					{ label: 'a', labelDetails: { description: 'A Register' } }
 				]);
-				await completionFor(' mov a,|').includes([
+				await completionsFor(' mov a,|').includes([
 					{ label: 'x', labelDetails: { description: 'X Register' } }
 				]);
 			});
 
 			test('register completion includes kind', async () => {
-				await completionFor('ldr |').includes([
+				await completionsFor('ldr |').includes([
 					{ label: 'b', kind: lsp.CompletionItemKind.Keyword }
 				]);
-				await completionFor('clr |').includes([
+				await completionsFor('clr |').includes([
 					{ label: 'c', kind: lsp.CompletionItemKind.Keyword }
 				]);
 			});
 
 			it('has no completions (currently) for <label>', async () =>
-				await completionFor('blt |').is([]));
+				await completionsFor('blt |').are([]));
 
-			it('has no completions for <message>', async () => await completionFor('!error |').is([]));
+			it('has no completions for <message>', async () => await completionsFor('!error |').are([]));
 
 			it('completes an operand with first letter of registers', async () => {
-				await completionFor('clr m|').includes([{ label: 'm1' }, { label: 'm2' }]);
+				await completionsFor('clr m|').includes([{ label: 'm1' }, { label: 'm2' }]);
 			});
 
 			it('matches case on registers', async () => {
-				await completionFor('clr M|').includes([{ label: 'M1' }, { label: 'M2' }]);
-				await completionFor('lds D|').includes([{ label: 'D' }]);
+				await completionsFor('clr M|').includes([{ label: 'M1' }, { label: 'M2' }]);
+				await completionsFor('lds D|').includes([{ label: 'D' }]);
 			});
 
 			it('completes an optional register when approached', async () => {
-				await completionFor('add |').includes([{ label: 'a' }, { label: 'd' }]);
+				await completionsFor('add |').includes([{ label: 'a' }, { label: 'd' }]);
 			});
 
 			// 	parsingSignature('!align <value:2|4|8|16|...>').hasOperands([
@@ -430,4 +382,49 @@ describe('CompletionProvider', () => {
 			});
 		});
 	});
+
+	// Test Director
+	const given = (code: string) => {
+		// Arrange: document from code
+		const docProvider = async () => {
+			const uri = ctx.workspaceFolders[0].uri + '/example.rcasm';
+			const textDocument = TextDocument.create(uri, 'rcasm', 0, code);
+			await processor.process(textDocument);
+			return textDocument;
+		};
+		return {
+			// Filter: completions at position
+			completionsAt: (r: number, c: number) => {
+				// Action: provide completions
+				const completionsProvider = async () => {
+					const doc = await docProvider();
+					return provider.onCompletion({ position: lsp.Position.create(r, c), textDocument: doc });
+				};
+				return {
+					// Assert: completions
+					are: async <E>(expected: readonly E[]) =>
+						expect(await completionsProvider()).toIncludeSamePartialMembers(expected),
+					includes: async <E>(expected: readonly E[]) =>
+						expect(await completionsProvider()).toIncludeAllPartialMembers(expected),
+					doesNotInclude: async <E>(expected: readonly E[]) =>
+						expect(await completionsProvider()).not.toIncludeAllPartialMembers(expected)
+				};
+			}
+		};
+	};
+
+	const completionsFor = (value: string) => {
+		const offset = value.indexOf('|');
+		assert.ok(offset !== -1, `| missing in '${value}'`);
+		value = value.substring(0, offset) + value.substring(offset + 1);
+		return given(value).completionsAt(0, offset);
+	};
+
+	// Create and process text doc
+	const createDoc = async (filename: string, text: string) => {
+		const uri = ctx.workspaceFolders[0].uri + '/' + filename;
+		const textDocument = TextDocument.create(uri, 'vasmmot', 0, text);
+		await processor.process(textDocument);
+		return textDocument;
+	};
 });
