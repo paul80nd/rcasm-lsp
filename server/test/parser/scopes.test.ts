@@ -25,6 +25,12 @@ describe('scopes', () => {
 
 		it('finds a for directive ref', () =>
 			parsing('!for k in range(16) {\nldi b,k\n}').symbolAt(28).is(variable.at(5).withName('k')));
+
+		it('finds refs split on §', () => {
+			const given = parsing('fra: inc\nldi m,fra§parr\nparr: add');
+			given.symbolAt(16).is(label.at(0).withName('fra'));
+			given.symbolAt(20).is(label.at(24).withName('parr'));
+		});
 	});
 
 	// Test Director

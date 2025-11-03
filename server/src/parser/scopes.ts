@@ -108,6 +108,13 @@ export class Scopes {
 		this.curSymtab = curSym;
 	}
 
+	withAnonOrLabelScope(name: string | undefined, body: () => void, parent?: NamedScope<SymEntry>) {
+		if (name) {
+			return this.withLabelScope(name, body, parent);
+		}
+		this.withAnonScope(body, parent);
+	}
+
 	findPath(path: string[], absolute: boolean): SymEntry | undefined {
 		if (absolute) {
 			return this.root.findSymbolPath(path);

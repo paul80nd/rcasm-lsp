@@ -39,25 +39,22 @@ describe('DefinitionProvider', () => {
 				.symbolAt(0, 6)
 				.hasDefinitionAt(range(1, 0, 1, 4)));
 
-		// it('finds definition for label inside scope', async () =>
-		// 	await given(`jmp scp::test\nscp: {\ntest: add\n}`)
-		// 		.symbolAt(0, 6)
-		// 		.hasDefinitionAt(range(1, 0, 1, 4)));
+		it('finds definition for label inside scope', async () => {
+			const g = given(`jmp scp::test\nscp: {\ntest: add\n}`);
+			await g.symbolAt(0, 6).hasDefinitionAt(range(2, 0, 2, 4));
+			await g.symbolAt(0, 10).hasDefinitionAt(range(2, 0, 2, 4));
+		});
 
-		// it('returns a definition for a label outside scope', async () =>
-		// 	await given(`test: add\nscope: {\njmp ::test\n}`)
-		// 		.symbolAt(2, 7)
-		// 		.hasDefinitionAt(range(0, 0, 0, 4)));
-		//     it("returns no definition if not in word", async () => {
-		//       const textDocument = await createDoc("example123.s", ` move #foo,d0`);
+		it('returns a definition for a label outside scope', async () =>
+			await given(`test: add\nscope: {\njmp ::test\n}`)
+				.symbolAt(2, 7)
+				.hasDefinitionAt(range(0, 0, 0, 4)));
 
-		//       const definitions = await provider.onDefinition({
-		//         position: lsp.Position.create(1, 5),
-		//         textDocument,
-		//       });
-
-		//       expect(definitions).toHaveLength(0);
-		//     });
+		it('returns definitions for refs split on §', async () => {
+			const g = given('fra: inc\nldi m,fra§parr\nparr: add');
+			await g.symbolAt(1, 8).hasDefinitionAt(range(0, 0, 0, 3));
+			await g.symbolAt(1, 12).hasDefinitionAt(range(2, 0, 2, 4));
+		});
 	});
 
 	// Test Director

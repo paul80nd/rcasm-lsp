@@ -181,10 +181,16 @@ describe('HoverProvider', () => {
 					.hoverAt(0, 6)
 					.is(hover.covering(0, 4, 0, 8).withText('(label) test')));
 
-			// it('provides a hover on scoped label ref', async () =>
-			// 	await given(`jmp scp::test\nscp: {\ntest: add\n}`)
-			// 		.hoverAt(0, 6)
-			// 		.is(hover.covering(0, 4, 0, 8).withText('(label) test')));
+			it('provides a hover on scoped label ref', async () =>
+				await given(`jmp scp::test\nscp: {\ntest: add\n}`)
+					.hoverAt(0, 6)
+					.is(hover.covering(0, 4, 0, 13).withText('(label) test')));
+
+			it('provides hover for refs split on §', async () => {
+				const g = given('fra: inc\nldi m,fra§parr\nparr: add');
+				await g.hoverAt(1, 8).is(hover.covering(1, 6, 1, 9).withText('(label) fra'));
+				await g.hoverAt(1, 12).is(hover.covering(1, 10, 1, 14).withText('(label) parr'));
+			});
 		});
 
 		describe('variable ref hovers', () => {

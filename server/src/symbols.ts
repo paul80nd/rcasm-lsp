@@ -1,8 +1,6 @@
 import * as lsp from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as parser from './parser/nodes';
-// import { getDependencies } from "./files";
-// import { containsPosition, nodeAsRange } from './geometry';
 import { Context } from './context';
 import { ProcessedDocument } from './document-processor';
 import * as scopes from './parser/scopes';

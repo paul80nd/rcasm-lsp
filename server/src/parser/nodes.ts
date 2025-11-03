@@ -116,26 +116,6 @@ export class Node {
 
 export const adapt = (s: scp.Scopes, p?: ast.Program): Node => new Program(s, p);
 
-const withAnonScope = (
-	scopes: scp.Scopes,
-	name: string | undefined,
-	treeScope: () => void,
-	parent?: scp.NamedScope<scp.SymEntry>
-): void => {
-	if (name) {
-		return withLabelScope(scopes, name, treeScope, parent);
-	}
-	scopes.withAnonScope(treeScope, parent);
-};
-const withLabelScope = (
-	scopes: scp.Scopes,
-	name: string,
-	treeScope: () => void,
-	_parent?: scp.NamedScope<scp.SymEntry>
-): void => {
-	scopes.withLabelScope(name, treeScope);
-};
-
 export class Program extends Node {
 	constructor(s: scp.Scopes, p?: ast.Program) {
 		super(p, NodeType.Program);
@@ -276,7 +256,7 @@ export class ForDirective extends Directive {
 			sn = `${lsn}__x`;
 		}
 
-		withAnonScope(s, sn, () => {
+		s.withAnonOrLabelScope(sn, () => {
 			ss.body!.filter(st => st.label || st.scopedStmts || st.stmt).forEach(st =>
 				this.adoptChild(new Line(s, st))
 			);
@@ -289,14 +269,14 @@ export class IfDirective extends Directive {
 		super(ss, '!if');
 		ss.cases.forEach(c => {
 			this.adoptChild(parameterFromExpr(c[0]));
-			withAnonScope(s, lsn, () => {
+			s.withAnonOrLabelScope(lsn, () => {
 				c[1]
 					.filter(st => st.label || st.scopedStmts || st.stmt)
 					.forEach(st => this.adoptChild(new Line(s, st)));
 			});
 		});
 		if (ss.elseBranch) {
-			withAnonScope(s, lsn, () => {
+			s.withAnonOrLabelScope(lsn, () => {
 				ss.elseBranch
 					.filter(st => st.label || st.scopedStmts || st.stmt)
 					.forEach(st => this.adoptChild(new Line(s, st)));
