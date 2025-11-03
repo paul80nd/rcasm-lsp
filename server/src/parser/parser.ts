@@ -1,13 +1,13 @@
 import * as rcasm from '@paul80nd/rcasm';
 import * as nodes from './nodes';
+import * as scp from './scopes';
 
 export class Parser {
-	parse(text: string): nodes.Program {
-		const program = rcasm.parseOnly(text);
-		const root = new nodes.Program(program);
+	parse(text: string): { tree: nodes.Node; scopes: scp.Scopes } {
+		const ast = rcasm.parseOnly(text);
+		const scopes = new scp.Scopes();
+		const tree = nodes.adapt(scopes, ast);
 
-		root.textProvider = (offset: number, length: number) => text.substring(offset, offset + length);
-
-		return root;
+		return { tree, scopes };
 	}
 }

@@ -12,8 +12,8 @@ describe('HoverProvider', () => {
 	let ctx: Context;
 	let processor: DocumentProcessor;
 
-	beforeAll(async () => {
-		ctx = await createTestContext();
+	beforeAll(() => {
+		ctx = createTestContext();
 		processor = new DocumentProcessor(ctx);
 		provider = new HoverProvider(ctx);
 	});
@@ -66,57 +66,59 @@ describe('HoverProvider', () => {
 				);
 			});
 
-			it('provides hover for !fill', () =>
-				hoverFor('!fi|ll 8, 0x01').is(hover.between(0, 13).containingText(/Define Fill Space/)));
+			it('provides hover for !fill', async () =>
+				await hoverFor('!fi|ll 8, 0x01').is(
+					hover.between(0, 13).containingText(/Define Fill Space/)
+				));
 
-			it('provides hover for !align', () =>
-				hoverFor('!a|lign 8').is(hover.between(0, 8).containingText(/Define Align/)));
+			it('provides hover for !align', async () =>
+				await hoverFor('!a|lign 8').is(hover.between(0, 8).containingText(/Define Align/)));
 
-			it('provides hover for !for', () =>
-				hoverFor('!fo|r i in range(0,2) {\n add\n}').is(
+			it('provides hover for !for', async () =>
+				await hoverFor('!fo|r i in range(0,2) {\n add\n}').is(
 					hover.covering(0, 0, 2, 1).containingText(/Define For Loop/)
 				));
 
-			it('provides hover for !for within block', () =>
-				given('!for i in range(0,2) {\n add\n}')
+			it('provides hover for !for within block', async () =>
+				await given('!for i in range(0,2) {\n add\n}')
 					.hoverAt(1, 0)
 					.is(hover.covering(0, 0, 2, 1).containingText(/Define For Loop/)));
 
-			it('mnemonic hover overrides outer !for block', () =>
-				given('!for i in range(0,2) {\n add\n}')
+			it('mnemonic hover overrides outer !for block', async () =>
+				await given('!for i in range(0,2) {\n add\n}')
 					.hoverAt(1, 2)
 					.is(hover.covering(1, 1, 1, 4).containingText(/Arithmetic Add/)));
 
-			it('provides hover for !if', () =>
-				hoverFor('!i|f (0==1) {\n add\n} else {\n inc\n}').is(
+			it('provides hover for !if', async () =>
+				await hoverFor('!i|f (0==1) {\n add\n} else {\n inc\n}').is(
 					hover.covering(0, 0, 4, 1).containingText(/Define Conditional Block/)
 				));
 
-			it('provides hover for !if within if block', () =>
-				given('!if (0==1) {\n add\n} else {\n inc\n}')
+			it('provides hover for !if within if block', async () =>
+				await given('!if (0==1) {\n add\n} else {\n inc\n}')
 					.hoverAt(1, 0)
 					.is(hover.covering(0, 0, 4, 1).containingText(/Define Conditional Block/)));
 
-			it('mnemonic hover overrides outer !if block', () =>
-				given('!if (0==1) {\n add\n} else {\n inc\n}')
+			it('mnemonic hover overrides outer !if block', async () =>
+				await given('!if (0==1) {\n add\n} else {\n inc\n}')
 					.hoverAt(1, 2)
 					.is(hover.covering(1, 1, 1, 4).containingText(/Arithmetic Add/)));
 
-			it('provides hover for !if within else block', () =>
-				given('!if (0==1) {\n add\n} else {\n inc\n}')
+			it('provides hover for !if within else block', async () =>
+				await given('!if (0==1) {\n add\n} else {\n inc\n}')
 					.hoverAt(3, 0)
 					.is(hover.covering(0, 0, 4, 1).containingText(/Define Conditional Block/)));
 
-			it('mnemonic hover overrides outer !if block', () =>
-				given('!if (0==1) {\n add\n} else {\n inc\n}')
+			it('mnemonic hover overrides outer !if block', async () =>
+				await given('!if (0==1) {\n add\n} else {\n inc\n}')
 					.hoverAt(3, 2)
 					.is(hover.covering(3, 1, 3, 4).containingText(/Arithmetic Increment/)));
 
-			it('provides hover for !let', () =>
-				hoverFor('!l|et a=5').is(hover.between(0, 8).containingText(/Define Variable/)));
+			it('provides hover for !let', async () =>
+				await hoverFor('!l|et a=5').is(hover.between(0, 8).containingText(/Define Variable/)));
 
-			it('provides hover for !error', () =>
-				hoverFor('!e|rror "broken"').is(
+			it('provides hover for !error', async () =>
+				await hoverFor('!e|rror "broken"').is(
 					hover.between(0, 15).containingText(/Throw Assembly Error/)
 				));
 		});
@@ -169,33 +171,27 @@ describe('HoverProvider', () => {
 		});
 
 		describe('label ref hovers', () => {
-			it('provides a hover on label ref', () =>
-				given('test: add\njmp test')
+			it('provides a hover on label ref', async () =>
+				await given('test: add\njmp test')
 					.hoverAt(1, 6)
 					.is(hover.covering(1, 4, 1, 8).withText('(label) test')));
 
-			it('provides a hover on label ref even if label follows after', () =>
-				given('jmp test\ntest: add')
+			it('provides a hover on label ref even if label follows after', async () =>
+				await given('jmp test\ntest: add')
 					.hoverAt(0, 6)
 					.is(hover.covering(0, 4, 0, 8).withText('(label) test')));
 
-			//     it("provide hover  for symbol reference", async () => {
-			//       const textDocument = await createDoc(
-			//         "example.s",
-			//         `foo = 1
-			// 	move #foo,d1`
-			//       );
+			// it('provides a hover on scoped label ref', async () =>
+			// 	await given(`jmp scp::test\nscp: {\ntest: add\n}`)
+			// 		.hoverAt(0, 6)
+			// 		.is(hover.covering(0, 4, 0, 8).withText('(label) test')));
+		});
 
-			//       const hover = await provider.onHover({
-			//         textDocument,
-			//         position: lsp.Position.create(1, 9),
-			//       });
-
-			//       expect(hover).toEqual({
-			//         range: range(1, 7, 1, 10),
-			//         contents: [{ language: "vasmmot", value: "foo = 1" }],
-			//       });
-			//     });
+		describe('variable ref hovers', () => {
+			it('provides a hover on variable ref', async () =>
+				await given('!let   k  = 5\nldi b,k')
+					.hoverAt(1, 6)
+					.is(hover.covering(1, 6, 1, 7).withRcasm('!let k = 5')));
 		});
 
 		// Test Director
@@ -239,7 +235,8 @@ describe('HoverProvider', () => {
 					withContent: (contents: lsp.MarkupContent) => ({
 						range,
 						contents
-					})
+					}),
+					withRcasm: (code: string) => s1.withText('```rcasm\n' + code + '\n```')
 				};
 				return s1;
 			}

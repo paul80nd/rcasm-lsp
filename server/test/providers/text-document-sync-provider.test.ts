@@ -8,8 +8,8 @@ describe('TextDocumentSyncProvider', () => {
 	let provider: TextDocumentSyncProvider;
 	let ctx: Context;
 
-	beforeAll(async () => {
-		ctx = await createTestContext();
+	beforeAll(() => {
+		ctx = createTestContext();
 		provider = new TextDocumentSyncProvider(ctx);
 	});
 

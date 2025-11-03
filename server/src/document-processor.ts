@@ -1,15 +1,15 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Parser } from './parser';
 import * as parser from './parser/nodes';
+import * as scopes from './parser/scopes';
 
 // import { readDocumentFromUri, resolveReferencedUris } from "./files";
-import { processSymbols, Symbols } from './symbols';
 import { Context } from './context';
 
 export interface ProcessedDocument {
 	document: TextDocument;
 	tree: parser.Program;
-	symbols: Symbols;
+	scopes: scopes.Scopes;
 	//   referencedUris: string[];
 }
 
@@ -28,7 +28,7 @@ export default class DocumentProcessor {
 	): Promise<ProcessedDocument> {
 		this.ctx.logger.log('processDocument: ' + document.uri);
 
-		const tree = this.parser.parse(document.getText() /*, oldTree*/);
+		const { tree, scopes } = this.parser.parse(document.getText() /*, oldTree*/);
 
 		//     if (oldTree) {
 		//       oldTree.delete();
@@ -37,7 +37,7 @@ export default class DocumentProcessor {
 		const processed: ProcessedDocument = {
 			document,
 			tree,
-			symbols: processSymbols(/*document.uri,*/ tree /*, this.ctx*/)
+			scopes
 			//       referencedUris: [],
 		};
 

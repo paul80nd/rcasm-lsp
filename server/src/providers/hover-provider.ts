@@ -3,13 +3,13 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Provider } from '.';
 // import { nodeAsRange, positionToPoint } from "../geometry";
 // import { resolveInclude } from "../files";
-import { /* DefinitionType,*/ getDefinitions /*, processPath */ } from '../symbols';
+import { /* DefinitionType,*/ DefinitionType, getDefinitions /*, processPath */ } from '../symbols';
 import { mnemonicDocs, registerDocs } from '../docs/index';
 // import { RegisterName, Size } from "../syntax";
 import { Context } from '../context';
 import * as nodes from '../parser/nodes';
 import {
-	//   formatDeclaration,
+	formatDeclaration,
 	formatMnemonicDoc,
 	formatRegisterDoc,
 	formatNumeric
@@ -49,7 +49,7 @@ export default class HoverProvider implements Provider {
 					return this.hoverDirectiveMnemonic(node as nodes.Directive, getRange(node));
 				case nodes.NodeType.SetPC:
 					return this.hoverSetPC(node as nodes.SetPC, getRange(node));
-				case nodes.NodeType.LabelRef:
+				case nodes.NodeType.SQRef:
 					return this.hoverSymbol(processed.document, position, getRange(node));
 				case nodes.NodeType.Literal:
 					return this.hoverNumber(node as nodes.Literal, getRange(node));
@@ -104,28 +104,22 @@ export default class HoverProvider implements Provider {
 		let content = '';
 
 		if (def) {
-			//       if (def.comment) {
-			//         contents.push(def.comment); // TODO
-			//       }
-
 			switch (def.type) {
-				//         case DefinitionType.Register:
-				//         case DefinitionType.RegisterList:
-				//         case DefinitionType.Constant:
-				//         case DefinitionType.Variable: {
-				//           // Find Declaration and add code block
-				//           const startLine = def.location.range.start.line;
-				//           const defDoc = this.ctx.store.get(def.location.uri)?.document;
-				//           if (defDoc) {
-				//             const lines = defDoc.getText().split(/\r?\n/g);
-				//             const definitionLine = lines[startLine];
-				//             contents.push({
-				//               language: document.languageId,
-				//               value: formatDeclaration(definitionLine),
-				//             });
-				//           }
-				//           break;
-				//         }
+				case DefinitionType.Variable: {
+					// Find Declaration and add code block
+					const startLine = def.location.range.start.line;
+					const defDoc = this.ctx.store.get(def.location.uri)?.document;
+					if (defDoc) {
+						const definitionLine = defDoc.getText(
+							lsp.Range.create(
+								lsp.Position.create(startLine, 0),
+								lsp.Position.create(startLine, Number.MAX_VALUE)
+							)
+						);
+						content = '```rcasm\n' + formatDeclaration(definitionLine) + '\n```';
+					}
+					break;
+				}
 				default:
 					content = `(${def.type}) ${def.name}`;
 			}

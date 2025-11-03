@@ -4,12 +4,13 @@ import * as parser from './parser/nodes';
 // import { getDependencies } from "./files";
 // import { containsPosition, nodeAsRange } from './geometry';
 import { Context } from './context';
-import { ParsedSymbols } from './parser';
 import { ProcessedDocument } from './document-processor';
+import * as scopes from './parser/scopes';
 
 export interface NamedSymbol {
 	location: lsp.Location;
 	name: string;
+	referenceType?: parser.ReferenceType;
 }
 
 // export interface Literal {
@@ -30,9 +31,9 @@ export interface Definition extends NamedSymbol {
 
 export enum DefinitionType {
 	// Section = 'section',
-	Label = 'label'
+	Label = 'label',
 	// Constant = 'constant',
-	// Variable = 'variable',
+	Variable = 'variable'
 	// Register = 'register',
 	// RegisterList = 'register_list',
 	// Offset = 'offset',
@@ -40,7 +41,7 @@ export enum DefinitionType {
 }
 
 export interface Symbols {
-	parsedSymbols: ParsedSymbols;
+	scope: scopes.Scopes;
 	// definitions: Map<string, Definition>;
 	// references: Map<string, NamedSymbol[]>;
 	// includes: Literal[];
@@ -54,13 +55,11 @@ export interface Symbols {
  */
 export function processSymbols(
 	// uri: string,
-	tree: parser.Program
+	scps: scopes.Scopes
 	// ctx: Context
 ): Symbols {
-	const pSymbols = new ParsedSymbols(tree);
-
 	const symbols: Symbols = {
-		parsedSymbols: pSymbols
+		scope: scps
 		// definitions: new Map<string, Definition>(),
 		// references: new Map<string, NamedSymbol[]>(),
 		// includes: [],
@@ -256,15 +255,19 @@ export function symbolAtPosition(
 		return undefined;
 	}
 
-	const symbol = processed.symbols.parsedSymbols.findSymbolFromNode(node);
-	if (!symbol) {
+	if (node instanceof parser.SQRef) {
+		const r = processed.scopes.findQualifiedSym(node.path, node.absolute);
+		if (r) {
+			return {
+				name: r.name,
+				referenceType:
+					r.type == 'label' ? parser.ReferenceType.Label : parser.ReferenceType.Variable,
+				location: { uri: processed.document.uri, range: getRange(r.node, processed.document) }
+			};
+		}
 		return undefined;
 	}
 
-	return {
-		name: symbol.name,
-		location: { uri: processed.document.uri, range: getRange(symbol.node, processed.document) }
-	};
 	// return (
 	// 		//     definitionAtPosition(symbols, position) ||
 	// 		referenceAtPosition(symbols, position)
@@ -411,10 +414,20 @@ export async function getDefinitions(
 		return [];
 	}
 
+	let type = DefinitionType.Label;
+	switch (symbol.referenceType) {
+		case parser.ReferenceType.Label:
+			type = DefinitionType.Label;
+			break;
+		case parser.ReferenceType.Variable:
+			type = DefinitionType.Variable;
+	}
+
 	return [
 		{
 			name: symbol.name,
-			type: DefinitionType.Label,
+			referenceType: symbol.referenceType,
+			type,
 			location: symbol.location,
 			selectionRange: symbol.location.range
 		}

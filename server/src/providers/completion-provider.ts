@@ -7,7 +7,6 @@ import { Context } from '../context';
 import { Component, componentAtIndex, ComponentType, parseLine, parseSignature } from '../parse';
 import { formatMnemonicDoc, formatRegisterDoc } from '../formatting';
 import { RegisterName } from '../syntax';
-//import { ProcessedDocument } from "../document-processor";
 
 export default class CompletionProvider implements Provider {
 	constructor(protected readonly ctx: Context) {}
@@ -266,9 +265,9 @@ export default class CompletionProvider implements Provider {
 
 const typeMappings: Record<DefinitionType, lsp.CompletionItemKind> = {
 	// [DefinitionType.Section]: lsp.CompletionItemKind.Module,
-	[DefinitionType.Label]: lsp.CompletionItemKind.Field
+	[DefinitionType.Label]: lsp.CompletionItemKind.Field,
 	// [DefinitionType.Constant]: lsp.CompletionItemKind.Constant,
-	// [DefinitionType.Variable]: lsp.CompletionItemKind.Variable,
+	[DefinitionType.Variable]: lsp.CompletionItemKind.Variable
 	// [DefinitionType.Register]: lsp.CompletionItemKind.Constant,
 	// [DefinitionType.RegisterList]: lsp.CompletionItemKind.Constant,
 	// [DefinitionType.Offset]: lsp.CompletionItemKind.Constant,

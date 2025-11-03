@@ -11,8 +11,8 @@ describe('DefinitionProvider', () => {
 	let ctx: Context;
 	let processor: DocumentProcessor;
 
-	beforeAll(async () => {
-		ctx = await createTestContext();
+	beforeAll(() => {
+		ctx = createTestContext();
 		processor = new DocumentProcessor(ctx);
 		provider = new DefinitionProvider(ctx);
 	});
@@ -38,6 +38,11 @@ describe('DefinitionProvider', () => {
 			await given(`jmp test\ntest: add`)
 				.symbolAt(0, 6)
 				.hasDefinitionAt(range(1, 0, 1, 4)));
+
+		// it('finds definition for label inside scope', async () =>
+		// 	await given(`jmp scp::test\nscp: {\ntest: add\n}`)
+		// 		.symbolAt(0, 6)
+		// 		.hasDefinitionAt(range(1, 0, 1, 4)));
 
 		// it('returns a definition for a label outside scope', async () =>
 		// 	await given(`test: add\nscope: {\njmp ::test\n}`)

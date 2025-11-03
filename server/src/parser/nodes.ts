@@ -1,23 +1,31 @@
 'use strict';
 
-import * as rcasm from '@paul80nd/rcasm';
+import * as ast from '@paul80nd/rcasm';
+import * as scp from './scopes';
 
 export enum NodeType {
 	Program,
 	Line,
 	Label,
-	LabelRef,
 	Instruction,
 	Literal,
 	Register,
 	SetPC,
 	Directive,
 	Scope,
-	Expression
+	Expression,
+	CurrentPC,
+	BinaryOp,
+	CallFunc,
+	Variable,
+	Ref,
+	SQRef,
+	ConditionalBlock
 }
 
 export enum ReferenceType {
-	Label
+	Label,
+	Variable
 }
 
 export function getNodeAtOffset(node: Node, offset: number): Node | null {
@@ -56,55 +64,32 @@ export function getNodePath(node: Node, offset: number): Node[] {
 	return path;
 }
 
-export type ITextProvider = (offset: number, length: number) => string;
-
 export class Node {
 	public parent: Node | null;
 
 	public offset: number;
 	public length: number;
+	public info?: string;
 	public get end() {
 		return this.offset + this.length;
 	}
 
-	public textProvider: ITextProvider | undefined; // only set on the root node
-
 	private children: Node[] | undefined;
 
 	constructor(
-		rnode: rcasm.Node | undefined,
-		private nodeType: NodeType
+		rnode: ast.Node | undefined,
+		private nodeType: NodeType,
+		info: string | undefined = undefined
 	) {
 		this.parent = null;
 		this.offset = rnode?.loc.start.offset ?? 0;
 		this.length = (rnode?.loc.end.offset ?? 0) - this.offset;
+		this.info = info;
 	}
 
 	public get type(): NodeType {
 		return this.nodeType;
 	}
-
-	private getTextProvider(): ITextProvider {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		let node: Node | null = this;
-		while (node && !node.textProvider) {
-			node = node.parent;
-		}
-		if (node) {
-			return node.textProvider!;
-		}
-		return () => {
-			return 'unknown';
-		};
-	}
-
-	public getText(): string {
-		return this.getTextProvider()(this.offset, this.length);
-	}
-
-	// 	public matches(str: string): boolean {
-	// 		return this.length === str.length && this.getTextProvider()(this.offset, this.length) === str;
-	// 	}
 
 	public accept(visitor: IVisitorFunction): void {
 		if (visitor(this) && this.children) {
@@ -129,25 +114,45 @@ export class Node {
 	}
 }
 
-// export function adapt(p: rcasm.Program): Program {
-// 	return new Program(p);
-// }
+export const adapt = (s: scp.Scopes, p?: ast.Program): Node => new Program(s, p);
+
+const withAnonScope = (
+	scopes: scp.Scopes,
+	name: string | undefined,
+	treeScope: () => void,
+	parent?: scp.NamedScope<scp.SymEntry>
+): void => {
+	if (name) {
+		return withLabelScope(scopes, name, treeScope, parent);
+	}
+	scopes.withAnonScope(treeScope, parent);
+};
+const withLabelScope = (
+	scopes: scp.Scopes,
+	name: string,
+	treeScope: () => void,
+	_parent?: scp.NamedScope<scp.SymEntry>
+): void => {
+	scopes.withLabelScope(name, treeScope);
+};
 
 export class Program extends Node {
-	constructor(p: rcasm.Program | undefined) {
+	constructor(s: scp.Scopes, p?: ast.Program) {
 		super(p, NodeType.Program);
-		p?.lines?.forEach(l => this.adoptChild(new Line(l)));
+		p?.lines
+			?.filter(l => l.label || l.scopedStmts || l.stmt)
+			.forEach(l => this.adoptChild(new Line(s, l)));
 	}
 }
 
 class Line extends Node {
-	constructor(l: rcasm.Line) {
+	constructor(s: scp.Scopes, l: ast.Line) {
 		super(l, NodeType.Line);
 		if (l.label) {
-			this.adoptChild(new Label(l.label));
+			this.adoptChild(new Label(s, l.label));
 		}
 		if (l.scopedStmts) {
-			this.adoptChild(new Scope(l));
+			this.adoptChild(new Scope(s, l));
 		}
 		if (l.stmt) {
 			switch (l.stmt.type) {
@@ -167,13 +172,13 @@ class Line extends Node {
 					this.adoptChild(new AlignDirective(l.stmt));
 					break;
 				case 'for':
-					this.adoptChild(new ForDirective(l.stmt));
+					this.adoptChild(new ForDirective(s, l.stmt, l.label?.name));
 					break;
 				case 'if':
-					this.adoptChild(new IfDirective(l.stmt));
+					this.adoptChild(new IfDirective(s, l.stmt, l.label?.name));
 					break;
 				case 'let':
-					this.adoptChild(new LetDirective(l.stmt));
+					this.adoptChild(new LetDirective(s, l.stmt));
 					break;
 				case 'error':
 					this.adoptChild(new ErrorDirective(l.stmt));
@@ -184,93 +189,119 @@ class Line extends Node {
 }
 
 export class Label extends Node {
-	constructor(l: rcasm.Label) {
-		super(l, NodeType.Label);
-		this.length = l.name.length; // Ignore colon and any whitespace
-	}
+	public name: string;
 
-	public getName(): string {
-		return this.getText();
+	constructor(s: scp.Scopes, l: ast.Label) {
+		super(l, NodeType.Label, l.name);
+		this.name = l.name;
+		this.length = l.name.length; // Ignore colon and any whitespace
+
+		if (!s.symbolSeen(l.name)) {
+			s.declareLabelSymbol(l.name, this);
+		}
 	}
 }
 
 export class Scope extends Node {
-	constructor(ss: rcasm.Line) {
+	constructor(s: scp.Scopes, ss: ast.Line) {
 		super(ss, NodeType.Scope);
-		ss.scopedStmts!.forEach(s => {
-			this.adoptChild(new Line(s));
+		const label = ss.label?.name ?? '?';
+		s.withLabelScope(label, () => {
+			ss.scopedStmts!.filter(l => l.label || l.scopedStmts || l.stmt).forEach(l => {
+				this.adoptChild(new Line(s, l));
+			});
 		});
 	}
 }
 
 export class SetPC extends Node {
-	constructor(spc: rcasm.StmtSetPC) {
+	constructor(spc: ast.StmtSetPC) {
 		super(spc, NodeType.SetPC);
-		this.adoptChild(new Expression(spc.pc));
+		this.adoptChild(parameterFromExpr(spc.pc));
 	}
 }
 
 export class Directive extends Node {
 	public mnemonic: string;
-	constructor(d: rcasm.Node, mne: string) {
-		super(d, NodeType.Directive);
+	constructor(d: ast.Node, mne: string) {
+		super(d, NodeType.Directive, mne);
 		this.mnemonic = mne.toLowerCase();
 	}
 }
 export class DataDirective extends Directive {
-	constructor(d: rcasm.StmtData) {
-		super(d, d.dataSize === rcasm.DataSize.Byte ? '!byte' : '!word');
+	constructor(d: ast.StmtData) {
+		super(d, d.dataSize === ast.DataSize.Byte ? '!byte' : '!word');
 		d.values.forEach(v => {
-			this.adoptChild(new Expression(v));
+			this.adoptChild(parameterFromExpr(v));
 		});
 	}
 }
 export class FillDirective extends Directive {
-	constructor(d: rcasm.StmtFill) {
+	constructor(d: ast.StmtFill) {
 		super(d, '!fill');
-		this.adoptChild(new Expression(d.numBytes));
-		this.adoptChild(new Expression(d.fillValue));
+		this.adoptChild(parameterFromExpr(d.numBytes));
+		this.adoptChild(parameterFromExpr(d.fillValue));
 	}
 }
 export class AlignDirective extends Directive {
-	constructor(d: rcasm.StmtAlign) {
+	constructor(d: ast.StmtAlign) {
 		super(d, '!align');
-		this.adoptChild(new Expression(d.alignBytes));
+		this.adoptChild(parameterFromExpr(d.alignBytes));
 	}
 }
 export class LetDirective extends Directive {
-	constructor(d: rcasm.StmtLet) {
+	constructor(s: scp.Scopes, d: ast.StmtLet) {
 		super(d, '!let');
-		this.adoptChild(new Expression(d.value));
+		this.adoptChild(new Variable(s, d.name));
+		this.adoptChild(parameterFromExpr(d.value));
 	}
 }
+
 export class ErrorDirective extends Directive {
-	constructor(d: rcasm.StmtError) {
+	constructor(d: ast.StmtError) {
 		super(d, '!error');
 	}
 }
 
 export class ForDirective extends Directive {
-	constructor(ss: rcasm.StmtFor) {
+	constructor(s: scp.Scopes, ss: ast.StmtFor, lsn?: string) {
 		super(ss, '!for');
-		ss.body!.forEach(s => {
-			this.adoptChild(new Line(s));
+
+		this.adoptChild(new Variable(s, ss.index));
+		this.adoptChild(parameterFromExpr(ss.list));
+
+		// Derrive scope name
+		let sn = undefined;
+		if (lsn) {
+			sn = `${lsn}__x`;
+		}
+
+		withAnonScope(s, sn, () => {
+			ss.body!.filter(st => st.label || st.scopedStmts || st.stmt).forEach(st =>
+				this.adoptChild(new Line(s, st))
+			);
 		});
 	}
 }
 
 export class IfDirective extends Directive {
-	constructor(ss: rcasm.StmtIfElse) {
+	constructor(s: scp.Scopes, ss: ast.StmtIfElse, lsn?: string) {
 		super(ss, '!if');
 		ss.cases.forEach(c => {
-			this.adoptChild(new Expression(c[0]));
-			c[1].forEach(s => {
-				this.adoptChild(new Line(s));
+			this.adoptChild(parameterFromExpr(c[0]));
+			withAnonScope(s, lsn, () => {
+				c[1]
+					.filter(st => st.label || st.scopedStmts || st.stmt)
+					.forEach(st => this.adoptChild(new Line(s, st)));
 			});
 		});
-		ss.elseBranch?.forEach(s => {
-			this.adoptChild(new Line(s));
-		});
+		if (ss.elseBranch) {
+			withAnonScope(s, lsn, () => {
+				ss.elseBranch
+					.filter(st => st.label || st.scopedStmts || st.stmt)
+					.forEach(st => this.adoptChild(new Line(s, st)));
+			});
+		}
 	}
 }
 
@@ -279,50 +310,88 @@ export class Instruction extends Node {
 	public p1?: Operand;
 	public p2?: Operand;
 
-	constructor(si: rcasm.StmtInsn) {
-		super(si, NodeType.Instruction);
-		const addParam = (p: rcasm.Expr): Operand | undefined => {
-			switch (p.type) {
-				case 'literal':
-					return this.adoptChild(new Literal(p)) as Operand;
-				case 'register':
-					return this.adoptChild(new Register(p)) as Operand;
-				case 'qualified-ident':
-					return this.adoptChild(new LabelRef(p)) as Operand;
-				default:
-					return this.adoptChild(new Expression(p)) as Operand;
-			}
-		};
+	constructor(si: ast.StmtInsn) {
+		super(si, NodeType.Instruction, si.mnemonic);
 		this.mnemonic = si.mnemonic.toLowerCase();
 		if (si.p1) {
-			this.p1 = addParam(si.p1);
+			this.p1 = this.adoptChild(parameterFromExpr(si.p1));
 		}
 		if (si.p2) {
-			this.p2 = addParam(si.p2);
+			this.p2 = this.adoptChild(parameterFromExpr(si.p2));
 		}
 	}
 }
 
-export type Operand = LabelRef | Literal | Register;
+const parameterFromExpr = (p: ast.Expr): Operand => {
+	switch (p.type) {
+		case 'binary':
+			return new BinaryOp(p) as Operand;
+		case 'callfunc':
+			return new CallFunc(p) as Operand;
+		case 'literal':
+			return new Literal(p) as Operand;
+		case 'register':
+			return new Register(p) as Operand;
+		case 'qualified-ident':
+			return new SQRef(p) as Operand;
+		case 'ident':
+			return new Ref(p) as Operand;
+		case 'getcurpc':
+			return new CurrentPC(p) as Operand;
+		default:
+			throw 'Expr type not covered';
+	}
+};
 
-export class LabelRef extends Node {
-	constructor(sqi: rcasm.ScopeQualifiedIdent) {
-		super(sqi, NodeType.LabelRef);
-		this.length = sqi.path.at(-1)!.length;
+export type Operand = SQRef | Literal | Register | CallFunc | Ref | CurrentPC;
+
+export class SQRef extends Node {
+	public path: string[];
+	public absolute: boolean;
+	constructor(sqi: ast.ScopeQualifiedIdent) {
+		super(sqi, NodeType.SQRef, `${sqi.path}${sqi.absolute ? ' (abs)' : ''}`);
+		// this.length = sqi.path.at(-1)!.length;
+		this.path = sqi.path;
+		this.absolute = sqi.absolute;
+	}
+}
+
+export class CurrentPC extends Node {
+	constructor(cpc: ast.GetCurPC) {
+		super(cpc, NodeType.CurrentPC);
 	}
 }
 
 export class Literal extends Node {
 	public value: number | string;
 
-	constructor(l: rcasm.Literal) {
-		super(l, NodeType.Literal);
+	constructor(l: ast.Literal) {
+		super(l, NodeType.Literal, `${l.ot} ${l.lit}`);
 		this.value = l.lit;
 	}
 }
 
+export class Variable extends Node {
+	public name: string;
+
+	constructor(s: scp.Scopes, i: ast.Ident) {
+		super(i, NodeType.Variable, i.name);
+		this.name = i.name;
+		s.declareVar(i.name, this);
+	}
+}
+
+export class Ref extends Node {
+	public name: string;
+
+	constructor(i: ast.Ident) {
+		super(i, NodeType.Ref);
+		this.name = i.name;
+	}
+}
+
 export class Expression extends Node {
-	constructor(e: rcasm.Expr) {
+	constructor(e: ast.Expr) {
 		super(e, NodeType.Expression);
 		switch (e.type) {
 			case 'literal':
@@ -336,16 +405,36 @@ export class Expression extends Node {
 				this.adoptChild(new Expression(e.right));
 				break;
 			case 'qualified-ident':
-				return this.adoptChild(new LabelRef(e));
+				return this.adoptChild(new SQRef(e));
+			case 'ident':
+				return this.adoptChild(new Ref(e));
 		}
+	}
+}
+
+export class BinaryOp extends Node {
+	constructor(bo: ast.BinaryOp) {
+		super(bo, NodeType.BinaryOp, bo.op);
+		this.adoptChild(parameterFromExpr(bo.left));
+		this.adoptChild(parameterFromExpr(bo.right));
+	}
+}
+
+export class CallFunc extends Node {
+	constructor(cf: ast.CallFunc) {
+		super(cf, NodeType.CallFunc);
+		this.adoptChild(parameterFromExpr(cf.callee));
+		cf.args.forEach(c => {
+			this.adoptChild(parameterFromExpr(c));
+		});
 	}
 }
 
 export class Register extends Node {
 	public value: string;
 
-	constructor(r: rcasm.Register) {
-		super(r, NodeType.Register);
+	constructor(r: ast.Register) {
+		super(r, NodeType.Register, r.value);
 		this.value = r.value.toUpperCase();
 	}
 }

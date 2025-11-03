@@ -8,12 +8,12 @@ import {
 } from './docs';
 // import { AddressingMode } from "./syntax";
 
-// export function formatDeclaration(definitionLine: string) {
-//   return definitionLine
-//     .split(/(;|\* )/)[0] // Remove comment
-//     .replace(/\s+/g, " ") // Collapse whitespace
-//     .trimEnd();
-// }
+export function formatDeclaration(definitionLine: string) {
+	return definitionLine
+		.split(';')[0] // Remove comment
+		.replace(/\s+/g, ' ') // Collapse whitespace
+		.trimEnd();
+}
 
 export function formatNumeric(value: number): string {
 	const hex = value.toString(16);
