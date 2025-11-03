@@ -15,7 +15,7 @@
 		"vscode-uri": "^3.0.3",
 		"vscode-languageserver": "^9.0.1",
 		"vscode-languageserver-textdocument": "^1.0.11",
-		"@paul80nd/rcasm": "1.16.0"
+		"@paul80nd/rcasm": "1.17.0"
 	},
 	"scripts": {}
 }
