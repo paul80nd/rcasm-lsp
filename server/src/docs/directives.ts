@@ -1,3 +1,6 @@
+import { MnemonicDoc } from '.';
+
+export const directiveDocs: Record<string, MnemonicDoc> =
 {
 	"!align": {
 		"title": "!align",
@@ -55,4 +58,4 @@
 		"snippet": "!if (${1:i == 0}) { !error \"${2:Error message}\" }",
 		"description": "Intentionally raises an error at assembly time. Typically used within an !if directive to assert that a condition is met."
 	}
-}
+};

@@ -57,6 +57,7 @@ export default class HoverProvider implements Provider {
 					return this.hoverRegister(node as nodes.Register, getRange(node));
 			}
 		}
+		return;
 	}
 
 	register(connection: lsp.Connection) {
@@ -161,6 +162,7 @@ function lookupMnemonicDoc(mnemonic: string): MarkupContent | undefined {
 	if (mnemonicDocs[mnemonic]) {
 		return formatMnemonicDoc(mnemonicDocs[mnemonic]);
 	}
+	return;
 }
 
 function lookupRegisterDoc(reg: string): MarkupContent | undefined {
@@ -168,4 +170,5 @@ function lookupRegisterDoc(reg: string): MarkupContent | undefined {
 	if (registerDocs[register]) {
 		return formatRegisterDoc(registerDocs[register]);
 	}
+	return;
 }

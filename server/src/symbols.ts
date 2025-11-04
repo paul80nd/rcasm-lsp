@@ -270,6 +270,7 @@ export function symbolAtPosition(
 	// 		//     definitionAtPosition(symbols, position) ||
 	// 		referenceAtPosition(symbols, position)
 	// );
+	return;
 }
 
 // /**

@@ -1,3 +1,15 @@
+import { RegisterName } from '../syntax';
+
+export interface RegisterDoc {
+	title: string;
+	summary: string;
+	size: number;
+	canRead: boolean;
+	canWrite: boolean;
+	description: string;
+}
+
+export const registerDocs: Record<RegisterName, RegisterDoc> =
 {
 	"a": {
 		"title": "a",
@@ -111,4 +123,4 @@
 		"canWrite": false,
 		"description": "The current value set on the 8-bit front panel switches. Effectively this allows user input to be gated onto the data bus."
 	}
-}
+};

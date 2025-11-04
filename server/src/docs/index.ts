@@ -1,27 +1,10 @@
-import instructionsJson from './instructions.json';
-import directivesJson from './directives.json';
-import registersJson from './registers.json';
-import { AddressingMode, RegisterName } from '../syntax';
-import { integer } from 'vscode-languageserver';
 
-export type AluFlag = 'z' | 'c' | 's';
+import { instructionDocs } from './instructions';
+import { directiveDocs } from './directives';
 
-/**
- * ALU flag register states
- *
- * - The bit remains unchanged by the execution of the instruction
- * * The bit is set or cleared according to the outcome of the instruction.
- */
-export type AluFlagState = '-' | '*' | '0' | 'U' | '1';
-
-export type AluFlags = Record<AluFlag, AluFlagState>;
-
-export type InstructionClass = 'ALU' | 'GOTO' | 'MOV8';
-
-/**
- * Supported addressing modes for operand
- */
-export type AddressingModes = Record<AddressingMode, boolean>;
+export * from './instructions';
+export * from './directives';
+export * from './registers';
 
 export interface MnemonicDoc {
 	title: string;
@@ -31,53 +14,10 @@ export interface MnemonicDoc {
 	snippet?: string;
 }
 
-export interface InstructionDoc extends MnemonicDoc {
-	class: InstructionClass;
-	cycles: integer;
-	operation?: string;
-	flags?: AluFlags;
-	src?: AddressingModes;
-	dest?: AddressingModes;
-	procs: Processors;
-	variant?: string;
-	variants?: InstructionVariant[];
-}
-
-export interface InstructionVariant {
-	class: InstructionClass;
-	cycles: integer;
-	variant: string;
-	description?: string;
-	syntax: string[];
-	src?: AddressingModes;
-	dest?: AddressingModes;
-}
-
-export type Processor = 'rcasm' | 'rcasm+div';
-
-export type Processors = Record<Processor, boolean>;
-
-export const isInstructionDoc = (doc: MnemonicDoc): doc is InstructionDoc =>
-	(doc as InstructionDoc).operation !== undefined;
-
-export const instructionDocs = instructionsJson as Record<string, InstructionDoc>;
-export const directiveDocs = directivesJson as Record<string, MnemonicDoc>;
-
 export const mnemonicDocs = {
 	...instructionDocs,
 	...directiveDocs
 };
-
-export interface RegisterDoc {
-	title: string;
-	summary: string;
-	size: number;
-	canRead: boolean;
-	canWrite: boolean;
-	description: string;
-}
-
-export const registerDocs = registersJson as Record<RegisterName, RegisterDoc>;
 
 // export const addressingModeDocs: Record<AddressingMode, string> = {
 //   dr: "Dr",

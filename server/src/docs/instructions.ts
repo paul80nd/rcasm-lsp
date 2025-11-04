@@ -1,3 +1,53 @@
+import { MnemonicDoc } from '.';
+import { AddressingMode } from '../syntax';
+
+export type AddressingModes = Record<AddressingMode, boolean>;
+
+export type InstructionClass = 'ALU' | 'GOTO' | 'MOV8' | 'MOV16' | 'INCXY' | 'MISC' | 'SETAB' | 'LOAD' | 'STORE';
+
+export type Processor = 'rcasm' | 'rcasm+div';
+
+export type Processors = Record<Processor, boolean>;
+
+export type AluFlag = 'z' | 'c' | 's';
+
+/**
+ * ALU flag register states
+ *
+ * - The bit remains unchanged by the execution of the instruction
+ * * The bit is set or cleared according to the outcome of the instruction.
+ */
+export type AluFlagState = '-' | '*' | '0' | 'U' | '1';
+
+export type AluFlags = Record<AluFlag, AluFlagState>;
+
+export interface InstructionDoc extends MnemonicDoc {
+	class: InstructionClass;
+	cycles: number;
+	operation?: string;
+	flags?: AluFlags;
+	src?: AddressingModes;
+	dest?: AddressingModes;
+	procs: Processors;
+	variant?: string;
+	variants?: InstructionVariant[];
+}
+
+export interface InstructionVariant {
+	class: InstructionClass;
+	cycles: number;
+	variant: string;
+	description?: string;
+	syntax: string[];
+	src?: AddressingModes;
+	dest?: AddressingModes;
+	whenFirstParamIs?: string[];
+}
+
+export const isInstructionDoc = (doc: MnemonicDoc): doc is InstructionDoc =>
+	(doc as InstructionDoc).operation !== undefined;
+
+export const instructionDocs: Record<string, InstructionDoc> =
 {
 	"add": {
 		"title": "add",
@@ -258,7 +308,7 @@
 		"operation": "[dst] ← R / [C]",
 		"syntax": ["dvr [<dst:a|d>]"],
 		"description": "Performs a further division of the last `div` or `mod` remainder by register `c` placing the quotient result in `dst` (a or d). Register B should be set to 0. If dst is not specified then register a is assumed.",
-		"dst": {
+		"dest": {
 			"dr": true,
 			"ar": false,
 			"mIndirect": false,
@@ -532,7 +582,7 @@
 		"operation": "[dst] ← [B]%[C]",
 		"syntax": ["mod <dst:a|d>"],
 		"description": "Performs an integer division of register `b` by register `c` placing the remainder result in `dst` (a or d). If dst is not specified then register a is assumed.",
-		"dst": {
+		"dest": {
 			"dr": true,
 			"ar": false,
 			"mIndirect": false,
@@ -759,4 +809,4 @@
 			"rcasm+div": true
 		}
 	}
-}
+};

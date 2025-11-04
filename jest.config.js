@@ -4,7 +4,6 @@ module.exports = {
 			'ts-jest',
 			{
 				tsconfig: {
-					resolveJsonModule: true,
 					esModuleInterop: true
 				}
 			}
