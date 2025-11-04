@@ -85,7 +85,7 @@ describe('parse', () => {
 004+011 ...SQRef test,start
 016+021 .Line
 016+004 ..Label test
-016+021 ..Scope
+016+021 ..Scope test
 024+011 ...Line
 024+005 ....Label start
 032+003 ....Instruction add
@@ -222,6 +222,20 @@ describe('parse', () => {
 009+004 ....Literal h 255
 017+029 ...Line
 017+029 ....Directive !error
+`));
+
+	it('parses named scopes', () =>
+		parsing('bbp: {\njmp init\ninit: add\n}').is(`
+000+027 Program
+000+027 .Line
+000+003 ..Label bbp
+000+027 ..Scope bbp
+007+008 ...Line
+007+008 ....Instruction jmp
+011+004 .....SQRef init
+016+009 ...Line
+016+004 ....Label init
+022+003 ....Instruction add
 `));
 
 	// Test Director

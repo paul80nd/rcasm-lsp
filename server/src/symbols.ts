@@ -253,8 +253,8 @@ export function symbolAtPosition(
 		return undefined;
 	}
 
-	if (node instanceof parser.SQRef) {
-		const r = processed.scopes.findQualifiedSym(node.path, node.absolute);
+	if (node instanceof parser.SQRef && node.namedScope) {
+		const r = processed.scopes.findQualifiedSym(node.path, node.absolute, node.namedScope);
 		if (r) {
 			return {
 				name: r.name,

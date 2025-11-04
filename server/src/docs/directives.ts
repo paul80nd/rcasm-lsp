@@ -1,61 +1,67 @@
 import { MnemonicDoc } from '.';
 
-export const directiveDocs: Record<string, MnemonicDoc> =
-{
-	"!align": {
-		"title": "!align",
-		"summary": "Define Align",
-		"syntax": ["!align <value:2|4|8|16|...>"],
-		"snippet": "!align ${1:8}",
-		"description": "Writes 8-bit zeros into the output until the current location is a multiple of the given value."
+export const directiveDocs: Record<string, MnemonicDoc> = {
+	'!align': {
+		title: '!align',
+		summary: 'Define Align',
+		syntax: ['!align <value:2|4|8|16|...>'],
+		snippet: '!align ${1:8}',
+		description:
+			'Writes 8-bit zeros into the output until the current location is a multiple of the given value.'
 	},
-	"!byte": {
-		"title": "!byte",
-		"summary": "Define Byte Data",
-		"syntax": ["!byte <value:0x00..0xFF>[,...]"],
-		"snippet": "!byte ${1:0x00}",
-		"description": "Writes the given 8-bit values directly into the output starting from current location."
+	'!byte': {
+		title: '!byte',
+		summary: 'Define Byte Data',
+		syntax: ['!byte <value:0x00..0xFF>[,...]'],
+		snippet: '!byte ${1:0x00}',
+		description:
+			'Writes the given 8-bit values directly into the output starting from current location.'
 	},
-	"!word": {
-		"title": "!word",
-		"summary": "Define Word Data",
-		"syntax": ["!word <value:0x0000..0xFFFF>[,...]"],
-		"snippet": "!word ${1:0x0000}",
-		"description": "Writes the given 16-bit values directly into the output starting from current location."
+	'!word': {
+		title: '!word',
+		summary: 'Define Word Data',
+		syntax: ['!word <value:0x0000..0xFFFF>[,...]'],
+		snippet: '!word ${1:0x0000}',
+		description:
+			'Writes the given 16-bit values directly into the output starting from current location.'
 	},
-	"!fill": {
-		"title": "!fill",
-		"summary": "Define Fill Space",
-		"syntax": ["!fill <count:0..255>,<value:0x00..0xFF>"],
-		"snippet": "!fill ${1:8},${2:0x00}",
-		"description": "Writes the given 8-bit value n times directly into the output starting from current location."
+	'!fill': {
+		title: '!fill',
+		summary: 'Define Fill Space',
+		syntax: ['!fill <count:0..255>,<value:0x00..0xFF>'],
+		snippet: '!fill ${1:8},${2:0x00}',
+		description:
+			'Writes the given 8-bit value n times directly into the output starting from current location.'
 	},
-	"!for": {
-		"title": "!for",
-		"summary": "Define For Loop",
-		"syntax": ["!for <variable> in range([<start>,]<end>)"],
-		"snippet": "!for ${1:i} in range(${2:5}) {\n        ${3:add}\n}",
-		"description": "Defines a loop that will be expanded at assembly time. The loop will be expanded n times."
+	'!for': {
+		title: '!for',
+		summary: 'Define For Loop',
+		syntax: ['!for <variable> in range([<start>,]<end>)'],
+		snippet: '!for ${1:i} in range(${2:5}) {\n        ${3:add}\n}',
+		description:
+			'Defines a loop that will be expanded at assembly time. The loop will be expanded n times.'
 	},
-	"!if": {
-		"title": "!if",
-		"summary": "Define Conditional Block",
-		"syntax": ["!if (<condition>)"],
-		"snippet": "!if (${1:i == 0}) {\n        ${2:add}\n}",
-		"description": "Defines a block of code that will be output at assembly time if the condition is met."
+	'!if': {
+		title: '!if',
+		summary: 'Define Conditional Block',
+		syntax: ['!if (<condition>)'],
+		snippet: '!if (${1:i == 0}) {\n        ${2:add}\n}',
+		description:
+			'Defines a block of code that will be output at assembly time if the condition is met.'
 	},
-	"!let": {
-		"title": "!let",
-		"summary": "Define Variable",
-		"syntax": ["!let <variable> = <value>"],
-		"snippet": "!let ${1:i} = ${2:0}",
-		"description": "Defines a variable that can be substituted into the output at assembly time."
+	'!let': {
+		title: '!let',
+		summary: 'Define Variable',
+		syntax: ['!let <variable> = <value>'],
+		snippet: '!let ${1:i} = ${2:0}',
+		description: 'Defines a variable that can be substituted into the output at assembly time.'
 	},
-	"!error": {
-		"title": "!error",
-		"summary": "Throw Assembly Error",
-		"syntax": ["!error <message>"],
-		"snippet": "!if (${1:i == 0}) { !error \"${2:Error message}\" }",
-		"description": "Intentionally raises an error at assembly time. Typically used within an !if directive to assert that a condition is met."
+	'!error': {
+		title: '!error',
+		summary: 'Throw Assembly Error',
+		syntax: ['!error <message>'],
+		snippet: '!if (${1:i == 0}) { !error "${2:Error message}" }',
+		description:
+			'Intentionally raises an error at assembly time. Typically used within an !if directive to assert that a condition is met.'
 	}
 };

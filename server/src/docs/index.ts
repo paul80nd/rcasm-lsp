@@ -1,4 +1,3 @@
-
 import { instructionDocs } from './instructions';
 import { directiveDocs } from './directives';
 

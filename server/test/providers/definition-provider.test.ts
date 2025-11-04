@@ -55,6 +55,11 @@ describe('DefinitionProvider', () => {
 			await g.symbolAt(1, 8).hasDefinitionAt(range(0, 0, 0, 3));
 			await g.symbolAt(1, 12).hasDefinitionAt(range(2, 0, 2, 4));
 		});
+
+		it('returns definitions for refs and label inside scope', async () =>
+			await given('bbp: {\njmp init\ninit: add\n}')
+				.symbolAt(1, 5)
+				.hasDefinitionAt(range(2, 0, 2, 4)));
 	});
 
 	// Test Director

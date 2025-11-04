@@ -40,7 +40,7 @@ describe('scopes', () => {
 			symbolAt: (offset: number) => {
 				const node = nodes.getNodeAtOffset(tree, offset) as nodes.SQRef;
 				assert(node, 'No ref node found at offset');
-				const symbol = scopes.findQualifiedSym(node.path, node.absolute);
+				const symbol = scopes.findQualifiedSym(node.path, node.absolute, node.namedScope);
 				return {
 					is: <E>(expected: E) => expect(symbol).toEqual(expected)
 				};

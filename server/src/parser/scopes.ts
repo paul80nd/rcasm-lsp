@@ -63,17 +63,6 @@ export class NamedScope<T> {
 	addSymbol(name: string, val: T): void {
 		this.syms.set(name, val);
 	}
-
-	updateSymbol(name: string, val: T) {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		for (let cur: NamedScope<T> | null = this; cur !== null; cur = cur.parent) {
-			const v = cur.syms.get(name);
-			if (v !== undefined) {
-				cur.syms.set(name, val);
-				return;
-			}
-		}
-	}
 }
 
 export type SymEntry = SymLabel | SymVar;
@@ -122,38 +111,18 @@ export class Scopes {
 		return this.curSymtab.findSymbolPath(path);
 	}
 
-	findQualifiedSym(path: string[], absolute: boolean): SymEntry | undefined {
-		return this.findPath(path, absolute);
-	}
-
-	symbolSeen(name: string): boolean {
-		const n = this.curSymtab.syms.get(name);
-		if (n !== undefined) {
-			return true;
+	findQualifiedSym(path: string[], absolute: boolean, scope?: NamedScope<SymEntry>) {
+		if (absolute) {
+			return this.root.findSymbolPath(path);
 		}
-		return false;
+		if (scope) {
+			return scope.findSymbolPath(path);
+		}
+		return this.curSymtab.findSymbolPath(path);
 	}
 
 	declareLabelSymbol(name: string, node: nodes.Node) {
-		// As we allow name shadowing, we must look up the name
-		// only from the current scope.  If we lookup parent
-		// scopes for label declarations, we end up
-		// mutating some unrelated, but same-named label names.
-		const prevLabel = this.curSymtab.syms.get(name);
-		if (prevLabel === undefined) {
-			const lblsym: SymLabel = {
-				type: 'label',
-				name,
-				node
-			};
-			this.curSymtab.addSymbol(name, lblsym);
-			return;
-		}
-		if (prevLabel.type !== 'label') {
-			throw new Error('ICE: declareLabelSymbol should be called only on labels');
-		}
-		// Update to mark the label as "seen" in this pass
-		this.curSymtab.updateSymbol(name, prevLabel);
+		this.curSymtab.addSymbol(name, { type: 'label', name, node });
 	}
 
 	declareVar(name: string, node: nodes.Node): void {

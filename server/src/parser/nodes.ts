@@ -75,6 +75,7 @@ export class Node {
 	}
 
 	private children: Node[] | undefined;
+	public namedScope?: scp.NamedScope<scp.SymEntry>;
 
 	constructor(
 		rnode: ast.Node | undefined,
@@ -137,19 +138,19 @@ class Line extends Node {
 		if (l.stmt) {
 			switch (l.stmt.type) {
 				case 'insn':
-					this.adoptChild(new Instruction(l.stmt));
+					this.adoptChild(new Instruction(s, l.stmt));
 					break;
 				case 'setpc':
-					this.adoptChild(new SetPC(l.stmt));
+					this.adoptChild(new SetPC(s, l.stmt));
 					break;
 				case 'data':
-					this.adoptChild(new DataDirective(l.stmt));
+					this.adoptChild(new DataDirective(s, l.stmt));
 					break;
 				case 'fill':
-					this.adoptChild(new FillDirective(l.stmt));
+					this.adoptChild(new FillDirective(s, l.stmt));
 					break;
 				case 'align':
-					this.adoptChild(new AlignDirective(l.stmt));
+					this.adoptChild(new AlignDirective(s, l.stmt));
 					break;
 				case 'for':
 					this.adoptChild(new ForDirective(s, l.stmt, l.label?.name));
@@ -176,15 +177,13 @@ export class Label extends Node {
 		this.name = l.name;
 		this.length = l.name.length; // Ignore colon and any whitespace
 
-		if (!s.symbolSeen(l.name)) {
-			s.declareLabelSymbol(l.name, this);
-		}
+		s.declareLabelSymbol(l.name, this);
 	}
 }
 
 export class Scope extends Node {
 	constructor(s: scp.Scopes, ss: ast.Line) {
-		super(ss, NodeType.Scope);
+		super(ss, NodeType.Scope, ss.label?.name);
 		const label = ss.label?.name ?? '?';
 		s.withLabelScope(label, () => {
 			ss.scopedStmts!.filter(l => l.label || l.scopedStmts || l.stmt).forEach(l => {
@@ -195,9 +194,9 @@ export class Scope extends Node {
 }
 
 export class SetPC extends Node {
-	constructor(spc: ast.StmtSetPC) {
+	constructor(ss: scp.Scopes, spc: ast.StmtSetPC) {
 		super(spc, NodeType.SetPC);
-		this.adoptChild(parameterFromExpr(spc.pc));
+		this.adoptChild(parameterFromExpr(ss, spc.pc));
 	}
 }
 
@@ -209,31 +208,31 @@ export class Directive extends Node {
 	}
 }
 export class DataDirective extends Directive {
-	constructor(d: ast.StmtData) {
+	constructor(ss: scp.Scopes, d: ast.StmtData) {
 		super(d, d.dataSize === ast.DataSize.Byte ? '!byte' : '!word');
 		d.values.forEach(v => {
-			this.adoptChild(parameterFromExpr(v));
+			this.adoptChild(parameterFromExpr(ss, v));
 		});
 	}
 }
 export class FillDirective extends Directive {
-	constructor(d: ast.StmtFill) {
+	constructor(ss: scp.Scopes, d: ast.StmtFill) {
 		super(d, '!fill');
-		this.adoptChild(parameterFromExpr(d.numBytes));
-		this.adoptChild(parameterFromExpr(d.fillValue));
+		this.adoptChild(parameterFromExpr(ss, d.numBytes));
+		this.adoptChild(parameterFromExpr(ss, d.fillValue));
 	}
 }
 export class AlignDirective extends Directive {
-	constructor(d: ast.StmtAlign) {
+	constructor(ss: scp.Scopes, d: ast.StmtAlign) {
 		super(d, '!align');
-		this.adoptChild(parameterFromExpr(d.alignBytes));
+		this.adoptChild(parameterFromExpr(ss, d.alignBytes));
 	}
 }
 export class LetDirective extends Directive {
 	constructor(s: scp.Scopes, d: ast.StmtLet) {
 		super(d, '!let');
 		this.adoptChild(new Variable(s, d.name));
-		this.adoptChild(parameterFromExpr(d.value));
+		this.adoptChild(parameterFromExpr(s, d.value));
 	}
 }
 
@@ -248,7 +247,7 @@ export class ForDirective extends Directive {
 		super(ss, '!for');
 
 		this.adoptChild(new Variable(s, ss.index));
-		this.adoptChild(parameterFromExpr(ss.list));
+		this.adoptChild(parameterFromExpr(s, ss.list));
 
 		// Derrive scope name
 		let sn = undefined;
@@ -268,7 +267,7 @@ export class IfDirective extends Directive {
 	constructor(s: scp.Scopes, ss: ast.StmtIfElse, lsn?: string) {
 		super(ss, '!if');
 		ss.cases.forEach(c => {
-			this.adoptChild(parameterFromExpr(c[0]));
+			this.adoptChild(parameterFromExpr(s, c[0]));
 			s.withAnonOrLabelScope(lsn, () => {
 				c[1]
 					.filter(st => st.label || st.scopedStmts || st.stmt)
@@ -290,30 +289,30 @@ export class Instruction extends Node {
 	public p1?: Operand;
 	public p2?: Operand;
 
-	constructor(si: ast.StmtInsn) {
+	constructor(ss: scp.Scopes, si: ast.StmtInsn) {
 		super(si, NodeType.Instruction, si.mnemonic);
 		this.mnemonic = si.mnemonic.toLowerCase();
 		if (si.p1) {
-			this.p1 = this.adoptChild(parameterFromExpr(si.p1));
+			this.p1 = this.adoptChild(parameterFromExpr(ss, si.p1));
 		}
 		if (si.p2) {
-			this.p2 = this.adoptChild(parameterFromExpr(si.p2));
+			this.p2 = this.adoptChild(parameterFromExpr(ss, si.p2));
 		}
 	}
 }
 
-const parameterFromExpr = (p: ast.Expr): Operand => {
+const parameterFromExpr = (ss: scp.Scopes, p: ast.Expr): Operand => {
 	switch (p.type) {
 		case 'binary':
-			return new BinaryOp(p) as Operand;
+			return new BinaryOp(ss, p) as Operand;
 		case 'callfunc':
-			return new CallFunc(p) as Operand;
+			return new CallFunc(ss, p) as Operand;
 		case 'literal':
 			return new Literal(p) as Operand;
 		case 'register':
 			return new Register(p) as Operand;
 		case 'qualified-ident':
-			return new SQRef(p) as Operand;
+			return new SQRef(ss, p) as Operand;
 		case 'ident':
 			return new Ref(p) as Operand;
 		case 'getcurpc':
@@ -328,11 +327,11 @@ export type Operand = SQRef | Literal | Register | CallFunc | Ref | CurrentPC;
 export class SQRef extends Node {
 	public path: string[];
 	public absolute: boolean;
-	constructor(sqi: ast.ScopeQualifiedIdent) {
+	constructor(ss: scp.Scopes, sqi: ast.ScopeQualifiedIdent) {
 		super(sqi, NodeType.SQRef, `${sqi.path}${sqi.absolute ? ' (abs)' : ''}`);
-		// this.length = sqi.path.at(-1)!.length;
 		this.path = sqi.path;
 		this.absolute = sqi.absolute;
+		this.namedScope = ss.curSymtab;
 	}
 }
 
@@ -371,7 +370,7 @@ export class Ref extends Node {
 }
 
 export class Expression extends Node {
-	constructor(e: ast.Expr) {
+	constructor(ss: scp.Scopes, e: ast.Expr) {
 		super(e, NodeType.Expression);
 		switch (e.type) {
 			case 'literal':
@@ -381,11 +380,11 @@ export class Expression extends Node {
 				this.adoptChild(new Register(e));
 				break;
 			case 'binary':
-				this.adoptChild(new Expression(e.left));
-				this.adoptChild(new Expression(e.right));
+				this.adoptChild(new Expression(ss, e.left));
+				this.adoptChild(new Expression(ss, e.right));
 				break;
 			case 'qualified-ident':
-				return this.adoptChild(new SQRef(e));
+				return this.adoptChild(new SQRef(ss, e));
 			case 'ident':
 				return this.adoptChild(new Ref(e));
 		}
@@ -393,19 +392,19 @@ export class Expression extends Node {
 }
 
 export class BinaryOp extends Node {
-	constructor(bo: ast.BinaryOp) {
+	constructor(ss: scp.Scopes, bo: ast.BinaryOp) {
 		super(bo, NodeType.BinaryOp, bo.op);
-		this.adoptChild(parameterFromExpr(bo.left));
-		this.adoptChild(parameterFromExpr(bo.right));
+		this.adoptChild(parameterFromExpr(ss, bo.left));
+		this.adoptChild(parameterFromExpr(ss, bo.right));
 	}
 }
 
 export class CallFunc extends Node {
-	constructor(cf: ast.CallFunc) {
+	constructor(ss: scp.Scopes, cf: ast.CallFunc) {
 		super(cf, NodeType.CallFunc);
-		this.adoptChild(parameterFromExpr(cf.callee));
+		this.adoptChild(parameterFromExpr(ss, cf.callee));
 		cf.args.forEach(c => {
-			this.adoptChild(parameterFromExpr(c));
+			this.adoptChild(parameterFromExpr(ss, c));
 		});
 	}
 }
