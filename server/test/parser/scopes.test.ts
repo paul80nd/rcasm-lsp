@@ -32,9 +32,9 @@ describe('scopes', () => {
 		const { tree, scopes } = parser.parse(code);
 		return {
 			symbolAt: (offset: number) => {
-				const node = nodes.getNodeAtOffset(tree, offset) as nodes.SQRef;
-				assert(node, 'No ref node found at offset');
-				const symbol = scopes.findQualifiedSymbol(node);
+				const node = nodes.getNodeAtOffset(tree, offset);
+				assert(node?.ref, 'No ref node found at offset');
+				const symbol = scopes.findQualifiedSymbol(node.ref);
 				return {
 					is: <E>(expected: E) => expect(symbol).toEqual(expected)
 				};

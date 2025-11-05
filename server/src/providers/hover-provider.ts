@@ -44,9 +44,13 @@ export default class HoverProvider implements Provider {
 
 			switch (node.type) {
 				case 'Instruction':
-					return node.value ? this.hoverInstructionMnemonic(node.value.toString(), getRange(node)) : undefined;
+					return node.value
+						? this.hoverInstructionMnemonic(node.value.toString(), getRange(node))
+						: undefined;
 				case 'Directive':
-					return node.value ? this.hoverDirectiveMnemonic(node.value.toString(), getRange(node)) : undefined;
+					return node.value
+						? this.hoverDirectiveMnemonic(node.value.toString(), getRange(node))
+						: undefined;
 				case 'SetPC':
 					return this.hoverSetPC(getRange(node));
 				case 'SQRef':

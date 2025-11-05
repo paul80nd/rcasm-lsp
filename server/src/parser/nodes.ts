@@ -1,6 +1,4 @@
-import * as ast from '@paul80nd/rcasm';
-import { SymbolScope } from './scopes';
-import { IParseContext } from './parser';
+import { SymbolReference } from './scopes';
 
 export type NodeType =
 	| 'BinaryOp'
@@ -74,14 +72,16 @@ export interface INode {
 	readonly end: number;
 
 	readonly parent?: INode;
+	readonly ref?: SymbolReference;
 
 	accept(visitor: IVisitorFunction): void;
 	acceptVisitor(visitor: IVisitor): void;
 }
 export interface IOrphanNode extends INode {
 	parent?: INode;
-	adoptChild(node: IOrphanNode): void
+	adoptChild(node: IOrphanNode): void;
 	length: number;
+	ref?: SymbolReference;
 }
 
 class Node implements INode, IOrphanNode {
@@ -97,7 +97,7 @@ class Node implements INode, IOrphanNode {
 	public parent?: INode;
 	private children?: INode[];
 
-	public scope?: SymbolScope;
+	public ref?: SymbolReference;
 
 	constructor(type: NodeType, offset: number, length: number, value?: string | number) {
 		this.type = type;
@@ -122,17 +122,6 @@ class Node implements INode, IOrphanNode {
 		node.parent = this;
 		this.children = this.children || [];
 		this.children.push(node);
-	}
-}
-
-export class SQRef extends Node {
-	public path: string[];
-	public absolute: boolean;
-	constructor(ctx: IParseContext, sqi: ast.ScopeQualifiedIdent) {
-		super('SQRef', sqi.loc.start.offset, sqi.loc.end.offset - sqi.loc.start.offset, `${sqi.path}${sqi.absolute ? ' (abs)' : ''}`);
-		this.path = sqi.path;
-		this.absolute = sqi.absolute;
-		this.scope = ctx.scope;
 	}
 }
 

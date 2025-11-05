@@ -1,15 +1,21 @@
-import { INode, SQRef } from './nodes';
+import { INode } from './nodes';
 
 export type SymbolScope = NamedScope<SymEntry>;
+
+export interface SymbolReference {
+	path: string[];
+	absolute: boolean;
+	scope: SymbolScope;
+}
 
 export class Scopes {
 	constructor(private root: SymbolScope) {}
 
-	findQualifiedSymbol(node: SQRef) {
-		if (node.absolute || !node.scope) {
-			return this.root.findSymbolPath(node.path);
+	findQualifiedSymbol(ref: SymbolReference) {
+		if (ref.absolute || !ref.scope) {
+			return this.root.findSymbolPath(ref.path);
 		}
-		return node.scope.findSymbolPath(node.path);
+		return ref.scope.findSymbolPath(ref.path);
 	}
 }
 

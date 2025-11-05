@@ -24,7 +24,7 @@ class AstAdapter {
 
 	adapt(p?: rcasm.Program): INode {
 		if (!p) {
-			return nodes.mkNode(				'Program', 0, 0	);
+			return nodes.mkNode('Program', 0, 0);
 		}
 		const n = mkNode(p, 'Program');
 		p.lines
@@ -42,37 +42,38 @@ class AstAdapter {
 			n.adoptChild(this.adaptScope(l));
 		}
 		if (l.stmt) {
-			switch (l.stmt.type) {
-				case 'insn':
-					n.adoptChild(this.adaptInstruction(l.stmt));
-					break;
-				case 'setpc':
-					n.adoptChild(this.adaptSetPc(l.stmt));
-					break;
-				case 'data':
-					n.adoptChild(this.adaptDataDirective(l.stmt));
-					break;
-				case 'fill':
-					n.adoptChild(this.adaptFillDirective(l.stmt));
-					break;
-				case 'align':
-					n.adoptChild(this.adaptAlignDirective(l.stmt));
-					break;
-				case 'for':
-					n.adoptChild(this.adaptForDirective(l.stmt, l.label?.name));
-					break;
-				case 'if':
-					n.adoptChild(this.adaptIfDirective(l.stmt, l.label?.name));
-					break;
-				case 'let':
-					n.adoptChild(this.adaptLetDirective(l.stmt));
-					break;
-				case 'error':
-					n.adoptChild(this.adaptErrorDirective(l.stmt));
-					break;
-			}
+			n.adoptChild(this.adaptStmt(l.stmt, l.label));
 		}
 		return n;
+	}
+
+	adaptStmt(s: rcasm.Stmt, l: rcasm.Label | null): IOrphanNode {
+		switch (s.type) {
+			case 'insn':
+				return this.adaptInstruction(s);
+			case 'setpc':
+				return this.adaptSetPc(s);
+			case 'data':
+				return this.adaptDataDirective(s);
+			case 'fill':
+				return mkNode(
+					s,
+					'Directive',
+					'!fill',
+					this.adaptExpr(s.numBytes),
+					this.adaptExpr(s.fillValue)
+				);
+			case 'align':
+				return mkNode(s, 'Directive', '!align', this.adaptExpr(s.alignBytes));
+			case 'for':
+				return this.adaptForDirective(s, l?.name);
+			case 'if':
+				return this.adaptIfDirective(s, l?.name);
+			case 'let':
+				return this.adaptLetDirective(s);
+			case 'error':
+				return mkNode(s, 'Directive', '!error');
+		}
 	}
 
 	adaptLabel(l: rcasm.Label): IOrphanNode {
@@ -86,9 +87,11 @@ class AstAdapter {
 		const n = mkNode(ss, 'Scope', ss.label?.name);
 		const label = ss.label?.name ?? '?';
 		this.ctx.withLabelScope(label, () => {
-			ss.scopedStmts!.filter(l => l.label || l.scopedStmts || l.stmt).forEach(l => {
-				n.adoptChild(this.adaptLine(l));
-			});
+			ss.scopedStmts
+				?.filter(l => l.label || l.scopedStmts || l.stmt)
+				.forEach(l => {
+					n.adoptChild(this.adaptLine(l));
+				});
 		});
 		return n;
 	}
@@ -105,41 +108,23 @@ class AstAdapter {
 	}
 
 	adaptSetPc(spc: rcasm.StmtSetPC): IOrphanNode {
-		const n = mkNode(spc, 'SetPC');
-		n.adoptChild(this.adaptExpr(spc.pc));
+		const n = mkNode(spc, 'SetPC', undefined, this.adaptExpr(spc.pc));
 		return n;
 	}
 
 	adaptDataDirective(d: rcasm.StmtData): IOrphanNode {
-		const n = mkNode(d, 'Directive', d.dataSize === rcasm.DataSize.Byte ? '!byte' : '!word');
-		d.values.forEach(v => {
-			n.adoptChild(this.adaptExpr(v));
-		});
-		return n;
-	}
-
-	adaptFillDirective(d: rcasm.StmtFill): IOrphanNode {
-		const n = mkNode(d, 'Directive', '!fill');
-		n.adoptChild(this.adaptExpr(d.numBytes));
-		n.adoptChild(this.adaptExpr(d.fillValue));
-		return n;
-	}
-
-	adaptAlignDirective(d: rcasm.StmtAlign): IOrphanNode {
-		const n = mkNode(d, 'Directive', '!align');
-		n.adoptChild(this.adaptExpr(d.alignBytes));
+		const n = mkNode(
+			d,
+			'Directive',
+			d.dataSize === rcasm.DataSize.Byte ? '!byte' : '!word',
+			...d.values.map(v => this.adaptExpr(v))
+		);
 		return n;
 	}
 
 	adaptLetDirective(d: rcasm.StmtLet): IOrphanNode {
-		const n = mkNode(d, 'Directive', '!let');
-		n.adoptChild(this.adaptVariable(d.name));
-		n.adoptChild(this.adaptExpr(d.value));
+		const n = mkNode(d, 'Directive', '!let', this.adaptVariable(d.name), this.adaptExpr(d.value));
 		return n;
-	}
-
-	adaptErrorDirective(d: rcasm.StmtError): IOrphanNode {
-		return mkNode(d, 'Directive', '!error');
 	}
 
 	adaptForDirective(ss: rcasm.StmtFor, lsn?: string): IOrphanNode {
@@ -154,11 +139,13 @@ class AstAdapter {
 			sn = `${lsn}__x`;
 		}
 
-		this.ctx.withAnonOrLabelScope(sn, () => {
-			ss.body!.filter(st => st.label || st.scopedStmts || st.stmt).forEach(st =>
-				n.adoptChild(this.adaptLine(st))
-			);
-		});
+		if (ss.body) {
+			this.ctx.withAnonOrLabelScope(sn, () => {
+				ss.body
+					.filter(st => st.label || st.scopedStmts || st.stmt)
+					.forEach(st => n.adoptChild(this.adaptLine(st)));
+			});
+		}
 
 		return n;
 	}
@@ -183,46 +170,32 @@ class AstAdapter {
 		return n;
 	}
 
-	adaptExpr = (p: rcasm.Expr): IOrphanNode => {
-		switch (p.type) {
+	adaptExpr = (e: rcasm.Expr): IOrphanNode => {
+		switch (e.type) {
 			case 'binary':
-				return this.adaptBinaryOp(p);
+				return mkNode(e, 'BinaryOp', e.op, this.adaptExpr(e.left), this.adaptExpr(e.right));
 			case 'callfunc':
-				return this.adaptCallFunc(p);
+				return mkNode(
+					e,
+					'CallFunc',
+					undefined,
+					this.adaptExpr(e.callee),
+					...e.args.map(a => this.adaptExpr(a))
+				);
 			case 'literal':
-				return this.adaptLiteral(p);
+				return mkNode(e, 'Literal', e.lit);
 			case 'register':
-				return this.adaptRegister(p);
+				return mkNode(e, 'Register', e.value);
 			case 'qualified-ident':
-				return new nodes.SQRef(this.ctx, p);
+				return this.adaptSQIndent(e);
 			case 'ident':
-				return this.adaptRef(p);
+				return mkNode(e, 'Ref');
 			case 'getcurpc':
-				return this.adaptCurrentPc(p);
+				return mkNode(e, 'CurrentPC');
 			default:
 				throw 'Expr type not covered';
 		}
 	};
-
-	adaptBinaryOp(bo: rcasm.BinaryOp): IOrphanNode {
-		const n = mkNode(bo, 'BinaryOp', bo.op);
-		n.adoptChild(this.adaptExpr(bo.left));
-		n.adoptChild(this.adaptExpr(bo.right));
-		return n;
-	}
-
-	adaptCallFunc(cf: rcasm.CallFunc): IOrphanNode {
-		const n = mkNode(cf, 'CallFunc');
-		n.adoptChild(this.adaptExpr(cf.callee));
-		cf.args.forEach(c => {
-			n.adoptChild(this.adaptExpr(c));
-		});
-		return n;
-	}
-
-	adaptCurrentPc(cpc: rcasm.GetCurPC): IOrphanNode {
-		return mkNode(cpc, 'CurrentPC');
-	}
 
 	adaptVariable(i: rcasm.Ident): IOrphanNode {
 		const n = mkNode(i, 'Variable', i.name);
@@ -230,21 +203,27 @@ class AstAdapter {
 		return n;
 	}
 
-	adaptRef(i: rcasm.Ident): IOrphanNode {
-		return mkNode(i, 'Ref');
+	adaptSQIndent(sqi: rcasm.ScopeQualifiedIdent): IOrphanNode {
+		const n = mkNode(sqi, 'SQRef', `${sqi.path}${sqi.absolute ? ' (abs)' : ''}`);
+		n.ref = {
+			path: sqi.path,
+			absolute: sqi.absolute,
+			scope: this.ctx.scope
+		};
+		return n;
 	}
-
-	adaptRegister(r: rcasm.Register) : IOrphanNode {
-		return mkNode(r, 'Register', r.value);
-	}
-
-	adaptLiteral(l: rcasm.Literal) : IOrphanNode {
-		return mkNode(l, 'Literal', l.lit);
-	}
-	
 }
 
-const mkNode = (rn: rcasm.Node, type: nodes.NodeType, value?: string | number): IOrphanNode => nodes.mkNode(type, rn.loc.start.offset, rn.loc.end.offset - rn.loc.start.offset, value);
+const mkNode = (
+	rn: rcasm.Node,
+	type: nodes.NodeType,
+	value?: string | number,
+	...children: IOrphanNode[]
+): IOrphanNode => {
+	const n = nodes.mkNode(type, rn.loc.start.offset, rn.loc.end.offset - rn.loc.start.offset, value);
+	children.forEach(c => n.adoptChild(c));
+	return n;
+};
 
 class ParserContext implements IParseContext {
 	root: SymbolScope = new NamedScope<SymEntry>(null, '');
@@ -278,5 +257,4 @@ class ParserContext implements IParseContext {
 	declareVar(name: string, node: nodes.INode): void {
 		this.scope.addSymbol(name, { type: 'var', name, node });
 	}
-
 }
