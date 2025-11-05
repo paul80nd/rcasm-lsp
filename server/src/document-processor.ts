@@ -1,61 +1,31 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { Parser } from './parser';
-import * as parser from './parser/nodes';
-import * as scopes from './parser/scopes';
+import * as parser from './parser';
 
-// import { readDocumentFromUri, resolveReferencedUris } from "./files";
 import { Context } from './context';
 
 export interface ProcessedDocument {
 	document: TextDocument;
-	tree: parser.Program;
-	scopes: scopes.Scopes;
-	//   referencedUris: string[];
+	tree: parser.INode;
+	scopes: parser.Scopes;
 }
 
 export type ProcessedDocumentStore = Map<string, ProcessedDocument>;
 
 export default class DocumentProcessor {
-	private parser: Parser;
+	constructor(protected readonly ctx: Context) {}
 
-	constructor(protected readonly ctx: Context) {
-		this.parser = new Parser();
-	}
-
-	async process(
-		document: TextDocument
-		//     oldTree?: Parser.Tree
-	): Promise<ProcessedDocument> {
+	async process(document: TextDocument): Promise<ProcessedDocument> {
 		this.ctx.logger.log('processDocument: ' + document.uri);
 
-		const { tree, scopes } = this.parser.parse(document.getText() /*, oldTree*/);
-
-		//     if (oldTree) {
-		//       oldTree.delete();
-		//     }
+		const { tree, scopes } = parser.parse(document.getText());
 
 		const processed: ProcessedDocument = {
 			document,
 			tree,
 			scopes
-			//       referencedUris: [],
 		};
 
 		this.ctx.store.set(document.uri, processed);
-
-		//     const resolved = await resolveReferencedUris(document.uri, this.ctx);
-		//     processed.referencedUris.push(...resolved);
-
-		//     await Promise.all(
-		//       processed.referencedUris.map(async (uri) => {
-		//         if (!this.ctx.store.has(uri)) {
-		//           const doc = await readDocumentFromUri(uri);
-		//           if (doc) {
-		//             this.process(doc);
-		//           }
-		//         }
-		//       })
-		//     );
 
 		return processed;
 	}

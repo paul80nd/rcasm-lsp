@@ -1,16 +1,10 @@
-import { Parser } from '../../src/parser';
+import * as parser from '../../src/parser';
 import * as nodes from '../../src/parser/nodes';
 import * as matchers from 'jest-extended';
 
 expect.extend(matchers);
 
 describe('parse', () => {
-	let parser: Parser;
-
-	beforeAll(() => {
-		parser = new Parser();
-	});
-
 	it('parses a complete instruction line', () => {
 		parsing('label: mov a,b    ; comment here').is(`
 000+032 Program
@@ -28,9 +22,9 @@ describe('parse', () => {
 000+036 .Line
 000+005 ..Label label
 007+029 ..Directive !byte
-013+002 ...Literal d 10
-017+004 ...Literal h 254
-023+013 ...Literal b 85
+013+002 ...Literal 10
+017+004 ...Literal 254
+023+013 ...Literal 85
 `));
 
 	it('parses a fill directive', () =>
@@ -38,8 +32,8 @@ describe('parse', () => {
 000+012 Program
 000+012 .Line
 000+012 ..Directive !fill
-006+001 ...Literal d 9
-008+004 ...Literal h 170
+006+001 ...Literal 9
+008+004 ...Literal 170
 `));
 
 	it('parses an align directive', () =>
@@ -47,7 +41,7 @@ describe('parse', () => {
 000+009 Program
 000+009 .Line
 000+009 ..Directive !align
-007+002 ...Literal d 16
+007+002 ...Literal 16
 `));
 
 	it('parses byte string', () =>
@@ -55,7 +49,7 @@ describe('parse', () => {
 000+011 Program
 000+011 .Line
 000+011 ..Directive !byte
-006+005 ...Literal s abc
+006+005 ...Literal abc
 `));
 
 	it('parses word string', () =>
@@ -63,7 +57,7 @@ describe('parse', () => {
 000+011 Program
 000+011 .Line
 000+011 ..Directive !word
-006+005 ...Literal s abc
+006+005 ...Literal abc
 `));
 
 	it('parses a forward jump', () =>
@@ -96,7 +90,7 @@ describe('parse', () => {
 000+008 Program
 000+008 .Line
 000+008 ..SetPC
-004+004 ...Literal h 7
+004+004 ...Literal 7
 `));
 
 	it('parses let directive and ref', () =>
@@ -105,7 +99,7 @@ describe('parse', () => {
 000+019 .Line
 000+019 ..Directive !let
 005+011 ...Variable CPLAN_SIZE
-018+001 ...Literal d 3
+018+001 ...Literal 3
 020+016 .Line
 020+016 ..Instruction ldi
 024+001 ...Register a
@@ -118,7 +112,7 @@ describe('parse', () => {
 000+019 .Line
 000+019 ..Directive !let
 005+011 ...Variable CPLAN_SIZE
-018+001 ...Literal d 3
+018+001 ...Literal 3
 020+042 .Line
 020+004 ..Label plan
 026+036 ..Directive !let
@@ -126,7 +120,7 @@ describe('parse', () => {
 038+024 ...BinaryOp +
 038+006 ....SQRef cplan
 047+014 ....BinaryOp *
-047+002 .....Literal d 4
+047+002 .....Literal 4
 051+010 .....SQRef CPLAN_SIZE
 `));
 
@@ -138,7 +132,7 @@ describe('parse', () => {
 005+002 ...Variable k
 010+010 ...CallFunc
 010+005 ....SQRef range
-016+002 ....Literal d 16
+016+002 ....Literal 16
 022+007 ...Line
 022+007 ....Instruction ldi
 026+001 .....Register b
@@ -153,20 +147,20 @@ describe('parse', () => {
 005+002 ...Variable k
 010+011 ...CallFunc
 010+005 ....SQRef range
-016+001 ....Literal d 4
-018+001 ....Literal d 6
+016+001 ....Literal 4
+018+001 ....Literal 6
 023+039 ...Line
 023+039 ....Directive !let
 028+004 .....Variable ssz
 034+028 .....BinaryOp -
-034+003 ......Literal d 10
+034+003 ......Literal 10
 041+020 ......BinaryOp /
 043+013 .......BinaryOp +
 043+002 ........SQRef k
 049+006 ........BinaryOp %
 049+002 .........SQRef k
-053+002 .........Literal d 2
-060+001 .......Literal d 2
+053+002 .........Literal 2
+060+001 .......Literal 2
 `));
 
 	it('parses if directive', () =>
@@ -175,8 +169,8 @@ describe('parse', () => {
 000+019 .Line
 000+019 ..Directive !if
 005+005 ...BinaryOp >
-005+002 ....Literal d 1
-009+001 ....Literal d 2
+005+002 ....Literal 1
+009+001 ....Literal 2
 014+003 ...Line
 014+003 ....Instruction add
 `));
@@ -186,7 +180,7 @@ describe('parse', () => {
 000+028 Program
 000+028 .Line
 000+028 ..Directive !if
-005+001 ...Literal d 1
+005+001 ...Literal 1
 010+003 ...Line
 010+003 ....Instruction add
 023+003 ...Line
@@ -199,13 +193,13 @@ describe('parse', () => {
 000+055 .Line
 000+055 ..Directive !if
 005+006 ...BinaryOp ==
-005+002 ....Literal d 1
-010+001 ....Literal d 2
+005+002 ....Literal 1
+010+001 ....Literal 2
 015+003 ...Line
 015+003 ....Instruction add
 027+006 ...BinaryOp !=
-027+002 ....Literal d 1
-032+001 ....Literal d 2
+027+002 ....Literal 1
+032+001 ....Literal 2
 037+003 ...Line
 037+003 ....Instruction not
 050+003 ...Line
@@ -219,7 +213,7 @@ describe('parse', () => {
 000+047 ..Directive !if
 005+008 ...BinaryOp >
 005+002 ....CurrentPC
-009+004 ....Literal h 255
+009+004 ....Literal 255
 017+029 ...Line
 017+029 ....Directive !error
 `));
@@ -256,7 +250,7 @@ describe('parse', () => {
 	class TestVisitor implements nodes.IVisitor {
 		public doc = '\n';
 
-		public visitNode(node: nodes.Node): boolean {
+		public visitNode(node: nodes.INode): boolean {
 			// Calculate depth
 			let depth = 0;
 			for (let pNode = node; pNode.parent; pNode = pNode.parent) {
@@ -264,10 +258,10 @@ describe('parse', () => {
 			}
 
 			// Format the output string
-			const info = node.info ? ` ${node.info}` : '';
+			const info = node.value ? ` ${node.value}` : '';
 			const formattedOffset = node.offset.toString().padStart(3, '0');
 			const formattedLength = node.length.toString().padStart(3, '0');
-			this.doc += `${formattedOffset}+${formattedLength} ${'.'.repeat(depth)}${nodes.NodeType[node.type]}${info}\n`;
+			this.doc += `${formattedOffset}+${formattedLength} ${'.'.repeat(depth)}${node.type}${info}\n`;
 
 			return true;
 		}

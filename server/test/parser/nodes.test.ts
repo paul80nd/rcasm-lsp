@@ -1,13 +1,7 @@
-import { Parser } from '../../src/parser';
 import * as nodes from '../../src/parser/nodes';
+import * as parser from '../../src/parser';
 
 describe('nodes', () => {
-	let parser: Parser;
-
-	beforeAll(() => {
-		parser = new Parser();
-	});
-
 	describe('getNodeAtOffet', () => {
 		it('finds nodes in a complete instruction line', () => {
 			const given = parsing('label: mov a,b    ; comment here');
@@ -43,7 +37,7 @@ describe('nodes', () => {
 							offset: node?.offset,
 							length: node?.length,
 							type: node?.type,
-							info: node?.info
+							info: node?.value
 						}).toEqual(expected)
 				};
 			}
@@ -62,8 +56,8 @@ describe('nodes', () => {
 			})
 		})
 	};
-	const label = node.ofType(nodes.NodeType.Label);
-	const instr = node.ofType(nodes.NodeType.Instruction);
-	const ref = node.ofType(nodes.NodeType.SQRef);
-	const register = node.ofType(nodes.NodeType.Register);
+	const label = node.ofType('Label');
+	const instr = node.ofType('Instruction');
+	const ref = node.ofType('SQRef');
+	const register = node.ofType('Register');
 });

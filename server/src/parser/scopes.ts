@@ -1,4 +1,17 @@
-import * as nodes from './nodes';
+import { INode, SQRef } from './nodes';
+
+export type SymbolScope = NamedScope<SymEntry>;
+
+export class Scopes {
+	constructor(private root: SymbolScope) {}
+
+	findQualifiedSymbol(node: SQRef) {
+		if (node.absolute || !node.scope) {
+			return this.root.findSymbolPath(node.path);
+		}
+		return node.scope.findSymbolPath(node.path);
+	}
+}
 
 export class NamedScope<T> {
 	syms = new Map<string, T>();
@@ -70,62 +83,11 @@ export type SymEntry = SymLabel | SymVar;
 export interface SymLabel {
 	type: 'label';
 	name: string;
-	node: nodes.Node;
+	node: INode;
 }
 
 export interface SymVar {
 	type: 'var';
 	name: string;
-	node: nodes.Node;
-}
-
-export class Scopes {
-	root: NamedScope<SymEntry> = new NamedScope<SymEntry>(null, '');
-	curSymtab = this.root;
-	private anonScopeCount = 0;
-
-	withAnonScope(body: () => void, parent?: NamedScope<SymEntry>) {
-		const anonLabel = `__anon_scope_${this.anonScopeCount}`;
-		this.anonScopeCount++;
-		this.withLabelScope(anonLabel, body, parent);
-	}
-
-	withLabelScope(name: string, body: () => void, parent?: NamedScope<SymEntry>) {
-		const curSym = this.curSymtab;
-		this.curSymtab = this.curSymtab.newScope(name, parent || curSym);
-		body();
-		this.curSymtab = curSym;
-	}
-
-	withAnonOrLabelScope(name: string | undefined, body: () => void, parent?: NamedScope<SymEntry>) {
-		if (name) {
-			return this.withLabelScope(name, body, parent);
-		}
-		this.withAnonScope(body, parent);
-	}
-
-	findPath(path: string[], absolute: boolean): SymEntry | undefined {
-		if (absolute) {
-			return this.root.findSymbolPath(path);
-		}
-		return this.curSymtab.findSymbolPath(path);
-	}
-
-	findQualifiedSym(path: string[], absolute: boolean, scope?: NamedScope<SymEntry>) {
-		if (absolute) {
-			return this.root.findSymbolPath(path);
-		}
-		if (scope) {
-			return scope.findSymbolPath(path);
-		}
-		return this.curSymtab.findSymbolPath(path);
-	}
-
-	declareLabelSymbol(name: string, node: nodes.Node) {
-		this.curSymtab.addSymbol(name, { type: 'label', name, node });
-	}
-
-	declareVar(name: string, node: nodes.Node): void {
-		this.curSymtab.addSymbol(name, { type: 'var', name, node });
-	}
+	node: INode;
 }

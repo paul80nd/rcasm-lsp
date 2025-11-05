@@ -1,14 +1,8 @@
-import { Parser } from '../../src/parser';
+import * as parser from '../../src/parser';
 import * as nodes from '../../src/parser/nodes';
 import assert from 'assert';
 
 describe('scopes', () => {
-	let parser: Parser;
-
-	beforeAll(() => {
-		parser = new Parser();
-	});
-
 	describe('findSymbolFromNode', () => {
 		it('finds a forward jump', () =>
 			parsing('jmp start\n; comment\nstart:  add').symbolAt(6).is(label.at(20).withName('start')));
@@ -40,7 +34,7 @@ describe('scopes', () => {
 			symbolAt: (offset: number) => {
 				const node = nodes.getNodeAtOffset(tree, offset) as nodes.SQRef;
 				assert(node, 'No ref node found at offset');
-				const symbol = scopes.findQualifiedSym(node.path, node.absolute, node.namedScope);
+				const symbol = scopes.findQualifiedSymbol(node);
 				return {
 					is: <E>(expected: E) => expect(symbol).toEqual(expected)
 				};

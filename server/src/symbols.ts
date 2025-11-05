@@ -3,7 +3,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as parser from './parser/nodes';
 import { Context } from './context';
 import { ProcessedDocument } from './document-processor';
-import * as scopes from './parser/scopes';
+import { Scopes } from './parser';
 
 export interface NamedSymbol {
 	location: lsp.Location;
@@ -39,7 +39,7 @@ export enum DefinitionType {
 }
 
 export interface Symbols {
-	scope: scopes.Scopes;
+	scope: Scopes;
 	// definitions: Map<string, Definition>;
 	// references: Map<string, NamedSymbol[]>;
 	// includes: Literal[];
@@ -53,7 +53,7 @@ export interface Symbols {
  */
 export function processSymbols(
 	// uri: string,
-	scps: scopes.Scopes
+	scps: Scopes
 	// ctx: Context
 ): Symbols {
 	const symbols: Symbols = {
@@ -253,8 +253,8 @@ export function symbolAtPosition(
 		return undefined;
 	}
 
-	if (node instanceof parser.SQRef && node.namedScope) {
-		const r = processed.scopes.findQualifiedSym(node.path, node.absolute, node.namedScope);
+	if (node instanceof parser.SQRef && node.scope) {
+		const r = processed.scopes.findQualifiedSymbol(node);
 		if (r) {
 			return {
 				name: r.name,
@@ -536,6 +536,6 @@ export function labelBeforePosition(): Definition | undefined {
 //   [DefinitionType.XRef]: lsp.SymbolKind.Field,
 // };
 
-function getRange(node: parser.Node, document: TextDocument): lsp.Range {
+function getRange(node: parser.INode, document: TextDocument): lsp.Range {
 	return lsp.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
 }

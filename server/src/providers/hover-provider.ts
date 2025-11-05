@@ -32,7 +32,7 @@ export default class HoverProvider implements Provider {
 			return;
 		}
 
-		const getRange = (node: nodes.Node): lsp.Range =>
+		const getRange = (node: nodes.INode): lsp.Range =>
 			lsp.Range.create(
 				processed.document.positionAt(node.offset),
 				processed.document.positionAt(node.end)
@@ -43,18 +43,18 @@ export default class HoverProvider implements Provider {
 			const node = nodepath[i];
 
 			switch (node.type) {
-				case nodes.NodeType.Instruction:
-					return this.hoverInstructionMnemonic(node as nodes.Instruction, getRange(node));
-				case nodes.NodeType.Directive:
-					return this.hoverDirectiveMnemonic(node as nodes.Directive, getRange(node));
-				case nodes.NodeType.SetPC:
-					return this.hoverSetPC(node as nodes.SetPC, getRange(node));
-				case nodes.NodeType.SQRef:
+				case 'Instruction':
+					return node.value ? this.hoverInstructionMnemonic(node.value.toString(), getRange(node)) : undefined;
+				case 'Directive':
+					return node.value ? this.hoverDirectiveMnemonic(node.value.toString(), getRange(node)) : undefined;
+				case 'SetPC':
+					return this.hoverSetPC(getRange(node));
+				case 'SQRef':
 					return this.hoverSymbol(processed.document, position, getRange(node));
-				case nodes.NodeType.Literal:
-					return this.hoverNumber(node as nodes.Literal, getRange(node));
-				case nodes.NodeType.Register:
-					return this.hoverRegister(node as nodes.Register, getRange(node));
+				case 'Literal':
+					return node.value ? this.hoverNumber(node.value, getRange(node)) : undefined;
+				case 'Register':
+					return node.value ? this.hoverRegister(node.value.toString(), getRange(node)) : undefined;
 			}
 		}
 		return;
@@ -67,29 +67,29 @@ export default class HoverProvider implements Provider {
 		};
 	}
 
-	private hoverInstructionMnemonic(node: nodes.Instruction, range: lsp.Range) {
-		const docs = lookupMnemonicDoc(node.mnemonic);
+	private hoverInstructionMnemonic(mnemonic: string, range: lsp.Range) {
+		const docs = lookupMnemonicDoc(mnemonic);
 		return {
 			range,
 			contents: docs || {
 				kind: lsp.MarkupKind.PlainText,
-				value: '(instruction) ' + node.mnemonic
+				value: '(instruction) ' + mnemonic
 			}
 		};
 	}
 
-	private hoverDirectiveMnemonic(node: nodes.Directive, range: lsp.Range) {
-		const docs = lookupMnemonicDoc(node.mnemonic);
+	private hoverDirectiveMnemonic(mnemonic: string, range: lsp.Range) {
+		const docs = lookupMnemonicDoc(mnemonic);
 		return {
 			range,
 			contents: docs || {
 				kind: lsp.MarkupKind.PlainText,
-				value: '(directive) ' + node.mnemonic
+				value: '(directive) ' + mnemonic
 			}
 		};
 	}
 
-	private hoverSetPC(node: nodes.SetPC, range: lsp.Range) {
+	private hoverSetPC(range: lsp.Range) {
 		const docs = lookupMnemonicDoc('org');
 		return {
 			range,
@@ -135,23 +135,23 @@ export default class HoverProvider implements Provider {
 		};
 	}
 
-	private async hoverNumber(node: nodes.Literal, range: lsp.Range) {
+	private async hoverNumber(value: string | number, range: lsp.Range) {
 		return {
 			range,
 			contents: {
 				kind: lsp.MarkupKind.Markdown,
-				value: typeof node.value === 'number' ? formatNumeric(node.value) : node.value
+				value: typeof value === 'number' ? formatNumeric(value) : value
 			}
 		};
 	}
 
-	private async hoverRegister(node: nodes.Register, range: lsp.Range) {
-		const docs = lookupRegisterDoc(node.value);
+	private async hoverRegister(value: string, range: lsp.Range) {
+		const docs = lookupRegisterDoc(value);
 		return {
 			range,
 			contents: docs || {
 				kind: lsp.MarkupKind.PlainText,
-				value: '(register) ' + node.value
+				value: '(register) ' + value
 			}
 		};
 	}
