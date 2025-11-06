@@ -1,0 +1,21 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"module": "umd",
+		"removeComments": true,
+		"declaration": true,
+		"preserveConstEnums": true,
+		"outDir": "lib/umd",
+		"sourceMap": true,
+		"allowJs": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"noImplicitThis": true,
+		"alwaysStrict": true,
+		"noImplicitReturns": true,
+		"stripInternal": true,
+		"downlevelIteration": true
+	},
+	"include": ["src/**/*.ts"]
+}

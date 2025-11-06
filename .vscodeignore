@@ -1,11 +1,13 @@
 .vscode/**
+.gitignore
+.prettierignore
 **/*.ts
 **/*.map
-.gitignore
+**/lib
 **/tsconfig.json
 **/tsconfig.base.json
-contributing.md
-.travis.yml
+eslint.config.mjs
+jest.config.js
 client/node_modules/**
 !client/node_modules/vscode-jsonrpc/**
 !client/node_modules/vscode-languageclient/**
