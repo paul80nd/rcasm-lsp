@@ -126,7 +126,7 @@ class Node implements INode, IOrphanNode {
 }
 
 export interface IVisitor {
-	visitNode: (node: Node) => boolean;
+	visitNode: (node: INode) => boolean;
 }
 
-export type IVisitorFunction = (node: Node) => boolean;
+export type IVisitorFunction = (node: INode) => boolean;

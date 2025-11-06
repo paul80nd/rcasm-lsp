@@ -62,8 +62,6 @@ export default class CompletionProvider implements Provider {
 				const doc = mnemonic && mnemonicDocs[mnemonic];
 				const signature = doc && doc.syntax.length ? parseSignature(doc.syntax[0]) : null; // TODO: find active
 				switch (signature?.operands[info?.index ?? 0].value) {
-					// case '<cpu_type>':
-					// 	return enumValues(syntax.cpuTypes);
 					case '<label>':
 						return [];
 					// 	const symbols = await this.completeAllDefinitions(processed,position);
@@ -255,13 +253,6 @@ export default class CompletionProvider implements Provider {
 	private dataRegs: RegisterName[] = [...this.abcdRegs, 'm1', 'm2', 'x', 'y'];
 	private addrRegs: RegisterName[] = ['m', 'xy', 'j'];
 }
-
-// function enumValues(values: string[]): lsp.CompletionItem[] {
-// 	return values.map(label => ({
-// 		label,
-// 		kind: lsp.CompletionItemKind.Enum
-// 	}));
-// }
 
 const typeMappings: Record<DefinitionType, lsp.CompletionItemKind> = {
 	// [DefinitionType.Section]: lsp.CompletionItemKind.Module,

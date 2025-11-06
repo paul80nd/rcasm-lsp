@@ -2,11 +2,13 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as parser from './parser';
 
 import { Context } from './context';
+import { processSymbols, Symbols } from './symbols';
 
 export interface ProcessedDocument {
 	document: TextDocument;
 	tree: parser.INode;
 	scopes: parser.Scopes;
+	symbols: Symbols;
 }
 
 export type ProcessedDocumentStore = Map<string, ProcessedDocument>;
@@ -18,11 +20,13 @@ export default class DocumentProcessor {
 		this.ctx.logger.log('processDocument: ' + document.uri);
 
 		const { tree, scopes } = parser.parse(document.getText());
+		const symbols = processSymbols(document, scopes);
 
 		const processed: ProcessedDocument = {
 			document,
 			tree,
-			scopes
+			scopes,
+			symbols
 		};
 
 		this.ctx.store.set(document.uri, processed);

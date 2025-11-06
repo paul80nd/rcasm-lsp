@@ -4,6 +4,7 @@ import * as parser from './parser/nodes';
 import { Context } from './context';
 import { ProcessedDocument } from './document-processor';
 import { Scopes } from './parser';
+import { SymbolScope, SymEntry } from './parser/scopes';
 
 export interface NamedSymbol {
 	location: lsp.Location;
@@ -40,25 +41,23 @@ export enum DefinitionType {
 
 export interface Symbols {
 	scope: Scopes;
-	// definitions: Map<string, Definition>;
+	definitions: Map<string, Definition>;
 	// references: Map<string, NamedSymbol[]>;
 	// includes: Literal[];
 	// incDirs: Literal[];
 }
 
-// let symbolsQuery: Query | undefined;
-
 /**
  * Process symbols in document
  */
 export function processSymbols(
-	// uri: string,
+	document: TextDocument,
 	scps: Scopes
 	// ctx: Context
 ): Symbols {
 	const symbols: Symbols = {
-		scope: scps
-		// definitions: new Map<string, Definition>(),
+		scope: scps,
+		definitions: new Map<string, Definition>()
 		// references: new Map<string, NamedSymbol[]>(),
 		// includes: [],
 		// incDirs: []
@@ -66,127 +65,97 @@ export function processSymbols(
 
 	//   let lastGlobalLabel: Definition | undefined;
 
-	//   function addDefinition(node: SyntaxNode, nameNode: SyntaxNode) {
-	//     const name = nameNode.text;
+	const addDefinition = (se: SymEntry, path: string) => {
+		const name = `${path}${se.name}`;
+		if (symbols.definitions.has(name)) {
+			return;
+		}
 
-	//     // Already defined in this doc?
-	//     // Ignore interpolated macro with macro args
-	//     if (symbols.definitions.has(name) || name.includes("\\")) {
-	//       return;
-	//     }
+		const type = definitionTypeMappings[se.type];
 
-	//     const type = definitionNodeTypeMappings[node.type];
+		const def: Definition = {
+			name,
+			type,
+			location: { uri: document.uri, range: getRange(se.node, document) },
+			selectionRange: getRange(se.node, document)
+		};
 
-	//     const def: Definition = {
-	//       name,
-	//       type,
-	//       location: { uri, range: nodeAsRange(node) },
-	//       selectionRange: nodeAsRange(nameNode),
-	//     };
+		//     // Comments:
+		//     const commentLines: string[] = [];
 
-	//     // Comments:
-	//     const commentLines: string[] = [];
+		//     // Same line comment
+		//     const [descendantComment] = node.descendantsOfType("comment");
+		//     if (descendantComment?.startPosition.row === node.startPosition.row) {
+		//       commentLines.unshift(descendantComment.text);
+		//     } else {
+		//       // Preceding line comments
+		//       let current = node;
+		//       while (
+		//         current.previousNamedSibling?.type === "comment" &&
+		//         current.previousNamedSibling.startPosition.row ===
+		//           current.startPosition.row - 1
+		//       ) {
+		//         current = current.previousNamedSibling;
+		//         commentLines.unshift(current.text);
+		//       }
+		//     }
 
-	//     // Same line comment
-	//     const [descendantComment] = node.descendantsOfType("comment");
-	//     if (descendantComment?.startPosition.row === node.startPosition.row) {
-	//       commentLines.unshift(descendantComment.text);
-	//     } else {
-	//       // Preceding line comments
-	//       let current = node;
-	//       while (
-	//         current.previousNamedSibling?.type === "comment" &&
-	//         current.previousNamedSibling.startPosition.row ===
-	//           current.startPosition.row - 1
-	//       ) {
-	//         current = current.previousNamedSibling;
-	//         commentLines.unshift(current.text);
-	//       }
-	//     }
+		//     // Convert to markdown:
+		//     const horizontalRule = "***";
+		//     const processedLines = commentLines.map((l) =>
+		//       l
+		//         // Remove comment char and leading whitespace from each line
+		//         .replace(/^[;*]\s?/, "")
+		//         // Convert repeated punctuation lines to MD horizontal rules
+		//         // This looks better and avoids creating headings with --- or === underline style
+		//         // Use a tmp placeholder string until special chars are escaped
+		//         .replace(/^\s*[*-=]{3,}\s*$/, "~~~")
+		//         // Escape special chars
+		//         .replace(/([*_{}[\]()#+-.!`])/g, "\\$1")
+		//         // Replace placholder with actual rule
+		//         .replace(/^~~~$/, horizontalRule)
+		//     );
+		//     // Ensure no horizontal rules at start or end of block
+		//     while (processedLines[0] === horizontalRule) {
+		//       processedLines.shift();
+		//     }
+		//     while (processedLines[processedLines.length - 1] === horizontalRule) {
+		//       processedLines.pop();
+		//     }
 
-	//     // Convert to markdown:
-	//     const horizontalRule = "***";
-	//     const processedLines = commentLines.map((l) =>
-	//       l
-	//         // Remove comment char and leading whitespace from each line
-	//         .replace(/^[;*]\s?/, "")
-	//         // Convert repeated punctuation lines to MD horizontal rules
-	//         // This looks better and avoids creating headings with --- or === underline style
-	//         // Use a tmp placeholder string until special chars are escaped
-	//         .replace(/^\s*[*-=]{3,}\s*$/, "~~~")
-	//         // Escape special chars
-	//         .replace(/([*_{}[\]()#+-.!`])/g, "\\$1")
-	//         // Replace placholder with actual rule
-	//         .replace(/^~~~$/, horizontalRule)
-	//     );
-	//     // Ensure no horizontal rules at start or end of block
-	//     while (processedLines[0] === horizontalRule) {
-	//       processedLines.shift();
-	//     }
-	//     while (processedLines[processedLines.length - 1] === horizontalRule) {
-	//       processedLines.pop();
-	//     }
+		//     if (commentLines.length) {
+		//       def.comment = processedLines.join("  \n");
+		//     }
 
-	//     if (commentLines.length) {
-	//       def.comment = processedLines.join("  \n");
-	//     }
+		//     if (type === DefinitionType.Label) {
+		//       if (isLocalLabel(name)) {
+		//         if (lastGlobalLabel) {
+		//           lastGlobalLabel.locals?.set(name, def);
+		//           return;
+		//         }
+		//       } else {
+		//         lastGlobalLabel = def;
+		//         def.locals = new Map();
+		//       }
+		//     }
 
-	//     if (type === DefinitionType.Label) {
-	//       if (isLocalLabel(name)) {
-	//         if (lastGlobalLabel) {
-	//           lastGlobalLabel.locals?.set(name, def);
-	//           return;
-	//         }
-	//       } else {
-	//         lastGlobalLabel = def;
-	//         def.locals = new Map();
-	//       }
-	//     }
-
-	//     symbols.definitions.set(name, def);
-	// }
+		symbols.definitions.set(name, def);
+	};
 
 	//   if (!symbolsQuery) {
 	//     symbolsQuery = ctx.language.query(`
 	//       (symbol) @symbol
-	//       (include) @include
-	//       (include_dir) @include_dir
-	//       (external_reference) @external_reference
 	//     `);
 	//   }
 	//   const captures = symbolsQuery.captures(tree.rootNode);
 
+	const walkScope = (ss: SymbolScope, path = '') => {
+		ss.syms.forEach(sss => addDefinition(sss, path));
+		ss.children.forEach(ssc => walkScope(ssc, `${path}${ssc.name}::`));
+	};
+	walkScope(scps.root);
+
 	//   for (const { node, name } of captures) {
-	//     if (name === "include") {
-	//       const pathNode = node.childForFieldName("path");
-	//       if (pathNode) {
-	//         symbols.includes.push({
-	//           location: { uri, range: nodeAsRange(pathNode) },
-	//           text: processPath(pathNode.text),
-	//         });
-	//       }
-	//       continue;
-	//     }
-
-	//     if (name === "include_dir") {
-	//       const pathNode = node.childForFieldName("path");
-	//       if (pathNode) {
-	//         symbols.incDirs.push({
-	//           location: { uri, range: nodeAsRange(pathNode) },
-	//           text: processPath(pathNode.text),
-	//         });
-	//       }
-	//       continue;
-	//     }
-
-	//     if (name === "external_reference") {
-	//       const items = node.childForFieldName("symbols");
-	//       if (items?.namedChildren) {
-	//         for (const nameNode of items.namedChildren) {
-	//           addDefinition(node, nameNode);
-	//         }
-	//       }
-	//     }
 
 	//     // Symbols:
 
@@ -511,18 +480,10 @@ export function labelBeforePosition(): Definition | undefined {
 //   return { range, startLabel, endLabel };
 // }
 
-// const definitionNodeTypeMappings: Record<string, DefinitionType> = {
-//   section: DefinitionType.Section,
-//   label: DefinitionType.Label,
-//   external_label: DefinitionType.Label,
-//   macro_definition: DefinitionType.Macro,
-//   symbol_definition: DefinitionType.Constant,
-//   symbol_assignment: DefinitionType.Variable,
-//   offset_definition: DefinitionType.Offset,
-//   register_definition: DefinitionType.Register,
-//   register_list_definition: DefinitionType.RegisterList,
-//   external_reference: DefinitionType.XRef,
-// };
+const definitionTypeMappings: Record<string, DefinitionType> = {
+	label: DefinitionType.Label,
+	var: DefinitionType.Variable
+};
 
 // export const symbolKindMappings: Record<DefinitionType, lsp.SymbolKind> = {
 //   [DefinitionType.Section]: lsp.SymbolKind.Module,

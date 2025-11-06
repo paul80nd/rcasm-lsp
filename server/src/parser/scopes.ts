@@ -9,7 +9,7 @@ export interface SymbolReference {
 }
 
 export class Scopes {
-	constructor(private root: SymbolScope) {}
+	constructor(readonly root: SymbolScope) {}
 
 	findQualifiedSymbol(ref: SymbolReference) {
 		if (ref.absolute || !ref.scope) {
