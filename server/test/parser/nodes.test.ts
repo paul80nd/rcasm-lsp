@@ -12,13 +12,13 @@ describe('nodes', () => {
 		});
 
 		it('finds symbols in a forward jump', () => {
-			const given = parsing('jmp start\n; comment\nstart:  add');
+			const given = parsing('jmp start', '; comment', 'start:  add');
 			given.nodeAt(4).is(ref.at(4, 9).withInfo('start'));
 			given.nodeAt(20).is(label.at(20, 25).withInfo('start'));
 		});
 
 		it('finds symbols in a scoped forward jump', () => {
-			const given = parsing('jmp test::start\ntest: {\nstart:  add\n}');
+			const given = parsing('jmp test::start', 'test: {', 'start:  add', '}');
 			given.nodeAt(4).is(ref.at(4, 15).withInfo('test,start'));
 			given.nodeAt(12).is(ref.at(4, 15).withInfo('test,start'));
 			given.nodeAt(24).is(label.at(24, 29).withInfo('start'));
@@ -26,8 +26,8 @@ describe('nodes', () => {
 	});
 
 	// Test Director
-	const parsing = (code: string) => {
-		const { tree } = parser.parse(code);
+	const parsing = (...code: string[]) => {
+		const { tree } = parser.parse(code.join('\n'));
 		return {
 			nodeAt: (offset: number) => {
 				const node = nodes.getNodeAtOffset(tree, offset);
