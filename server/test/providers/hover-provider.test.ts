@@ -31,13 +31,13 @@ describe('HoverProvider', () => {
 		describe('mnemonic hovers', () => {
 			it('provides hover for instructions', async () =>
 				await hoverFor('label: m|ov a,b ; test').is(
-					hover.between(7, 15).containingText(/8-bit Register to Register Copy/)
+					hover.between(7, 14).containingText(/8-bit Register to Register Copy/)
 				));
 
 			it('provides hover for instructions within scopes', async () =>
 				await given('test: {', 'label: mov a,b ; test', '}')
 					.hoverAt(1, 8)
-					.is(hover.covering(1, 7, 1, 15).containingText(/8-bit Register to Register Copy/)));
+					.is(hover.covering(1, 7, 1, 14).containingText(/8-bit Register to Register Copy/)));
 
 			it('provides hover for positions within instruction', async () => {
 				const expected = hover.between(0, 3).containingText(/Arithmetic Add/);
@@ -52,7 +52,7 @@ describe('HoverProvider', () => {
 
 			it('provides basic hover for org', async () =>
 				await hoverFor('label: o|rg 0xfedc ; test').is(
-					hover.between(7, 18).withPlainText('(instruction) org')
+					hover.between(7, 17).withPlainText('(instruction) org')
 				));
 		});
 
@@ -124,13 +124,13 @@ describe('HoverProvider', () => {
 		});
 
 		describe('register hovers', () => {
-			it('provides hover for register', () =>
-				hoverFor('label: mov a|,b ; test').is(hover.between(11, 12).containingText(/A Register/)));
+			it('provides hover for register', async () =>
+				await hoverFor('label: mov a|,b ; test').is(hover.between(11, 12).containingText(/A Register/)));
 
-			it('provides hover for register within scopes', () =>
-				given('test: {', 'label: mov a,b ; test', '}')
+			it('provides hover for register within scopes', async () =>
+				await given('test: {', 'label: mov a,b ; test', '}')
 					.hoverAt(1, 13)
-					.is(hover.covering(1, 13, 1, 15).containingText(/B Register/)));
+					.is(hover.covering(1, 13, 1, 14).containingText(/B Register/)));
 
 			it('provides hover for positions within register', async () => {
 				await hoverFor('mov |xy,m').is(hover.between(4, 6).containingText(/XY Register/));
@@ -163,11 +163,11 @@ describe('HoverProvider', () => {
 				await code.hoverAt(0, 27).is(hover.between(17, 22).withText('ABC'));
 			});
 
-			it('provides hover for literals within fill directives', () =>
-				hoverFor('!fill 9,0|xaa').is(hover.between(8, 12).withText('170 | 0xaa | 10101010b')));
+			it('provides hover for literals within fill directives', async () =>
+				await hoverFor('!fill 9,0|xaa').is(hover.between(8, 12).withText('170 | 0xaa | 10101010b')));
 
-			it('provides hover for literals within align directives', () =>
-				hoverFor('!align 20|-4').is(hover.between(7, 9).withText('20 | 0x14 | 10100b')));
+			it('provides hover for literals within align directives', async () =>
+				await hoverFor('!align 20|-4').is(hover.between(7, 9).withText('20 | 0x14 | 10100b')));
 		});
 
 		describe('label ref hovers', () => {

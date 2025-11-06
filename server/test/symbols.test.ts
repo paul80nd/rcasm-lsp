@@ -30,13 +30,13 @@ describe('symbols', () => {
 		it('finds a let directive', async () =>
 			await parsing('!let CPLAN_SIZE = 3', 'ldi a,CPLAN_SIZE')
 				.definitionsAre(
-					variable.at(range(0, 5, 0, 16)).withName('CPLAN_SIZE')
+					variable.at(range(0, 5, 0, 15)).withName('CPLAN_SIZE')
 				));
 
 		it('finds a for directive', async () =>
 			await parsing('!for k in range(16) {', 'ldi b,k', '}')
 				.definitionsAre(
-					variable.at(range(0, 5, 0, 7)).withName('k')
+					variable.at(range(0, 5, 0, 6)).withName('k')
 				));
 
 		it('finds refs split on §', async () =>

@@ -7,22 +7,22 @@ describe('parse', () => {
 	it('parses a complete instruction line', () =>
 		parsing('label: mov a,b    ; comment here').is(
 			'000+032 Program',
-			'000+018 .Line',
+			'000+014 .Line',
 			'000+005 ..Label label',
-			'007+011 ..Instruction mov',
+			'007+007 ..Instruction mov',
 			'011+001 ...Register a',
-			'013+005 ...Register b'
+			'013+001 ...Register b'
 		));
 
 	it('parses a complete directive line', () =>
 		parsing('label: !byte 10, 0xfe, 01010101b    ; comment here').is(
 			'000+050 Program',
-			'000+036 .Line',
+			'000+032 .Line',
 			'000+005 ..Label label',
-			'007+029 ..Directive !byte',
+			'007+025 ..Directive !byte',
 			'013+002 ...Literal 10',
 			'017+004 ...Literal 254',
-			'023+013 ...Literal 85'
+			'023+009 ...Literal 85'
 		));
 
 	it('parses a fill directive', () =>
@@ -96,7 +96,7 @@ describe('parse', () => {
 			'000+036 Program',
 			'000+019 .Line',
 			'000+019 ..Directive !let',
-			'005+011 ...Variable CPLAN_SIZE',
+			'005+010 ...Variable CPLAN_SIZE',
 			'018+001 ...Literal 3',
 			'020+016 .Line',
 			'020+016 ..Instruction ldi',
@@ -109,16 +109,16 @@ describe('parse', () => {
 			'000+062 Program',
 			'000+019 .Line',
 			'000+019 ..Directive !let',
-			'005+011 ...Variable CPLAN_SIZE',
+			'005+010 ...Variable CPLAN_SIZE',
 			'018+001 ...Literal 3',
 			'020+042 .Line',
 			'020+004 ..Label plan',
 			'026+036 ..Directive !let',
-			'031+005 ...Variable parr',
+			'031+004 ...Variable parr',
 			'038+024 ...BinaryOp +',
-			'038+006 ....SQRef cplan',
+			'038+005 ....SQRef cplan',
 			'047+014 ....BinaryOp *',
-			'047+002 .....Literal 4',
+			'047+001 .....Literal 4',
 			'051+010 .....SQRef CPLAN_SIZE'
 		));
 
@@ -127,8 +127,8 @@ describe('parse', () => {
 			'000+031 Program',
 			'000+031 .Line',
 			'000+031 ..Directive !for',
-			'005+002 ...Variable k',
-			'010+010 ...CallFunc',
+			'005+001 ...Variable k',
+			'010+009 ...CallFunc',
 			'010+005 ....SQRef range',
 			'016+002 ....Literal 16',
 			'022+007 ...Line',
@@ -142,22 +142,22 @@ describe('parse', () => {
 			'000+064 Program',
 			'000+064 .Line',
 			'000+064 ..Directive !for',
-			'005+002 ...Variable k',
-			'010+011 ...CallFunc',
+			'005+001 ...Variable k',
+			'010+010 ...CallFunc',
 			'010+005 ....SQRef range',
 			'016+001 ....Literal 4',
 			'018+001 ....Literal 6',
 			'023+039 ...Line',
 			'023+039 ....Directive !let',
-			'028+004 .....Variable ssz',
+			'028+003 .....Variable ssz',
 			'034+028 .....BinaryOp -',
-			'034+003 ......Literal 10',
+			'034+002 ......Literal 10',
 			'041+020 ......BinaryOp /',
 			'043+013 .......BinaryOp +',
-			'043+002 ........SQRef k',
-			'049+006 ........BinaryOp %',
-			'049+002 .........SQRef k',
-			'053+002 .........Literal 2',
+			'043+001 ........SQRef k',
+			'049+005 ........BinaryOp %',
+			'049+001 .........SQRef k',
+			'053+001 .........Literal 2',
 			'060+001 .......Literal 2'
 		));
 
@@ -167,7 +167,7 @@ describe('parse', () => {
 			'000+019 .Line',
 			'000+019 ..Directive !if',
 			'005+005 ...BinaryOp >',
-			'005+002 ....Literal 1',
+			'005+001 ....Literal 1',
 			'009+001 ....Literal 2',
 			'014+003 ...Line',
 			'014+003 ....Instruction add'
@@ -191,12 +191,12 @@ describe('parse', () => {
 			'000+055 .Line',
 			'000+055 ..Directive !if',
 			'005+006 ...BinaryOp ==',
-			'005+002 ....Literal 1',
+			'005+001 ....Literal 1',
 			'010+001 ....Literal 2',
 			'015+003 ...Line',
 			'015+003 ....Instruction add',
 			'027+006 ...BinaryOp !=',
-			'027+002 ....Literal 1',
+			'027+001 ....Literal 1',
 			'032+001 ....Literal 2',
 			'037+003 ...Line',
 			'037+003 ....Instruction not',
@@ -210,10 +210,10 @@ describe('parse', () => {
 			'000+047 .Line',
 			'000+047 ..Directive !if',
 			'005+008 ...BinaryOp >',
-			'005+002 ....CurrentPC',
+			'005+001 ....CurrentPC',
 			'009+004 ....Literal 255',
-			'017+029 ...Line',
-			'017+029 ....Directive !error'
+			'017+028 ...Line',
+			'017+028 ....Directive !error'
 		));
 
 	it('parses named scopes', () =>

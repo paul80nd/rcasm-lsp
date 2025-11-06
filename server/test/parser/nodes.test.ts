@@ -6,9 +6,9 @@ describe('nodes', () => {
 		it('finds nodes in a complete instruction line', () => {
 			const given = parsing('label: mov a,b    ; comment here');
 			given.nodeAt(3).is(label.at(0, 5).withInfo('label'));
-			given.nodeAt(8).is(instr.at(7, 18).withInfo('mov'));
+			given.nodeAt(8).is(instr.at(7, 14).withInfo('mov'));
 			given.nodeAt(11).is(register.at(11, 12).withInfo('a'));
-			given.nodeAt(13).is(register.at(13, 18).withInfo('b'));
+			given.nodeAt(13).is(register.at(13, 14).withInfo('b'));
 		});
 
 		it('finds symbols in a forward jump', () => {
