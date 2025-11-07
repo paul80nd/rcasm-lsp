@@ -8,17 +8,6 @@ export interface SymbolReference {
 	scope: SymbolScope;
 }
 
-export class Scopes {
-	constructor(readonly root: SymbolScope) {}
-
-	findQualifiedSymbol(ref: SymbolReference) {
-		if (ref.absolute || !ref.scope) {
-			return this.root.findSymbolPath(ref.path);
-		}
-		return ref.scope.findSymbolPath(ref.path);
-	}
-}
-
 export class NamedScope<T> {
 	syms = new Map<string, T>();
 	readonly parent: NamedScope<T> | null = null;

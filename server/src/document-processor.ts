@@ -7,7 +7,7 @@ import { processSymbols, Symbols } from './symbols';
 export interface ProcessedDocument {
 	document: TextDocument;
 	tree: parser.INode;
-	scopes: parser.Scopes;
+	scopes: parser.SymbolScope;
 	symbols: Symbols;
 }
 

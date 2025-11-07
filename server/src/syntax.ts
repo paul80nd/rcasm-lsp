@@ -15,5 +15,3 @@ export type RegisterName =
 	| 'ds';
 
 export type AddressingMode = 'dr' | 'ar' | 'mIndirect' | 'imm';
-
-// export const cpuTypes = ['rcasm', 'rcasm+div'];

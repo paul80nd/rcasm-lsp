@@ -2,8 +2,6 @@ import * as lsp from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as parser from './parser/nodes';
 import { Context } from './context';
-import { ProcessedDocument } from './document-processor';
-import { Scopes } from './parser';
 import { SymbolScope, SymEntry } from './parser/scopes';
 import { parseLine } from './parse';
 import { containsPosition } from './geometry';
@@ -14,15 +12,9 @@ export interface NamedSymbol {
 	referenceType?: parser.ReferenceType;
 }
 
-// export interface Literal {
-// 	location: lsp.Location;
-// 	text: string;
-// }
-
 export interface Definition extends NamedSymbol {
 	type: DefinitionType;
 	selectionRange: lsp.Range;
-	// locals?: Map<string, Definition>;
 	comment?: string;
 }
 
@@ -36,7 +28,6 @@ export enum DefinitionType {
 }
 
 export interface Symbols {
-	scope: Scopes;
 	definitions: Map<string, Definition>;
 	references: Map<string, NamedSymbol[]>;
 }
@@ -47,11 +38,9 @@ export interface Symbols {
 export function processSymbols(
 	document: TextDocument,
 	tree: parser.INode,
-	scps: Scopes
-	//  ctx: Context
+	scps: SymbolScope
 ): Symbols {
 	const symbols: Symbols = {
-		scope: scps,
 		definitions: new Map<string, Definition>(),
 		references: new Map<string, NamedSymbol[]>()
 	};
@@ -151,11 +140,11 @@ export function processSymbols(
 		ss.syms.forEach(sss => addDefinition(sss, path));
 		ss.children.forEach(ssc => walkScope(ssc, `${path}${ssc.name}::`));
 	};
-	walkScope(scps.root);
+	walkScope(scps);
 
 	tree.accept(n => {
 		if (n.type === 'SQRef' && n.ref) {
-			const name = n.ref.path.join('::');
+			const name = n.ref.absolute ? n.ref.path.join('::') : (n.ref.scope.name === '' ? '' : n.ref.scope.name + '::') + n.ref.path.join('::');
 			let refs = symbols.references.get(name);
 			if (!refs) {
 				refs = [];
@@ -196,56 +185,28 @@ export function processSymbols(
  */
 export function symbolAtPosition(
 	symbols: Symbols,
-	processed: ProcessedDocument,
 	position: lsp.Position
 ): NamedSymbol | undefined {
-	const dap = definitionAtPosition(symbols, position);
-	if (dap) {
-		return dap;
-	}
-
-	// return (
-	// 		//     definitionAtPosition(symbols, position) ||
-	// 		referenceAtPosition(symbols, position)
-	// );
-
-	const offset = processed.document.offsetAt(position);
-	const node = parser.getNodeAtOffset(processed.tree, offset);
-
-	if (!node) {
-		return undefined;
-	}
-
-	if (node.type === 'SQRef' && node.ref) {
-		const r = processed.scopes.findQualifiedSymbol(node.ref);
-		if (r) {
-			return {
-				name: r.name,
-				referenceType:
-					r.type == 'label' ? parser.ReferenceType.Label : parser.ReferenceType.Variable,
-				location: { uri: processed.document.uri, range: getRange(r.node, processed.document) }
-			};
-		}
-		return undefined;
-	}
-
-	return;
+	return (
+		definitionAtPosition(symbols, position) ||
+		referenceAtPosition(symbols, position)
+	);
 }
 
-// /**
-//  * Get reference symbol at position
-//  */
-// export function referenceAtPosition(
-// 	symbols: Symbols,
-// 	position: lsp.Position
-// ): NamedSymbol | undefined {
-// 	for (const [, refs] of symbols.references) {
-// 		const foundRef = refs.find(ref => containsPosition(ref.location.range, position));
-// 		if (foundRef) {
-// 			return foundRef;
-// 		}
-// 	}
-// }
+/**
+ * Get reference symbol at position
+ */
+export function referenceAtPosition(
+	symbols: Symbols,
+	position: lsp.Position
+): NamedSymbol | undefined {
+	for (const [, refs] of symbols.references) {
+		const foundRef = refs.find(ref => containsPosition(ref.location.range, position));
+		if (foundRef) {
+			return foundRef;
+		}
+	}
+}
 
 /**
  * Get definition symbol at position
@@ -255,22 +216,11 @@ export function definitionAtPosition(
 	position: lsp.Position
 ): Definition | undefined {
 	for (const def of docSymbols.definitions.values()) {
-		// if (def.locals) {
-		//       for (const local of def.locals.values()) {
-		//         if (containsPosition(local.selectionRange, position)) {
-		//           return local;
-		//         }
-		//       }
-		//     }
 		if (containsPosition(def.selectionRange, position)) {
 			return def;
 		}
 	}
 }
-
-// export function isLocalLabel(label: string): boolean {
-//   return label.startsWith(".") || label.endsWith("$");
-// }
 
 // /**
 //  * Get references to symbol at position
@@ -367,56 +317,13 @@ export async function getDefinitions(
 		return [];
 	}
 
-	const symbol = symbolAtPosition(processed.symbols, processed, position);
+	const symbol = symbolAtPosition(processed.symbols, position);
 	if (!symbol) {
 		return [];
 	}
 
-	let type = DefinitionType.Label;
-	switch (symbol.referenceType) {
-		case parser.ReferenceType.Label:
-			type = DefinitionType.Label;
-			break;
-		case parser.ReferenceType.Variable:
-			type = DefinitionType.Variable;
-	}
-
-	return [
-		{
-			name: symbol.name,
-			referenceType: symbol.referenceType,
-			type,
-			location: symbol.location,
-			selectionRange: symbol.location.range
-		}
-	];
-
-	// if (isLocalLabel(symbol.name)) {
-	//     const globalLabel = labelBeforePosition(processed.symbols, position);
-	//     const def = globalLabel?.locals?.get(symbol.name);
-	//     return def ? [def] : [];
-	// }
-
-	//   // Definition in current doc
-	//   const def = processed.symbols.definitions.get(symbol.name);
-	//   if (def) {
-	//     return [def];
-	//   }
-
-	// const defs: Definition[] = [];
-
-	//   const deps = await getDependencies(uri, ctx);
-	//   for (const depUri of deps) {
-	//     const processedDoc = ctx.store.get(depUri);
-	//     if (processedDoc) {
-	//       const def = processedDoc.symbols.definitions.get(symbol.name);
-	//       if (def) {
-	//         defs.push(def);
-	//       }
-	//     }
-	//   }
-
-	// return defs;
+	const def = processed.symbols.definitions.get(symbol.name);
+	return def ? [def] : [];
 }
 
 /**

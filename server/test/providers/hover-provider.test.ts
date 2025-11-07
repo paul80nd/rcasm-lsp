@@ -200,7 +200,7 @@ describe('HoverProvider', () => {
 			it('provides a hover on scoped label ref', async () =>
 				await given('jmp scp::test', 'scp: {', 'test: add', '}')
 					.hoverAt(0, 6)
-					.is(hover.covering(0, 4, 0, 13).withText('(label) test')));
+					.is(hover.covering(0, 4, 0, 13).withText('(label) scp::test')));
 
 			it('provides hover for refs split on §', async () => {
 				const g = given('fra: inc', 'ldi m,fra§parr', 'parr: add');

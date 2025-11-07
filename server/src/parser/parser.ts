@@ -1,7 +1,7 @@
 import * as rcasm from '@paul80nd/rcasm';
 import { INode, IOrphanNode } from './nodes';
 import * as nodes from './nodes';
-import { SymbolScope, NamedScope, SymEntry, Scopes } from './scopes';
+import { SymbolScope, NamedScope, SymEntry } from './scopes';
 
 export interface IParseContext {
 	scope: SymbolScope;
@@ -12,11 +12,11 @@ export interface IParseContext {
 	declareVar(name: string, node: INode): void;
 }
 
-export function parse(text: string): { tree: INode; scopes: Scopes } {
+export function parse(text: string): { tree: INode; scopes: SymbolScope } {
 	const ast = rcasm.parseOnly(text);
 	const adapter = new AstAdapter();
 	const tree = adapter.adapt(ast);
-	return { tree, scopes: new Scopes(adapter.ctx.root) };
+	return { tree, scopes: adapter.ctx.root };
 }
 
 class AstAdapter {
