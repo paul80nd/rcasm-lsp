@@ -38,8 +38,8 @@ describe('symbols', () => {
 
 		it('finds a for directive', async () =>
 			await parsing('!for k in range(16) {', 'ldi b,k', '}').has(
-				definitionsOf(variable.at(range(0, 5, 0, 6)).named('k')),
-				referencesOf(ref.to('k').at(range(1, 6, 1, 7)), ref.to('range').at(range(0, 10, 0, 15)))
+				definitionsOf(variable.at(range(0, 5, 0, 6)).named('__anon_scope_0::k')),
+				referencesOf(ref.to('__anon_scope_0::k').at(range(1, 6, 1, 7)), ref.to('range').at(range(0, 10, 0, 15)))
 			));
 
 		it('finds refs split on §', async () =>
@@ -117,7 +117,7 @@ describe('symbols', () => {
 		it('correctly scopes labels in anon for block', async () =>
 			await parsing('!for k in range(16) {', 'l1: add', '}').has(
 				definitionsOf(
-					variable.at(range(0, 5, 0, 6)).named('k'),
+					variable.at(range(0, 5, 0, 6)).named('__anon_scope_0::k'),
 					label.at(range(1, 0, 1, 2)).named('__anon_scope_0::l1')
 				)
 			));
@@ -130,6 +130,14 @@ describe('symbols', () => {
 				),
 				referencesOf(ref.to('lab').at(range(0, 4, 0, 7), range(3, 4, 3, 9)))
 			));
+
+		it('picks up refs and label both inside scope', async () =>
+			await parsing('bbp: {', 'jmp init', 'init: add', '}').has(
+				definitionsOf(
+					label.at(range(0, 0, 0, 3)).named('bbp'),
+					label.at(range(2, 0, 2, 4)).named('bbp::init')
+				), referencesOf(ref.to('bbp::init').at(range(1, 4, 1, 8)))));
+
 	});
 
 	// Test Director

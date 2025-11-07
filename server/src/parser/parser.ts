@@ -130,7 +130,6 @@ class AstAdapter {
 	adaptForDirective(ss: rcasm.StmtFor, lsn?: string): IOrphanNode {
 		const n = mkNode(ss, 'Directive', '!for');
 
-		n.adoptChild(this.adaptVariable(ss.index));
 		n.adoptChild(this.adaptExpr(ss.list));
 
 		// Derrive scope name
@@ -139,13 +138,15 @@ class AstAdapter {
 			sn = `${lsn}__x`;
 		}
 
-		if (ss.body) {
-			this.ctx.withAnonOrLabelScope(sn, () => {
+		this.ctx.withAnonOrLabelScope(sn, () => {
+			n.adoptChild(this.adaptVariable(ss.index));
+
+			if (ss.body) {
 				ss.body
 					.filter(st => st.label || st.scopedStmts || st.stmt)
 					.forEach(st => n.adoptChild(this.adaptLine(st)));
-			});
-		}
+			}
+		});
 
 		return n;
 	}
