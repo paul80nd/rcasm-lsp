@@ -54,6 +54,7 @@ export default class HoverProvider implements Provider {
 				case 'SetPC':
 					return this.hoverSetPC(getRange(node));
 				case 'SQRef':
+				case 'Label':
 					return this.hoverSymbol(processed.document, position, getRange(node));
 				case 'Literal':
 					return node.value ? this.hoverNumber(node.value, getRange(node)) : undefined;

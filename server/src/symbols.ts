@@ -5,6 +5,8 @@ import { Context } from './context';
 import { ProcessedDocument } from './document-processor';
 import { Scopes } from './parser';
 import { SymbolScope, SymEntry } from './parser/scopes';
+import { parseLine } from './parse';
+import { containsPosition } from './geometry';
 
 export interface NamedSymbol {
 	location: lsp.Location;
@@ -29,22 +31,14 @@ export interface Definition extends NamedSymbol {
 // }
 
 export enum DefinitionType {
-	// Section = 'section',
 	Label = 'label',
-	// Constant = 'constant',
 	Variable = 'variable'
-	// Register = 'register',
-	// RegisterList = 'register_list',
-	// Offset = 'offset',
-	// XRef = 'xref'
 }
 
 export interface Symbols {
 	scope: Scopes;
 	definitions: Map<string, Definition>;
-	// references: Map<string, NamedSymbol[]>;
-	// includes: Literal[];
-	// incDirs: Literal[];
+	references: Map<string, NamedSymbol[]>;
 }
 
 /**
@@ -52,18 +46,15 @@ export interface Symbols {
  */
 export function processSymbols(
 	document: TextDocument,
+	tree: parser.INode,
 	scps: Scopes
-	// ctx: Context
+	//  ctx: Context
 ): Symbols {
 	const symbols: Symbols = {
 		scope: scps,
-		definitions: new Map<string, Definition>()
-		// references: new Map<string, NamedSymbol[]>(),
-		// includes: [],
-		// incDirs: []
+		definitions: new Map<string, Definition>(),
+		references: new Map<string, NamedSymbol[]>()
 	};
-
-	//   let lastGlobalLabel: Definition | undefined;
 
 	const addDefinition = (se: SymEntry, path: string) => {
 		const name = `${path}${se.name}`;
@@ -72,60 +63,74 @@ export function processSymbols(
 		}
 
 		const type = definitionTypeMappings[se.type];
+		const range = getRange(se.node, document);
 
 		const def: Definition = {
 			name,
 			type,
-			location: { uri: document.uri, range: getRange(se.node, document) },
-			selectionRange: getRange(se.node, document)
+			location: { uri: document.uri, range },
+			selectionRange: range
 		};
 
-		//     // Comments:
-		//     const commentLines: string[] = [];
+		// Comments:
+		const commentLines: string[] = [];
 
-		//     // Same line comment
-		//     const [descendantComment] = node.descendantsOfType("comment");
-		//     if (descendantComment?.startPosition.row === node.startPosition.row) {
-		//       commentLines.unshift(descendantComment.text);
-		//     } else {
-		//       // Preceding line comments
-		//       let current = node;
-		//       while (
-		//         current.previousNamedSibling?.type === "comment" &&
-		//         current.previousNamedSibling.startPosition.row ===
-		//           current.startPosition.row - 1
-		//       ) {
-		//         current = current.previousNamedSibling;
-		//         commentLines.unshift(current.text);
-		//       }
-		//     }
+		// Same line comment
+		const lineRange = lsp.Range.create(
+			lsp.Position.create(range.start.line, 0),
+			lsp.Position.create(range.start.line, lsp.uinteger.MAX_VALUE)
+		);
+		const line = parseLine(document.getText(lineRange) ?? '');
+		if (line && line.comment) {
+			const c = line.comment.value.trim();
+			if (c.startsWith(';')) {
+				commentLines.unshift(line.comment.value);
+			}
+		} else if (lineRange.start.line > 0) {
+			// Preceding line comments
+			for (let i = lineRange.start.line - 1; i >= 0; i--) {
+				const lr = lsp.Range.create(
+					lsp.Position.create(i, 0),
+					lsp.Position.create(i, lsp.uinteger.MAX_VALUE)
+				);
+				const l = parseLine(document.getText(lr) ?? '');
+				if (l && l.comment) {
+					const c = l.comment.value.trim();
+					if (c.startsWith(';')) {
+						commentLines.unshift(l.comment.value);
+					}
+				} else {
+					break;
+				}
+			}
+		}
 
-		//     // Convert to markdown:
-		//     const horizontalRule = "***";
-		//     const processedLines = commentLines.map((l) =>
-		//       l
-		//         // Remove comment char and leading whitespace from each line
-		//         .replace(/^[;*]\s?/, "")
-		//         // Convert repeated punctuation lines to MD horizontal rules
-		//         // This looks better and avoids creating headings with --- or === underline style
-		//         // Use a tmp placeholder string until special chars are escaped
-		//         .replace(/^\s*[*-=]{3,}\s*$/, "~~~")
-		//         // Escape special chars
-		//         .replace(/([*_{}[\]()#+-.!`])/g, "\\$1")
-		//         // Replace placholder with actual rule
-		//         .replace(/^~~~$/, horizontalRule)
-		//     );
-		//     // Ensure no horizontal rules at start or end of block
-		//     while (processedLines[0] === horizontalRule) {
-		//       processedLines.shift();
-		//     }
-		//     while (processedLines[processedLines.length - 1] === horizontalRule) {
-		//       processedLines.pop();
-		//     }
+		// Convert to markdown:
+		const horizontalRule = '***';
+		const processedLines = commentLines.map(l =>
+			l
+				// Remove comment char and leading whitespace from each line
+				.replace(/^[;*]\s?/, '')
+				// Convert repeated punctuation lines to MD horizontal rules
+				// This looks better and avoids creating headings with --- or === underline style
+				// Use a tmp placeholder string until special chars are escaped
+				.replace(/^\s*[*-=]{3,}\s*$/, '~~~')
+				// Escape special chars
+				.replace(/([*_{}[\]()#+-.!`])/g, '\\$1')
+				// Replace placholder with actual rule
+				.replace(/^~~~$/, horizontalRule)
+		);
+		// Ensure no horizontal rules at start or end of block
+		while (processedLines[0] === horizontalRule) {
+			processedLines.shift();
+		}
+		while (processedLines[processedLines.length - 1] === horizontalRule) {
+			processedLines.pop();
+		}
 
-		//     if (commentLines.length) {
-		//       def.comment = processedLines.join("  \n");
-		//     }
+		if (commentLines.length) {
+			def.comment = processedLines.join('  \n');
+		}
 
 		//     if (type === DefinitionType.Label) {
 		//       if (isLocalLabel(name)) {
@@ -142,49 +147,27 @@ export function processSymbols(
 		symbols.definitions.set(name, def);
 	};
 
-	//   if (!symbolsQuery) {
-	//     symbolsQuery = ctx.language.query(`
-	//       (symbol) @symbol
-	//     `);
-	//   }
-	//   const captures = symbolsQuery.captures(tree.rootNode);
-
 	const walkScope = (ss: SymbolScope, path = '') => {
 		ss.syms.forEach(sss => addDefinition(sss, path));
 		ss.children.forEach(ssc => walkScope(ssc, `${path}${ssc.name}::`));
 	};
 	walkScope(scps.root);
 
-	//   for (const { node, name } of captures) {
-
-	//     // Symbols:
-
-	//     if (!node.parent) {
-	//       continue;
-	//     }
-	//     const defMapping = definitionNodeTypeMappings[node.parent.type];
-
-	//     if (defMapping) {
-	//       // Definition:
-	//       const nameNode =
-	//         node.parent.childForFieldName("name") || node.parent.firstNamedChild;
-	//       if (nameNode) {
-	//         addDefinition(node.parent, nameNode);
-	//       }
-	//     } else {
-	//       // Reference:
-	//       const name = node.text;
-	//       let refs = symbols.references.get(name);
-	//       if (!refs) {
-	//         refs = [];
-	//         symbols.references.set(name, refs);
-	//       }
-	//       refs.push({
-	//         name,
-	//         location: { uri, range: nodeAsRange(node) },
-	//       });
-	//     }
-	//   }
+	tree.accept(n => {
+		if (n.type === 'SQRef' && n.ref) {
+			const name = n.ref.path.join('::');
+			let refs = symbols.references.get(name);
+			if (!refs) {
+				refs = [];
+				symbols.references.set(name, refs);
+			}
+			refs.push({
+				name,
+				location: { uri: document.uri, range: getRange(n, document) }
+			});
+		}
+		return true;
+	});
 
 	return symbols;
 }
@@ -212,9 +195,20 @@ export function processSymbols(
  * Get symbol at position
  */
 export function symbolAtPosition(
+	symbols: Symbols,
 	processed: ProcessedDocument,
 	position: lsp.Position
 ): NamedSymbol | undefined {
+	const dap = definitionAtPosition(symbols, position);
+	if (dap) {
+		return dap;
+	}
+
+	// return (
+	// 		//     definitionAtPosition(symbols, position) ||
+	// 		referenceAtPosition(symbols, position)
+	// );
+
 	const offset = processed.document.offsetAt(position);
 	const node = parser.getNodeAtOffset(processed.tree, offset);
 
@@ -235,10 +229,6 @@ export function symbolAtPosition(
 		return undefined;
 	}
 
-	// return (
-	// 		//     definitionAtPosition(symbols, position) ||
-	// 		referenceAtPosition(symbols, position)
-	// );
 	return;
 }
 
@@ -257,26 +247,26 @@ export function symbolAtPosition(
 // 	}
 // }
 
-// /**
-//  * Get definition symbol at position
-//  */
-// export function definitionAtPosition(
-//   docSymbols: Symbols,
-//   position: lsp.Position
-// ): Definition | undefined {
-//   for (const def of docSymbols.definitions.values()) {
-//     if (def.locals) {
-//       for (const local of def.locals.values()) {
-//         if (containsPosition(local.selectionRange, position)) {
-//           return local;
-//         }
-//       }
-//     }
-//     if (containsPosition(def.selectionRange, position)) {
-//       return def;
-//     }
-//   }
-// }
+/**
+ * Get definition symbol at position
+ */
+export function definitionAtPosition(
+	docSymbols: Symbols,
+	position: lsp.Position
+): Definition | undefined {
+	for (const def of docSymbols.definitions.values()) {
+		// if (def.locals) {
+		//       for (const local of def.locals.values()) {
+		//         if (containsPosition(local.selectionRange, position)) {
+		//           return local;
+		//         }
+		//       }
+		//     }
+		if (containsPosition(def.selectionRange, position)) {
+			return def;
+		}
+	}
+}
 
 // export function isLocalLabel(label: string): boolean {
 //   return label.startsWith(".") || label.endsWith("$");
@@ -377,7 +367,7 @@ export async function getDefinitions(
 		return [];
 	}
 
-	const symbol = symbolAtPosition(processed, position);
+	const symbol = symbolAtPosition(processed.symbols, processed, position);
 	if (!symbol) {
 		return [];
 	}

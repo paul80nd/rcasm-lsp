@@ -20,7 +20,7 @@ export default class DocumentProcessor {
 		this.ctx.logger.log('processDocument: ' + document.uri);
 
 		const { tree, scopes } = parser.parse(document.getText());
-		const symbols = processSymbols(document, scopes);
+		const symbols = processSymbols(document, tree, scopes);
 
 		const processed: ProcessedDocument = {
 			document,

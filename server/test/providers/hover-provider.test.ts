@@ -125,7 +125,9 @@ describe('HoverProvider', () => {
 
 		describe('register hovers', () => {
 			it('provides hover for register', async () =>
-				await hoverFor('label: mov a|,b ; test').is(hover.between(11, 12).containingText(/A Register/)));
+				await hoverFor('label: mov a|,b ; test').is(
+					hover.between(11, 12).containingText(/A Register/)
+				));
 
 			it('provides hover for register within scopes', async () =>
 				await given('test: {', 'label: mov a,b ; test', '}')
@@ -164,10 +166,24 @@ describe('HoverProvider', () => {
 			});
 
 			it('provides hover for literals within fill directives', async () =>
-				await hoverFor('!fill 9,0|xaa').is(hover.between(8, 12).withText('170 | 0xaa | 10101010b')));
+				await hoverFor('!fill 9,0|xaa').is(
+					hover.between(8, 12).withText('170 | 0xaa | 10101010b')
+				));
 
 			it('provides hover for literals within align directives', async () =>
 				await hoverFor('!align 20|-4').is(hover.between(7, 9).withText('20 | 0x14 | 10100b')));
+		});
+
+		describe('label hovers', () => {
+			it('provides a hover on label', async () =>
+				await given('test: add')
+					.hoverAt(0, 3)
+					.is(hover.covering(0, 0, 0, 4).withText('(label) test')));
+
+			it('provides a hover on scoped label', async () =>
+				await given('scp: {', 'test: add', '}')
+					.hoverAt(1, 3)
+					.is(hover.covering(1, 0, 1, 4).withText('(label) scp::test')));
 		});
 
 		describe('label ref hovers', () => {

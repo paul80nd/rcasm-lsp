@@ -29,37 +29,56 @@ describe('DefinitionProvider', () => {
 	});
 
 	describe('#onDefinition()', () => {
-		it('returns a definition for a label', async () =>
-			await given('test: add', 'jmp test')
-				.symbolAt(1, 6)
-				.hasDefinitionAt(range(0, 0, 0, 4)));
+		describe('label ref defs', () => {
+			it('returns a definition for a label ref', async () =>
+				await given('test: add', 'jmp test')
+					.symbolAt(1, 6)
+					.hasDefinitionAt(range(0, 0, 0, 4)));
 
-		it('finds definition if label follows after', async () =>
-			await given('jmp test', 'test: add')
-				.symbolAt(0, 6)
-				.hasDefinitionAt(range(1, 0, 1, 4)));
+			it('finds definition if label ref follows after', async () =>
+				await given('jmp test', 'test: add')
+					.symbolAt(0, 6)
+					.hasDefinitionAt(range(1, 0, 1, 4)));
 
-		it('finds definition for label inside scope', async () => {
-			const g = given('jmp scp::test', 'scp: {', 'test: add', '}');
-			await g.symbolAt(0, 6).hasDefinitionAt(range(2, 0, 2, 4));
-			await g.symbolAt(0, 10).hasDefinitionAt(range(2, 0, 2, 4));
+			it('finds definition for label ref inside scope', async () => {
+				const g = given('jmp scp::test', 'scp: {', 'test: add', '}');
+				await g.symbolAt(0, 6).hasDefinitionAt(range(2, 0, 2, 4));
+				await g.symbolAt(0, 10).hasDefinitionAt(range(2, 0, 2, 4));
+			});
+
+			it('returns a definition for a label ref outside scope', async () =>
+				await given('test: add', 'scope: {', 'jmp ::test', '}')
+					.symbolAt(2, 7)
+					.hasDefinitionAt(range(0, 0, 0, 4)));
+
+			it('returns definitions for refs split on §', async () => {
+				const g = given('fra: inc', 'ldi m,fra§parr', 'parr: add');
+				await g.symbolAt(1, 8).hasDefinitionAt(range(0, 0, 0, 3));
+				await g.symbolAt(1, 12).hasDefinitionAt(range(2, 0, 2, 4));
+			});
+
+			it('returns definitions for refs and label inside scope', async () =>
+				await given('bbp: {', 'jmp init', 'init: add', '}')
+					.symbolAt(1, 5)
+					.hasDefinitionAt(range(2, 0, 2, 4)));
 		});
 
-		it('returns a definition for a label outside scope', async () =>
-			await given('test: add', 'scope: {', 'jmp ::test', '}')
-				.symbolAt(2, 7)
-				.hasDefinitionAt(range(0, 0, 0, 4)));
+		describe('label defs', () => {
+			it('returns a definition for a label', async () =>
+				await given('test: add', 'jmp test')
+					.symbolAt(0, 3)
+					.hasDefinitionAt(range(0, 0, 0, 4)));
 
-		it('returns definitions for refs split on §', async () => {
-			const g = given('fra: inc', 'ldi m,fra§parr', 'parr: add');
-			await g.symbolAt(1, 8).hasDefinitionAt(range(0, 0, 0, 3));
-			await g.symbolAt(1, 12).hasDefinitionAt(range(2, 0, 2, 4));
+			it('finds definition for label inside scope', async () =>
+				await given('jmp scp::test', 'scp: {', 'test: add', '}')
+					.symbolAt(2, 3)
+					.hasDefinitionAt(range(2, 0, 2, 4)));
+
+			it('returns definitions for refs and label inside scope', async () =>
+				await given('bbp: {', 'jmp init', 'init: add', '}')
+					.symbolAt(2, 3)
+					.hasDefinitionAt(range(2, 0, 2, 4)));
 		});
-
-		it('returns definitions for refs and label inside scope', async () =>
-			await given('bbp: {', 'jmp init', 'init: add', '}')
-				.symbolAt(1, 5)
-				.hasDefinitionAt(range(2, 0, 2, 4)));
 	});
 
 	// Test Director
