@@ -196,7 +196,6 @@ describe('HoverProvider', () => {
 				await given('; not this', ' ', '; this', ';and this', 'test: add')
 					.hoverAt(4, 2)
 					.is(hover.covering(4, 0, 4, 4).withText('this', 'and this', '***', '(label) test')));
-
 		});
 
 		describe('label ref hovers', () => {
@@ -232,7 +231,6 @@ describe('HoverProvider', () => {
 				await given('; not this', ' ', '; this', ';and this', 'test: add', 'jmp test')
 					.hoverAt(5, 6)
 					.is(hover.covering(5, 4, 5, 8).withText('this', 'and this', '***', '(label) test')));
-
 		});
 
 		describe('variable ref hovers', () => {
@@ -276,7 +274,8 @@ describe('HoverProvider', () => {
 				hover.overRange(range(sr, sc, er, ec)),
 			overRange: (range: lsp.Range) => {
 				const s1 = {
-					withText: (...str: readonly string[]) => s1.withContent({ kind: 'markdown', value: str.join('  \n') }),
+					withText: (...str: readonly string[]) =>
+						s1.withContent({ kind: 'markdown', value: str.join('  \n') }),
 					withPlainText: (str: string) => s1.withContent({ kind: 'plaintext', value: str }),
 					containingText: (str: string | RegExp) =>
 						s1.withContent({ kind: 'markdown', value: expect.stringMatching(str) }),

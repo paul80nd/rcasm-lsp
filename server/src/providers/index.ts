@@ -7,6 +7,7 @@ import TextDocumentSyncProvider from './text-document-sync-provider';
 import HoverProvider from './hover-provider';
 import DefinitionProvider from './definition-provider';
 import FoldingRangeProvider from './folding-range-provider';
+import ReferencesProvider from './references-provider';
 
 export interface Provider {
 	register(connection: Connection, clientCapabilities: ClientCapabilities): ServerCapabilities;
@@ -18,6 +19,7 @@ const providers = [
 	DefinitionProvider,
 	FoldingRangeProvider,
 	HoverProvider,
+	ReferencesProvider,
 	TextDocumentSyncProvider
 ];
 

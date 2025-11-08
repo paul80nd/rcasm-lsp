@@ -222,81 +222,40 @@ export function definitionAtPosition(
 	}
 }
 
-// /**
-//  * Get references to symbol at position
-//  */
-// export async function getReferences(
-//   uri: string,
-//   position: lsp.Position,
-//   ctx: Context,
-//   includeDeclaration = false
-// ): Promise<NamedSymbol[]> {
-//   const currentDoc = ctx.store.get(uri);
-//   if (!currentDoc) {
-//     return [];
-//   }
+/**
+ * Get references to symbol at position
+ */
+export async function getReferences(
+	uri: string,
+	position: lsp.Position,
+	ctx: Context,
+	includeDeclaration = false
+): Promise<NamedSymbol[]> {
+	const currentDoc = ctx.store.get(uri);
+	if (!currentDoc) {
+		return [];
+	}
 
-//   const results: NamedSymbol[] = [];
+	const results: NamedSymbol[] = [];
 
-//   const symbol = symbolAtPosition(currentDoc.symbols, position);
-//   if (!symbol) {
-//     return [];
-//   }
+	const symbol = symbolAtPosition(currentDoc.symbols, position);
+	if (!symbol) {
+		return [];
+	}
 
-//   if (isLocalLabel(symbol.name)) {
-//     const { range, startLabel } = localContext(
-//       symbol,
-//       currentDoc.symbols,
-//       currentDoc.document
-//     );
-//     const refs = currentDoc.symbols.references.get(symbol.name);
-//     if (refs) {
-//       results.push(
-//         ...refs.filter((ref) =>
-//           containsPosition(range, ref.location.range.start)
-//         )
-//       );
-//     }
-//     if (includeDeclaration) {
-//       const def = startLabel?.locals?.get(symbol.name);
-//       if (def) {
-//         results.push(def);
-//       }
-//     }
-//   } else {
-//     // Current doc
-//     const refs = currentDoc.symbols.references.get(symbol.name);
-//     if (refs) {
-//       results.push(...refs);
-//     }
-//     if (includeDeclaration) {
-//       const def = currentDoc.symbols.definitions.get(symbol.name);
-//       if (def) {
-//         results.push(def);
-//       }
-//     }
+	const refs = currentDoc.symbols.references.get(symbol.name);
+	if (refs) {
+		results.push(...refs);
+	}
+	if (includeDeclaration) {
+		const def = currentDoc.symbols.definitions.get(symbol.name);
+		if (def) {
+			results.push(def);
+		}
+	}
 
-//     // Dependent docs
-//     const deps = await getDependencies(uri, ctx);
-//     for (const depUri of deps) {
-//       const depenedentDoc = ctx.store.get(depUri);
-//       if (depenedentDoc) {
-//         const refs = depenedentDoc.symbols.references.get(symbol.name);
-//         if (refs) {
-//           results.push(...refs);
-//         }
-//         if (includeDeclaration) {
-//           const def = depenedentDoc.symbols.definitions.get(symbol.name);
-//           if (def) {
-//             results.push(def);
-//           }
-//         }
-//       }
-//     }
-//   }
-
-//   return results;
-// }
+	return results;
+}
 
 // interface LocalContext {
 //   range: lsp.Range;
