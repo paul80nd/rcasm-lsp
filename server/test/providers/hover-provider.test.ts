@@ -186,6 +186,19 @@ describe('HoverProvider', () => {
 					.is(hover.covering(1, 0, 1, 4).withText('(label) scp::test')));
 		});
 
+		describe('label hover comments', () => {
+			it('hover includes line comment on label', async () =>
+				await given('test: add ; comment')
+					.hoverAt(0, 3)
+					.is(hover.covering(0, 0, 0, 4).withText('comment', '***', '(label) test')));
+
+			it('hover includes block comment on label', async () =>
+				await given('; not this', ' ', '; this', ';and this', 'test: add')
+					.hoverAt(4, 2)
+					.is(hover.covering(4, 0, 4, 4).withText('this', 'and this', '***', '(label) test')));
+
+		});
+
 		describe('label ref hovers', () => {
 			it('provides a hover on label ref', async () =>
 				await given('test: add', 'jmp test')
@@ -207,6 +220,19 @@ describe('HoverProvider', () => {
 				await g.hoverAt(1, 8).is(hover.covering(1, 6, 1, 9).withText('(label) fra'));
 				await g.hoverAt(1, 12).is(hover.covering(1, 10, 1, 14).withText('(label) parr'));
 			});
+		});
+
+		describe('label ref hover comments', () => {
+			it('hover includes line comment on label ref', async () =>
+				await given('test: add ; comment', 'jmp test')
+					.hoverAt(1, 6)
+					.is(hover.covering(1, 4, 1, 8).withText('comment', '***', '(label) test')));
+
+			it('hover includes block comment on label ref', async () =>
+				await given('; not this', ' ', '; this', ';and this', 'test: add', 'jmp test')
+					.hoverAt(5, 6)
+					.is(hover.covering(5, 4, 5, 8).withText('this', 'and this', '***', '(label) test')));
+
 		});
 
 		describe('variable ref hovers', () => {
@@ -250,7 +276,7 @@ describe('HoverProvider', () => {
 				hover.overRange(range(sr, sc, er, ec)),
 			overRange: (range: lsp.Range) => {
 				const s1 = {
-					withText: (str: string) => s1.withContent({ kind: 'markdown', value: str }),
+					withText: (...str: readonly string[]) => s1.withContent({ kind: 'markdown', value: str.join('  \n') }),
 					withPlainText: (str: string) => s1.withContent({ kind: 'plaintext', value: str }),
 					containingText: (str: string | RegExp) =>
 						s1.withContent({ kind: 'markdown', value: expect.stringMatching(str) }),

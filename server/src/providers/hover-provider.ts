@@ -107,9 +107,14 @@ export default class HoverProvider implements Provider {
 
 	private async hoverSymbol(document: TextDocument, position: lsp.Position, range: lsp.Range) {
 		const [def] = await getDefinitions(document.uri, position, this.ctx);
-		let content = '';
+		const contents: string[] = [];
 
 		if (def) {
+			if (def.comment) {
+				contents.push(def.comment);
+				contents.push('***');
+			}
+
 			switch (def.type) {
 				case DefinitionType.Variable: {
 					// Find Declaration and add code block
@@ -122,12 +127,12 @@ export default class HoverProvider implements Provider {
 								lsp.Position.create(startLine, Number.MAX_VALUE)
 							)
 						);
-						content = '```rcasm\n' + formatDeclaration(definitionLine) + '\n```';
+						contents.push('```rcasm\n' + formatDeclaration(definitionLine) + '\n```');
 					}
 					break;
 				}
 				default:
-					content = `(${def.type}) ${def.name}`;
+					contents.push(`(${def.type}) ${def.name}`);
 			}
 		}
 
@@ -135,7 +140,7 @@ export default class HoverProvider implements Provider {
 			range,
 			contents: {
 				kind: lsp.MarkupKind.Markdown,
-				value: content
+				value: contents.join('  \n')
 			}
 		};
 	}
