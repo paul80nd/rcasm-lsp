@@ -144,7 +144,10 @@ export function processSymbols(
 
 	tree.accept(n => {
 		if (n.type === 'SQRef' && n.ref) {
-			const name = n.ref.absolute ? n.ref.path.join('::') : (n.ref.scope.name === '' ? '' : n.ref.scope.name + '::') + n.ref.path.join('::');
+			const path = n.ref.path.map(p => p.replace(/__\d+$/, '__n'));
+			const name = n.ref.absolute
+				? path.join('::')
+				: (n.ref.scope.name === '' ? '' : n.ref.scope.name + '::') + path.join('::');
 			let refs = symbols.references.get(name);
 			if (!refs) {
 				refs = [];
@@ -187,10 +190,7 @@ export function symbolAtPosition(
 	symbols: Symbols,
 	position: lsp.Position
 ): NamedSymbol | undefined {
-	return (
-		definitionAtPosition(symbols, position) ||
-		referenceAtPosition(symbols, position)
-	);
+	return definitionAtPosition(symbols, position) || referenceAtPosition(symbols, position);
 }
 
 /**

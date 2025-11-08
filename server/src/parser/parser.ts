@@ -135,7 +135,7 @@ class AstAdapter {
 		// Derrive scope name
 		let sn = undefined;
 		if (lsn) {
-			sn = `${lsn}__x`;
+			sn = `${lsn}__n`;
 		}
 
 		this.ctx.withAnonOrLabelScope(sn, () => {
@@ -230,6 +230,7 @@ class ParserContext implements IParseContext {
 	root: SymbolScope = new NamedScope<SymEntry>(null, '');
 	scope = this.root;
 	private anonScopeCount = 0;
+	private path: string[] = [];
 
 	withAnonScope(body: () => void) {
 		const anonLabel = `__anon_scope_${this.anonScopeCount}`;
@@ -239,8 +240,10 @@ class ParserContext implements IParseContext {
 
 	withLabelScope(name: string, body: () => void) {
 		const curSym = this.scope;
+		this.path.push(name);
 		this.scope = this.scope.newScope(name, curSym);
 		body();
+		this.path.pop();
 		this.scope = curSym;
 	}
 

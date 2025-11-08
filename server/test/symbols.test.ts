@@ -39,7 +39,10 @@ describe('symbols', () => {
 		it('finds a for directive', async () =>
 			await parsing('!for k in range(16) {', 'ldi b,k', '}').has(
 				definitionsOf(variable.at(range(0, 5, 0, 6)).named('__anon_scope_0::k')),
-				referencesOf(ref.to('__anon_scope_0::k').at(range(1, 6, 1, 7)), ref.to('range').at(range(0, 10, 0, 15)))
+				referencesOf(
+					ref.to('__anon_scope_0::k').at(range(1, 6, 1, 7)),
+					ref.to('range').at(range(0, 10, 0, 15))
+				)
 			));
 
 		it('finds refs split on §', async () =>
@@ -136,8 +139,51 @@ describe('symbols', () => {
 				definitionsOf(
 					label.at(range(0, 0, 0, 3)).named('bbp'),
 					label.at(range(2, 0, 2, 4)).named('bbp::init')
-				), referencesOf(ref.to('bbp::init').at(range(1, 4, 1, 8)))));
+				),
+				referencesOf(ref.to('bbp::init').at(range(1, 4, 1, 8)))
+			));
 
+		it('normalises refs into for loop iteration', async () =>
+			await parsing(
+				'beq b_loop__4::_tst',
+				'b_loop: !for i in range(8) {',
+				'_tst: mov b,a',
+				'}'
+			).has(
+				definitionsOf(
+					label.at(range(1, 0, 1, 6)).named('b_loop'),
+					label.at(range(2, 0, 2, 4)).named('b_loop__n::_tst'),
+					variable.at(range(1, 13, 1, 14)).named('b_loop__n::i')
+				),
+				referencesOf(
+					ref.to('b_loop__n::_tst').at(range(0, 4, 0, 19)),
+					ref.to('range').at(range(1, 18, 1, 23))
+				)
+			));
+
+		it('resolves labels and refs within loop', async () =>
+			await parsing(
+				'b_loop: !for i in range(8) {',
+				'_tst: add',
+				'bmi _neg',
+				'jmp _set',
+				'_neg: mov a,b',
+				'_set: mov b,d',
+				'}'
+			).has(
+				definitionsOf(
+					label.at(range(0, 0, 0, 6)).named('b_loop'),
+					label.at(range(1, 0, 1, 4)).named('b_loop__n::_tst'),
+					label.at(range(4, 0, 4, 4)).named('b_loop__n::_neg'),
+					label.at(range(5, 0, 5, 4)).named('b_loop__n::_set'),
+					variable.at(range(0, 13, 0, 14)).named('b_loop__n::i')
+				),
+				referencesOf(
+					ref.to('b_loop__n::_neg').at(range(2, 4, 2, 8)),
+					ref.to('b_loop__n::_set').at(range(3, 4, 3, 8)),
+					ref.to('range').at(range(0, 18, 0, 23))
+				)
+			));
 	});
 
 	// Test Director
