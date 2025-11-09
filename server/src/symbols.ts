@@ -18,9 +18,9 @@ export interface Definition extends NamedSymbol {
 	comment?: string;
 }
 
-// export function isDefinition(symbol: NamedSymbol): symbol is Definition {
-//   return (symbol as Definition).selectionRange !== undefined;
-// }
+export function isDefinition(symbol: NamedSymbol): symbol is Definition {
+	return (symbol as Definition).selectionRange !== undefined;
+}
 
 export enum DefinitionType {
 	Label = 'label',
