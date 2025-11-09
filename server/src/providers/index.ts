@@ -9,6 +9,7 @@ import DefinitionProvider from './definition-provider';
 import FoldingRangeProvider from './folding-range-provider';
 import ReferencesProvider from './references-provider';
 import DocumentHighlightProvider from './document-highlight-provider';
+import DocumentSymbolProvider from './document-symbol-provider';
 
 export interface Provider {
 	register(connection: Connection, clientCapabilities: ClientCapabilities): ServerCapabilities;
@@ -19,6 +20,7 @@ const providers = [
 	CompletionProvider,
 	DefinitionProvider,
 	DocumentHighlightProvider,
+	DocumentSymbolProvider,
 	FoldingRangeProvider,
 	HoverProvider,
 	ReferencesProvider,

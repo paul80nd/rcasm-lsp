@@ -341,17 +341,10 @@ const definitionTypeMappings: Record<string, DefinitionType> = {
 	var: DefinitionType.Variable
 };
 
-// export const symbolKindMappings: Record<DefinitionType, lsp.SymbolKind> = {
-//   [DefinitionType.Section]: lsp.SymbolKind.Module,
-//   [DefinitionType.Label]: lsp.SymbolKind.Field,
-//   [DefinitionType.Macro]: lsp.SymbolKind.Function,
-//   [DefinitionType.Constant]: lsp.SymbolKind.Constant,
-//   [DefinitionType.Variable]: lsp.SymbolKind.Variable,
-//   [DefinitionType.Register]: lsp.SymbolKind.Constant,
-//   [DefinitionType.RegisterList]: lsp.SymbolKind.Constant,
-//   [DefinitionType.Offset]: lsp.SymbolKind.Constant,
-//   [DefinitionType.XRef]: lsp.SymbolKind.Field,
-// };
+export const symbolKindMappings: Record<DefinitionType, lsp.SymbolKind> = {
+	[DefinitionType.Label]: lsp.SymbolKind.Field,
+	[DefinitionType.Variable]: lsp.SymbolKind.Variable
+};
 
 function getRange(node: parser.INode, document: TextDocument): lsp.Range {
 	return lsp.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
