@@ -52,7 +52,7 @@ describe('HoverProvider', () => {
 
 			it('provides basic hover for org', async () =>
 				await hoverFor('label: o|rg 0xfedc ; test').is(
-					hover.between(7, 17).withPlainText('(instruction) org')
+					hover.between(7, 17).containingText('Define Output Location')
 				));
 		});
 

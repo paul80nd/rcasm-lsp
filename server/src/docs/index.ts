@@ -9,7 +9,7 @@ export interface MnemonicDoc {
 	title: string;
 	summary: string;
 	syntax: string[];
-	description?: string;
+	description?: string[];
 	snippet?: string;
 }
 

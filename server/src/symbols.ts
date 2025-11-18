@@ -206,6 +206,7 @@ export function referenceAtPosition(
 			return foundRef;
 		}
 	}
+	return undefined;
 }
 
 /**
@@ -220,6 +221,7 @@ export function definitionAtPosition(
 			return def;
 		}
 	}
+	return undefined;
 }
 
 /**
