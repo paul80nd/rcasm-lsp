@@ -12,7 +12,7 @@
 		"url": "https://github.com/paul80nd/rcasm-lsp"
 	},
 	"dependencies": {
-		"@paul80nd/rcasm": "1.18.2",
+		"@paul80nd/rcasm": "1.19.0",
 		"vscode-languageserver": "^9.0.1",
 		"vscode-languageserver-textdocument": "^1.0.11",
 		"vscode-uri": "^3.0.3"
