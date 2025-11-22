@@ -3,7 +3,7 @@
 	"description": "Relay computer assembly language extension",
 	"author": "Paul Law",
 	"license": "MIT",
-	"version": "1.0.6",
+	"version": "1.0.9",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/paul80nd/rcasm-lsp"

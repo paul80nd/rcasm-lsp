@@ -5,7 +5,7 @@
 		"removeComments": true,
 		"declaration": true,
 		"preserveConstEnums": true,
-		"outDir": "lib/umd",
+		"outDir": "../server-lib/lib/umd",
 		"sourceMap": true,
 		"allowJs": true,
 		"noImplicitAny": true,
