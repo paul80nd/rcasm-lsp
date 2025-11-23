@@ -41,12 +41,12 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 		// Description
 		value += `${hva}**${vs.length > 0 ? (doc.variant ?? doc.summary) : doc.summary}**`;
 		if (doc.description) {
-			doc.description.forEach(d => value += `  \n${d}`);
+			doc.description.forEach(d => (value += `  \n${d}`));
 		}
 		vs.forEach((v, i) => {
 			value += `\n\n${hvs[i]}**${v.variant}**`;
 			if (v.description) {
-				v.description.forEach(d => value += `  \n${d}`);
+				v.description.forEach(d => (value += `  \n${d}`));
 			}
 		});
 
