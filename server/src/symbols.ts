@@ -121,18 +121,6 @@ export function processSymbols(
 			def.comment = processedLines.join('  \n');
 		}
 
-		//     if (type === DefinitionType.Label) {
-		//       if (isLocalLabel(name)) {
-		//         if (lastGlobalLabel) {
-		//           lastGlobalLabel.locals?.set(name, def);
-		//           return;
-		//         }
-		//       } else {
-		//         lastGlobalLabel = def;
-		//         def.locals = new Map();
-		//       }
-		//     }
-
 		symbols.definitions.set(name, def);
 	};
 

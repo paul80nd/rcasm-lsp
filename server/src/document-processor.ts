@@ -7,14 +7,13 @@ import { processSymbols, Symbols } from './symbols';
 export interface ProcessedDocument {
 	document: TextDocument;
 	tree: parser.INode;
-	scopes: parser.SymbolScope;
 	symbols: Symbols;
 }
 
 export type ProcessedDocumentStore = Map<string, ProcessedDocument>;
 
 export default class DocumentProcessor {
-	constructor(protected readonly ctx: Context) {}
+	constructor(protected readonly ctx: Context) { }
 
 	async process(document: TextDocument): Promise<ProcessedDocument> {
 		this.ctx.logger.log('processDocument: ' + document.uri);
@@ -25,7 +24,6 @@ export default class DocumentProcessor {
 		const processed: ProcessedDocument = {
 			document,
 			tree,
-			scopes,
 			symbols
 		};
 
