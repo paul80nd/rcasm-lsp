@@ -184,6 +184,51 @@ describe('symbols', () => {
 					ref.to('range').at(range(0, 18, 0, 23))
 				)
 			));
+
+		it('resolves labels and refs outside unnamed loop', async () =>
+			await parsing(
+				'!let CPLAN_SIZE = 3',
+				'cplan: !byte 0, 9, 0x01',
+				'!for k in range(16) {',
+				'!let parr = cplan + (k * CPLAN_SIZE)',
+				'}'
+			).has(
+				definitionsOf(
+					variable.at(range(0, 5, 0, 15)).named('CPLAN_SIZE'),
+					label.at(range(1, 0, 1, 5)).named('cplan'),
+					variable.at(range(2, 5, 2, 6)).named('__anon_scope_0::k'),
+					variable.at(range(3, 5, 3, 9)).named('__anon_scope_0::parr')
+				),
+				referencesOf(
+					ref.to('range').at(range(2, 10, 2, 15)),
+					ref.to('CPLAN_SIZE').at(range(3, 25, 3, 35)),
+					ref.to('cplan').at(range(3, 12, 3, 17)),
+					ref.to('__anon_scope_0::k').at(range(3, 21, 3, 22))
+				)
+			));
+
+		it('resolves labels and refs outside named loop', async () =>
+			await parsing(
+				'!let CPLAN_SIZE = 3',
+				'cplan: !byte 0, 9, 0x01',
+				'start: !for k in range(16) {',
+				'!let parr = cplan + (k * CPLAN_SIZE)',
+				'}'
+			).has(
+				definitionsOf(
+					variable.at(range(0, 5, 0, 15)).named('CPLAN_SIZE'),
+					label.at(range(1, 0, 1, 5)).named('cplan'),
+					label.at(range(2, 0, 2, 5)).named('start'),
+					variable.at(range(2, 12, 2, 13)).named('start__n::k'),
+					variable.at(range(3, 5, 3, 9)).named('start__n::parr')
+				),
+				referencesOf(
+					ref.to('range').at(range(2, 17, 2, 22)),
+					ref.to('CPLAN_SIZE').at(range(3, 25, 3, 35)),
+					ref.to('cplan').at(range(3, 12, 3, 17)),
+					ref.to('start__n::k').at(range(3, 21, 3, 22))
+				)
+			));
 	});
 
 	// Test Director

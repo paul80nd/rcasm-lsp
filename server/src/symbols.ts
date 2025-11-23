@@ -136,27 +136,32 @@ export function processSymbols(
 		symbols.definitions.set(name, def);
 	};
 
+	// Collect definitions
 	const walkScope = (ss: SymbolScope, path = '') => {
 		ss.syms.forEach(sss => addDefinition(sss, path));
 		ss.children.forEach(ssc => walkScope(ssc, `${path}${ssc.name}::`));
 	};
 	walkScope(scps);
 
+	// Collect references
 	tree.accept(n => {
 		if (n.type === 'SQRef' && n.ref) {
 			const path = n.ref.path.map(p => p.replace(/__\d+$/, '__n'));
-			const name = n.ref.absolute
-				? path.join('::')
-				: (n.ref.scope.name === '' ? '' : n.ref.scope.name + '::') + path.join('::');
-			let refs = symbols.references.get(name);
-			if (!refs) {
-				refs = [];
-				symbols.references.set(name, refs);
+			const symPath = n.ref.absolute
+				? scps.findSymbolPath(path)
+				: n.ref.scope.findSymbolPath(path);
+			if (symPath) {
+				const name = symPath.join('::');
+				let refs = symbols.references.get(name);
+				if (!refs) {
+					refs = [];
+					symbols.references.set(name, refs);
+				}
+				refs.push({
+					name,
+					location: { uri: document.uri, range: getRange(n, document) }
+				});
 			}
-			refs.push({
-				name,
-				location: { uri: document.uri, range: getRange(n, document) }
-			});
 		}
 		return true;
 	});
