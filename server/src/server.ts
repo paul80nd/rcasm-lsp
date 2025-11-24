@@ -7,7 +7,7 @@ import { createContext } from './context';
 const connection = createConnection(lsp.ProposedFeatures.all);
 
 connection.onInitialize((params: InitializeParams): lsp.InitializeResult => {
-	const ctx = /*await*/ createContext(
+	const ctx = createContext(
 		params.workspaceFolders ?? [],
 		connection.console,
 		connection,

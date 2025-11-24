@@ -326,15 +326,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			mIndirect: false,
 			imm: false
 		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: false,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' },
+		procs: { rcasm: false, 'rcasm+div': true }
 	},
 	dvr: {
 		title: 'dvr',
@@ -353,11 +346,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			mIndirect: false,
 			imm: false
 		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
+		flags: { z: '-', c: '-', s: '-' },
 		procs: {
 			rcasm: false,
 			'rcasm+div': true
@@ -381,11 +370,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			mIndirect: false,
 			imm: false
 		},
-		flags: {
-			z: '*',
-			c: '0',
-			s: '*'
-		},
+		flags: { z: '*', c: '0', s: '*' },
 		procs: {
 			rcasm: true,
 			'rcasm+div': true

@@ -1,12 +1,5 @@
 import { MarkupContent, MarkupKind } from 'vscode-languageserver-types';
-import {
-	//   addressingModeDocs,
-	//   AddressingModes,
-	isInstructionDoc,
-	MnemonicDoc,
-	RegisterDoc
-} from './docs';
-// import { AddressingMode } from "./syntax";
+import { isInstructionDoc, MnemonicDoc, RegisterDoc } from './docs';
 
 export function formatDeclaration(definitionLine: string) {
 	return definitionLine
@@ -39,14 +32,14 @@ export function formatMnemonicDoc(doc: MnemonicDoc): MarkupContent {
 		value += '\n```\n\n---\n';
 
 		// Description
-		value += `${hva}**${vs.length > 0 ? (doc.variant ?? doc.summary) : doc.summary}**`;
+		value += `${hva}**${vs.length > 0 ? (doc.variant ?? doc.summary) : doc.summary}**  `;
 		if (doc.description) {
-			doc.description.forEach(d => (value += `  \n${d}`));
+			doc.description.forEach(d => (value += `\n${d}  `));
 		}
 		vs.forEach((v, i) => {
-			value += `\n\n${hvs[i]}**${v.variant}**`;
+			value += `\n\n${hvs[i]}**${v.variant}**  `;
 			if (v.description) {
-				v.description.forEach(d => (value += `  \n${d}`));
+				v.description.forEach(d => (value += `\n${d}  `));
 			}
 		});
 

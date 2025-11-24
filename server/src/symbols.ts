@@ -135,9 +135,7 @@ export function processSymbols(
 	tree.accept(n => {
 		if (n.type === 'SQRef' && n.ref) {
 			const path = n.ref.path.map(p => p.replace(/__\d+$/, '__n'));
-			const symPath = n.ref.absolute
-				? scps.findSymbolPath(path)
-				: n.ref.scope.findSymbolPath(path);
+			const symPath = n.ref.absolute ? scps.findSymbolPath(path) : n.ref.scope.findSymbolPath(path);
 			if (symPath) {
 				const name = symPath.join('::');
 				let refs = symbols.references.get(name);

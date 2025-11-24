@@ -61,7 +61,7 @@ export class NamedScope<T> {
 		while (tab.children.get(path[0]) === undefined) {
 			tab = tab.parent;
 			if (tab === null) {
-				return [...this.path, path[0]];	// If not found assume ref to local undeclared
+				return [...this.path, path[0]]; // If not found assume ref to local undeclared
 			}
 		}
 
@@ -69,7 +69,7 @@ export class NamedScope<T> {
 		for (let i = 0; i < path.length - 1; i++) {
 			tab = tab.children.get(path[i]);
 			if (tab === undefined) {
-				return [...this.path, path[0]];	// If not found assume ref to local undeclared
+				return [...this.path, path[0]]; // If not found assume ref to local undeclared
 			}
 		}
 		return [...tab.path, path[path.length - 1]];
