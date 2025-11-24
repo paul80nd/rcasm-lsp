@@ -116,34 +116,32 @@ export default class CompletionProvider implements Provider {
 		position: lsp.Position,
 		component?: Component
 	): Promise<lsp.CompletionItem[]> {
-		const instructions = Object.values(instructionDocs)
-			.filter(doc => this.ctx.config.processors.some(proc => doc.procs[proc]))
-			.map(doc => {
-				const insertText = doc.snippet ?? doc.title;
-				const item: lsp.CompletionItem = {
-					label: isUpperCase ? doc.title.toUpperCase() : doc.title.toLowerCase(),
-					labelDetails: {
-						description: doc.summary
-					},
-					kind: lsp.CompletionItemKind.Method,
-					// When providing textEdit clients typically ignore insertText.
-					// Keep insertText for clients that don't support textEdit on completions.
-					insertText: isUpperCase ? insertText.toUpperCase() : insertText,
-					insertTextFormat: doc.snippet
-						? lsp.InsertTextFormat.Snippet
-						: lsp.InsertTextFormat.PlainText,
-					data: true
-				};
-				// If we have a component range, replace that range so the completion doesn't simply insert at
-				// the cursor (which would duplicate any already-typed prefix like '!').
-				if (component) {
-					item.textEdit = lsp.TextEdit.replace(
-						this.getCompletionRange(position, component),
-						item.insertText as string
-					);
-				}
-				return item;
-			});
+		const instructions = Object.values(instructionDocs).map(doc => {
+			const insertText = doc.snippet ?? doc.title;
+			const item: lsp.CompletionItem = {
+				label: isUpperCase ? doc.title.toUpperCase() : doc.title.toLowerCase(),
+				labelDetails: {
+					description: doc.summary
+				},
+				kind: lsp.CompletionItemKind.Method,
+				// When providing textEdit clients typically ignore insertText.
+				// Keep insertText for clients that don't support textEdit on completions.
+				insertText: isUpperCase ? insertText.toUpperCase() : insertText,
+				insertTextFormat: doc.snippet
+					? lsp.InsertTextFormat.Snippet
+					: lsp.InsertTextFormat.PlainText,
+				data: true
+			};
+			// If we have a component range, replace that range so the completion doesn't simply insert at
+			// the cursor (which would duplicate any already-typed prefix like '!').
+			if (component) {
+				item.textEdit = lsp.TextEdit.replace(
+					this.getCompletionRange(position, component),
+					item.insertText as string
+				);
+			}
+			return item;
+		});
 
 		const directives = Object.values(directiveDocs).map(doc => {
 			const insertText = doc.snippet ?? doc.title;

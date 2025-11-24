@@ -17,10 +17,3 @@ export const mnemonicDocs = {
 	...instructionDocs,
 	...directiveDocs
 };
-
-// export const addressingModeDocs: Record<AddressingMode, string> = {
-//   dr: "Dr",
-//   ar: "Ar",
-//   mIndirect: "(m)",
-//   imm: "imm",
-// };

@@ -14,10 +14,6 @@ export type InstructionClass =
 	| 'LOAD'
 	| 'STORE';
 
-export type Processor = 'rcasm' | 'rcasm+div';
-
-export type Processors = Record<Processor, boolean>;
-
 export type AluFlag = 'z' | 'c' | 's';
 
 /**
@@ -37,7 +33,6 @@ export interface InstructionDoc extends MnemonicDoc {
 	flags?: AluFlags;
 	src?: AddressingModes;
 	dest?: AddressingModes;
-	procs: Processors;
 	variant?: string;
 	variants?: InstructionVariant[];
 }
@@ -68,21 +63,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Adds the contents of register `b` and `c` placing the result in `dst` (a or d).',
 			'If dst is not specified then register a is assumed.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '*',
-			c: '*',
-			s: '*'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '*', c: '*', s: '*' }
 	},
 	and: {
 		title: 'and',
@@ -95,21 +77,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Performs a bitwise AND on register `b` and `c` placing the result in `dst` (a or d).',
 			'If dst is not specified then register a is assumed.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '*',
-			c: '0',
-			s: '*'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '*', c: '0', s: '*' }
 	},
 	bcs: {
 		title: 'bcs',
@@ -120,15 +89,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['bcs <label>'],
 		snippet: 'bcs ${1:label}',
 		description: ['Jumps to label if C is set (last ALU operation resulted in a carry).'],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	beq: {
 		title: 'beq',
@@ -139,15 +100,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['beq <label>'],
 		snippet: 'beq ${1:label}',
 		description: ['Jumps to label if Z flag is set (last ALU operation result was 0).'],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	ble: {
 		title: 'ble',
@@ -160,15 +113,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		description: [
 			'Jumps to label if S or Z is set (last ALU operation resulted in a zero or negative value).'
 		],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	blt: {
 		title: 'blt',
@@ -182,15 +127,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Jumps to label if S is set (last ALU operation has most significant bit set / is negative).',
 			'Synonym of `bmi`.'
 		],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	bmi: {
 		title: 'bmi',
@@ -204,15 +141,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Jumps to label if S is set (last ALU operation has most significant bit set / is negative).',
 			'Synonym of `blt`.'
 		],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	bne: {
 		title: 'bne',
@@ -223,15 +152,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['bne <label>'],
 		snippet: 'bne ${1:label}',
 		description: ['Jumps to label if Z is not set (last ALU operation result was not 0).'],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	clr: {
 		title: 'clr',
@@ -245,21 +166,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Clears (sets to 0) general purpose 8-bit register dst.',
 			'This is the equivalent of `mov dst,dst`.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		},
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' },
 		variants: [
 			{
 				class: 'MOV16',
@@ -270,12 +178,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 					'This is the equivalent of `mov xy,xy`.'
 				],
 				syntax: ['clr xy'],
-				dest: {
-					dr: false,
-					ar: true,
-					mIndirect: false,
-					imm: false
-				},
+				dest: { dr: false, ar: true, mIndirect: false, imm: false },
 				whenFirstParamIs: ['xy']
 			}
 		]
@@ -293,21 +196,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'If dst is not specified then register a is assumed. Affects Z (zero) and S (sign) flags.',
 			'Synonym of `eor`.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '*',
-			c: '0',
-			s: '*'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '*', c: '0', s: '*' }
 	},
 	div: {
 		title: 'div',
@@ -318,16 +208,11 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['div [<dst:a|d>]'],
 		description: [
 			'Performs an integer division of register `b` by register `c` placing the quotient result in `dst` (a or d).',
-			'If dst is not specified then register a is assumed.'
+			'If dst is not specified then register a is assumed.',
+			'‼️ Instruction requires the Divider Unit ‼️'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: { z: '-', c: '-', s: '-' },
-		procs: { rcasm: false, 'rcasm+div': true }
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	dvr: {
 		title: 'dvr',
@@ -338,19 +223,11 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['dvr [<dst:a|d>]'],
 		description: [
 			'Performs a further division of the last `div` or `mod` remainder by register `c` placing the quotient result in `dst` (a or d).',
-			'Register B should be set to 0. If dst is not specified then register a is assumed.'
+			'Register B should be set to 0. If dst is not specified then register a is assumed.',
+			'‼️ Instruction requires the Divider Unit ‼️'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: { z: '-', c: '-', s: '-' },
-		procs: {
-			rcasm: false,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	eor: {
 		title: 'eor',
@@ -364,17 +241,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'If dst is not specified then register a is assumed.',
 			'Synonym of `cmp`.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: { z: '*', c: '0', s: '*' },
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '*', c: '0', s: '*' }
 	},
 	inc: {
 		title: 'inc',
@@ -387,21 +255,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Adds one to the contents of register `b` (register `c` is ignored) placing the result in `dst` (a or d).',
 			'If dst is not specified then register a is assumed.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '*',
-			c: '*',
-			s: '*'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '*', c: '*', s: '*' }
 	},
 	hlt: {
 		title: 'hlt',
@@ -411,15 +266,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		operation: 'HALT and [PC] ← [PC] + 1',
 		syntax: ['hlt'],
 		description: ['Halts execution of the program.'],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	hlr: {
 		title: 'hlr',
@@ -431,15 +278,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		description: [
 			'Halts execution of the program and sets the program counter to the value on the primary switches.'
 		],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	ixy: {
 		title: 'ixy',
@@ -449,15 +288,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		operation: '[XY] ← [XY] + 1',
 		syntax: ['ixy'],
 		description: ['Increments the 16-bit value in the `xy` register by 1.'],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	jmp: {
 		title: 'jmp',
@@ -468,15 +299,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['jmp <label>'],
 		snippet: 'jmp ${1:label}',
 		description: ['Unconditionally jumps to `label` (via register j).'],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	jsr: {
 		title: 'jsr',
@@ -490,15 +313,7 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Saves the address of the next instruction into register `xy` and then unconditionally jumps to `label` (via register j).',
 			"Notionally behaves as a 'call subroutine' operation."
 		],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	ldi: {
 		title: 'ldi',
@@ -524,41 +339,13 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 				],
 				syntax: ['ldi <dst:m|j>,<value:0x0000..0xFFFF>', 'ldi <dst:m|j>,<label>'],
 				whenFirstParamIs: ['m', 'j'],
-				src: {
-					dr: false,
-					ar: false,
-					mIndirect: false,
-					imm: true
-				},
-				dest: {
-					dr: false,
-					ar: true,
-					mIndirect: false,
-					imm: false
-				}
+				src: { dr: false, ar: false, mIndirect: false, imm: true },
+				dest: { dr: false, ar: true, mIndirect: false, imm: false }
 			}
 		],
-		src: {
-			dr: false,
-			ar: false,
-			mIndirect: false,
-			imm: true
-		},
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		src: { dr: false, ar: false, mIndirect: false, imm: true },
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	lds: {
 		title: 'lds',
@@ -569,21 +356,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['lds <dst:a|d>'],
 		snippet: 'lds ${1:a}',
 		description: ['Loads register `dst` (a or d) from the front panel switches.'],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	ldr: {
 		title: 'ldr',
@@ -596,27 +370,9 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		description: [
 			'Loads register `dst` (a, b, c or d) with the byte in memory currently referenced by register `m`.'
 		],
-		src: {
-			dr: false,
-			ar: false,
-			mIndirect: true,
-			imm: false
-		},
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		src: { dr: false, ar: false, mIndirect: true, imm: false },
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	mod: {
 		title: 'mod',
@@ -627,23 +383,11 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['mod <dst:a|d>'],
 		description: [
 			'Performs an integer division of register `b` by register `c` placing the remainder result in `dst` (a or d).',
-			'If dst is not specified then register a is assumed.'
+			'If dst is not specified then register a is assumed.',
+			'‼️ Instruction requires the Divider Unit ‼️'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: false,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	mdr: {
 		title: 'mdr',
@@ -654,23 +398,11 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		syntax: ['mdr <dst:a|d>'],
 		description: [
 			'Performs a further modulo of the last `div` or `mod` remainder by register `c` placing the remainder result in `dst` (a or d).',
-			'Register B should be set to 0. If dst is not specified then register a is assumed.'
+			'Register B should be set to 0. If dst is not specified then register a is assumed.',
+			'‼️ Instruction requires the Divider Unit ‼️'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: false,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	mov: {
 		title: 'mov',
@@ -696,41 +428,13 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 				],
 				syntax: ['mov <dst:xy|pc>,<src:m|xy|j|as>'],
 				whenFirstParamIs: ['xy', 'pc'],
-				src: {
-					dr: false,
-					ar: true,
-					mIndirect: false,
-					imm: false
-				},
-				dest: {
-					dr: false,
-					ar: true,
-					mIndirect: false,
-					imm: false
-				}
+				src: { dr: false, ar: true, mIndirect: false, imm: false },
+				dest: { dr: false, ar: true, mIndirect: false, imm: false }
 			}
 		],
-		src: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		src: { dr: true, ar: false, mIndirect: false, imm: false },
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	},
 	not: {
 		title: 'not',
@@ -743,21 +447,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Performs a bitwise NOT on register `b` (register `c` is ignored) placing the result in `dst` (a or d).',
 			'If dst is not specified then register a is assumed.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '*',
-			c: '0',
-			s: '*'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '*', c: '0', s: '*' }
 	},
 	orr: {
 		title: 'orr',
@@ -770,21 +461,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Performs a bitwise OR on register `b` and `c` placing the result in `dst` (a or d).',
 			'If dst is not specified then register a is assumed.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '*',
-			c: '0',
-			s: '*'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '*', c: '0', s: '*' }
 	},
 	rol: {
 		title: 'rol',
@@ -798,21 +476,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'If dst is not specified then register a is assumed.',
 			'Every bit shifts one place to the left with the left most bit rotated around to right.'
 		],
-		dest: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		flags: {
-			z: '*',
-			c: '0',
-			s: '*'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		dest: { dr: true, ar: false, mIndirect: false, imm: false },
+		flags: { z: '*', c: '0', s: '*' }
 	},
 	rts: {
 		title: 'rts',
@@ -825,27 +490,9 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 			'Copies the value in register `xy` to the program counter `pc`.',
 			"Notionally behaves as a 'return' operation to a previous jsr call."
 		],
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		src: {
-			dr: false,
-			ar: true,
-			mIndirect: false,
-			imm: false
-		},
-		dest: {
-			dr: false,
-			ar: true,
-			mIndirect: false,
-			imm: false
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		flags: { z: '-', c: '-', s: '-' },
+		src: { dr: false, ar: true, mIndirect: false, imm: false },
+		dest: { dr: false, ar: true, mIndirect: false, imm: false }
 	},
 	str: {
 		title: 'str',
@@ -858,26 +505,8 @@ export const instructionDocs: Record<string, InstructionDoc> = {
 		description: [
 			'Stores register `src` (a, b, c or d) into the byte of memory currently referenced by register `m`.'
 		],
-		src: {
-			dr: true,
-			ar: false,
-			mIndirect: false,
-			imm: false
-		},
-		dest: {
-			dr: false,
-			ar: false,
-			mIndirect: true,
-			imm: false
-		},
-		flags: {
-			z: '-',
-			c: '-',
-			s: '-'
-		},
-		procs: {
-			rcasm: true,
-			'rcasm+div': true
-		}
+		src: { dr: true, ar: false, mIndirect: false, imm: false },
+		dest: { dr: false, ar: false, mIndirect: true, imm: false },
+		flags: { z: '-', c: '-', s: '-' }
 	}
 };

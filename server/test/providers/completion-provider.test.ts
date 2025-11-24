@@ -124,28 +124,6 @@ describe('CompletionProvider', () => {
 					{ label: '!byte', sortText: 'byte' }
 				]));
 
-			it('excludes unsupported mnemonics', async () =>
-				await completionsFor('  di|').doesNotInclude([{ label: 'div' }]));
-
-			it('includes supported mnemonics', async () => {
-				const textDocument = await createDoc('example.s', '  di');
-				const ctx020: Context = {
-					...ctx,
-					config: {
-						...ctx.config,
-						processors: ['rcasm', 'rcasm+div']
-					}
-				};
-				const provider020 = new CompletionProvider(ctx020);
-
-				const completions = await provider020.onCompletion({
-					position: lsp.Position.create(0, 4),
-					textDocument
-				});
-
-				expect(completions).toContainEqual(expect.objectContaining({ label: 'div' }));
-			});
-
 			it('completions match case', async () => {
 				await completionsFor('MO|').includes([{ label: 'MOV' }]);
 				await completionsFor('!A|').includes([{ label: '!ALIGN' }]);
