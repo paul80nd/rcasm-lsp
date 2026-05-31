@@ -3,7 +3,8 @@
 	"compilerOptions": {
 		"lib": ["es2020", "webworker"],
 		"module": "esnext",
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		"types": []
 	},
 	"include": ["src/**/*.ts", "server/src/server-browser.ts"],
 	"exclude": ["server.ts", "index.ts"]
