@@ -13,8 +13,8 @@
 	},
 	"dependencies": {
 		"@paul80nd/rcasm": "1.20.2",
-		"vscode-languageserver": "^9.0.1",
-		"vscode-languageserver-textdocument": "^1.0.11",
+		"vscode-languageserver": "^10.0.1",
+		"vscode-languageserver-textdocument": "^1.0.13",
 		"vscode-uri": "^3.0.3"
 	},
 	"scripts": {}

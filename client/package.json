@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"glob": "13.0.6",
-		"vscode-languageclient": "^9.0.1"
+		"vscode-languageclient": "^10.0.1"
 	},
 	"devDependencies": {
 		"@types/vscode": "1.106.1",
