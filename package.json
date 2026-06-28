@@ -14,7 +14,8 @@
 		"multi-root ready"
 	],
 	"engines": {
-		"vscode": "^1.100.0"
+		"vscode": "^1.100.0",
+		"node": ">=20"
 	},
 	"main": "./client/out/extension",
 	"contributes": {
