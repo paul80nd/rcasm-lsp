@@ -5,25 +5,14 @@ import { getDocUri, activate } from './helper';
 suite('Should get diagnostics', () => {
 	const docUri = getDocUri('diagnostics.rcasm');
 
-	test('Diagnoses uppercase texts', async () => {
+	test('Reports an out-of-range literal', async () => {
+		// Fixture is `ldi a,300` — 300 exceeds the 4-bit immediate range.
 		await testDiagnostics(docUri, [
 			{
-				message: 'ANY is all uppercase.',
-				range: toRange(0, 0, 0, 3),
-				severity: vscode.DiagnosticSeverity.Warning,
-				source: 'ex'
-			},
-			{
-				message: 'ANY is all uppercase.',
-				range: toRange(0, 14, 0, 17),
-				severity: vscode.DiagnosticSeverity.Warning,
-				source: 'ex'
-			},
-			{
-				message: 'OS is all uppercase.',
-				range: toRange(0, 18, 0, 20),
-				severity: vscode.DiagnosticSeverity.Warning,
-				source: 'ex'
+				message: 'Literal out of range (must be between -16 and 15)',
+				range: toRange(0, 6, 0, 9),
+				severity: vscode.DiagnosticSeverity.Error,
+				source: 'rcasm'
 			}
 		]);
 	});
@@ -47,5 +36,6 @@ async function testDiagnostics(docUri: vscode.Uri, expectedDiagnostics: vscode.D
 		assert.equal(actualDiagnostic.message, expectedDiagnostic.message);
 		assert.deepEqual(actualDiagnostic.range, expectedDiagnostic.range);
 		assert.equal(actualDiagnostic.severity, expectedDiagnostic.severity);
+		assert.equal(actualDiagnostic.source, expectedDiagnostic.source);
 	});
 }

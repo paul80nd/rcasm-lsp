@@ -5,20 +5,19 @@ import { getDocUri, activate } from './helper';
 suite('Should do completion', () => {
 	const docUri = getDocUri('completion.rcasm');
 
-	test('Completes JS/TS in rcasm file', async () => {
-		await testCompletion(docUri, new vscode.Position(0, 0), {
-			items: [
-				{ label: 'JavaScript', kind: vscode.CompletionItemKind.Text },
-				{ label: 'TypeScript', kind: vscode.CompletionItemKind.Text }
-			]
-		});
+	test('Completes mnemonics on an empty line', async () => {
+		// Fixture is empty, so completion at the start offers the instruction set.
+		await testCompletion(docUri, new vscode.Position(0, 0), [
+			{ label: 'add', kind: vscode.CompletionItemKind.Method },
+			{ label: 'ldi', kind: vscode.CompletionItemKind.Method }
+		]);
 	});
 });
 
 async function testCompletion(
 	docUri: vscode.Uri,
 	position: vscode.Position,
-	expectedCompletionList: vscode.CompletionList
+	expectedItems: { label: string; kind: vscode.CompletionItemKind }[]
 ) {
 	await activate(docUri);
 
@@ -29,10 +28,13 @@ async function testCompletion(
 		position
 	)) as vscode.CompletionList;
 
-	assert.ok(actualCompletionList.items.length >= 2);
-	expectedCompletionList.items.forEach((expectedItem, i) => {
-		const actualItem = actualCompletionList.items[i];
-		assert.equal(actualItem.label, expectedItem.label);
+	// VS Code returns `label` as either a string or a CompletionItemLabel object.
+	const labelOf = (item: vscode.CompletionItem) =>
+		typeof item.label === 'string' ? item.label : item.label.label;
+
+	expectedItems.forEach(expectedItem => {
+		const actualItem = actualCompletionList.items.find(i => labelOf(i) === expectedItem.label);
+		assert.ok(actualItem, `expected a completion labelled '${expectedItem.label}'`);
 		assert.equal(actualItem.kind, expectedItem.kind);
 	});
 }
