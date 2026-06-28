@@ -74,20 +74,23 @@
 		"test-e2e": "sh ./scripts/e2e.sh",
 		"prettier": "prettier --write ."
 	},
+	"overrides": {
+		"serialize-javascript": "^7.0.6"
+	},
 	"devDependencies": {
-		"@eslint/js": "^9.39.2",
-		"@stylistic/eslint-plugin": "^5.7.1",
+		"@eslint/js": "^9.39.4",
+		"@stylistic/eslint-plugin": "^5.10.0",
 		"@types/jest": "^30.0.0",
 		"@types/mocha": "^10.0.6",
 		"@types/node": "^22.19.9",
 		"esbuild": "^0.27.3",
-		"eslint": "^9.39.2",
-		"jest": "^30.2.0",
+		"eslint": "^9.39.4",
+		"jest": "^30.4.2",
 		"jest-extended": "7.0.0",
-		"mocha": "^11.7.5",
-		"prettier": "3.8.1",
-		"ts-jest": "^29.4.6",
+		"mocha": "^11.7.6",
+		"prettier": "3.9.1",
+		"ts-jest": "^29.4.11",
 		"typescript": "^5.9.2",
-		"typescript-eslint": "^8.54.0"
+		"typescript-eslint": "^8.62.0"
 	}
 }
