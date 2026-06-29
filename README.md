@@ -2,7 +2,9 @@
 
 Relay Computer Assembly language server for use in VSCode.
 
-Heavily inspired by <https://github.com/grahambates/m68k-lsp>
+Heavily inspired by <https://github.com/grahambates/m68k-lsp> (a closely matching assembly LSP) and built on the
+Microsoft Node LSP libraries at <https://github.com/microsoft/vscode-languageserver-node>, which we track for
+protocol-feature guidance and dependency versions.
 
 - Suitable for use with LSP supporting editors
 - Includes VS Code extension
@@ -52,7 +54,8 @@ This Language Server works for rcasm files. It has the following language featur
 
 - Run `npm install` in this folder. This installs all necessary npm modules in both the client and server folder
 - Open VS Code on this folder.
-- Press Ctrl+Shift+B to start compiling the client and server in [watch mode](https://code.visualstudio.com/docs/editor/tasks#:~:text=The%20first%20entry%20executes,the%20HelloWorld.js%20file.).
+- Press Ctrl+Shift+B to start compiling the client and server
+  in [watch mode](https://code.visualstudio.com/docs/editor/tasks#:~:text=The%20first%20entry%20executes,the%20HelloWorld.js%20file.).
 - Switch to the Run and Debug View in the Sidebar (Ctrl+Shift+D).
 - Select `Launch Client` from the drop down (if it is not already).
 - Press ▷ to run the launch config (F5).

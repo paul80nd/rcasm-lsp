@@ -3,7 +3,7 @@
 	"description": "Relay computer assembly language extension",
 	"author": "Paul Law",
 	"license": "MIT",
-	"version": "1.0.9",
+	"version": "1.1.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/paul80nd/rcasm-lsp"
@@ -14,7 +14,8 @@
 		"multi-root ready"
 	],
 	"engines": {
-		"vscode": "^1.100.0"
+		"vscode": "^1.100.0",
+		"node": ">=20"
 	},
 	"main": "./client/out/extension",
 	"contributes": {
@@ -74,20 +75,23 @@
 		"test-e2e": "sh ./scripts/e2e.sh",
 		"prettier": "prettier --write ."
 	},
+	"overrides": {
+		"serialize-javascript": "^7.0.6"
+	},
 	"devDependencies": {
-		"@eslint/js": "^9.39.2",
-		"@stylistic/eslint-plugin": "^5.7.1",
+		"@eslint/js": "^10.0.1",
+		"@stylistic/eslint-plugin": "^5.10.0",
 		"@types/jest": "^30.0.0",
 		"@types/mocha": "^10.0.6",
 		"@types/node": "^22.19.9",
-		"esbuild": "^0.27.3",
-		"eslint": "^9.39.2",
-		"jest": "^30.2.0",
+		"esbuild": "^0.28.1",
+		"eslint": "^10.4.0",
+		"jest": "^30.4.2",
 		"jest-extended": "7.0.0",
-		"mocha": "^11.7.5",
-		"prettier": "3.8.1",
-		"ts-jest": "^29.4.6",
-		"typescript": "^5.9.2",
-		"typescript-eslint": "^8.54.0"
+		"mocha": "^11.7.6",
+		"prettier": "3.9.1",
+		"ts-jest": "^29.4.11",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.62.0"
 	}
 }

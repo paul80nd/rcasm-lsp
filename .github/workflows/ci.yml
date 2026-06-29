@@ -1,0 +1,47 @@
+# Clean install of node dependencies, build the source, and run the unit tests.
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: CI
+permissions:
+  contents: read
+  # The server's runtime dep @paul80nd/rcasm is hosted on GitHub Packages, which
+  # requires authentication even to read; grant the workflow token package reads.
+  packages: read
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v5
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v5
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        # Map the @paul80nd scope to GitHub Packages and write an .npmrc that
+        # reads the token from NODE_AUTH_TOKEN below.
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@paul80nd'
+    - run: npm ci
+      # postinstall cascades into client/ and server/ installs; the env is
+      # inherited by those child npm invocations so the token reaches them too.
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # tsc -b is incremental; a stale buildinfo can mask errors, so clear it first.
+    - name: Clear stale build info
+      run: find . -name '*.tsbuildinfo' -not -path '*/node_modules/*' -delete
+    - run: npm run compile
+    - run: npm test

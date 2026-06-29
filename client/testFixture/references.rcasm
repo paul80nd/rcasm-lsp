@@ -1,0 +1,3 @@
+!let foo = 123
+ldi a, foo
+ldi m, foo
