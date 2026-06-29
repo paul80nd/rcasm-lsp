@@ -284,6 +284,7 @@ export async function getDefinitions(
 export function labelBeforePosition(): Definition | undefined {
 	//   docSymbols: Symbols,
 	//   position: lsp.Position
+	// eslint-disable-next-line no-unassigned-vars -- stub: real body (below) reassigns `label`
 	let label: Definition | undefined;
 	//   for (const def of docSymbols.definitions.values()) {
 	//     if (def.type === DefinitionType.Label && !isLocalLabel(def.name)) {
