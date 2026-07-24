@@ -16,7 +16,11 @@ function toRange(sLine: number, sChar: number, eLine: number, eChar: number) {
 	return new vscode.Range(new vscode.Position(sLine, sChar), new vscode.Position(eLine, eChar));
 }
 
-async function testDefinition(docUri: vscode.Uri, position: vscode.Position, expectedRange: vscode.Range) {
+async function testDefinition(
+	docUri: vscode.Uri,
+	position: vscode.Position,
+	expectedRange: vscode.Range
+) {
 	await activate(docUri);
 
 	const result = (await vscode.commands.executeCommand(

@@ -22,5 +22,7 @@ async function testFolding(docUri: vscode.Uri, expected: { start: number; end: n
 	assert.equal(result.length, expected.length);
 	const key = (start: number, end: number) => `${start}-${end}`;
 	const actual = new Set(result.map(f => key(f.start, f.end)));
-	expected.forEach(e => assert.ok(actual.has(key(e.start, e.end)), `expected a fold over ${key(e.start, e.end)}`));
+	expected.forEach(e =>
+		assert.ok(actual.has(key(e.start, e.end)), `expected a fold over ${key(e.start, e.end)}`)
+	);
 }

@@ -24,7 +24,9 @@ async function testHover(docUri: vscode.Uri, position: vscode.Position, expected
 
 	// Hover contents are MarkdownString | MarkedString; flatten them to plain text.
 	const text = hovers
-		.flatMap(h => h.contents.map(c => (typeof c === 'string' ? c : (c as vscode.MarkdownString).value)))
+		.flatMap(h =>
+			h.contents.map(c => (typeof c === 'string' ? c : (c as vscode.MarkdownString).value))
+		)
 		.join('\n');
 	assert.ok(expected.test(text), `expected hover text to match ${expected}, got: ${text}`);
 }

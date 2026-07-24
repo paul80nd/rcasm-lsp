@@ -37,5 +37,7 @@ async function testHighlights(
 	const key = (r: vscode.Range, k: vscode.DocumentHighlightKind | undefined) =>
 		`${r.start.line}:${r.start.character}-${r.end.line}:${r.end.character}/${k}`;
 	const actual = new Set(result.map(h => key(h.range, h.kind)));
-	expected.forEach(e => assert.ok(actual.has(key(e.range, e.kind)), `expected a highlight at ${key(e.range, e.kind)}`));
+	expected.forEach(e =>
+		assert.ok(actual.has(key(e.range, e.kind)), `expected a highlight at ${key(e.range, e.kind)}`)
+	);
 }

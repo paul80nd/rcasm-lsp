@@ -4,15 +4,7 @@ import { AddressingMode } from '../syntax';
 export type AddressingModes = Record<AddressingMode, boolean>;
 
 export type InstructionClass =
-	| 'ALU'
-	| 'GOTO'
-	| 'MOV8'
-	| 'MOV16'
-	| 'INCXY'
-	| 'MISC'
-	| 'SETAB'
-	| 'LOAD'
-	| 'STORE';
+	'ALU' | 'GOTO' | 'MOV8' | 'MOV16' | 'INCXY' | 'MISC' | 'SETAB' | 'LOAD' | 'STORE';
 
 export type AluFlag = 'z' | 'c' | 's';
 

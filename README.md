@@ -24,9 +24,13 @@ This Language Server works for rcasm files. It has the following language featur
   - Assembly errors
   <!-- - Processor support -->
 - Code Folding
+
 <!-- - Document Formatting -->
+
 - Document Highlights
+
 <!-- - Document Links -->
+
 - Document Symbols
 - Find References
 - Go to definition
@@ -35,6 +39,7 @@ This Language Server works for rcasm files. It has the following language featur
   - Symbol info
   <!-- - Multiple workspaces -->
 - Rename Symbols
+
 <!-- - Signature Help -->
 
 ## Structure

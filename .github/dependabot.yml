@@ -17,15 +17,15 @@ updates:
   # Root manifest and the two nested workspaces (client/, server/) are separate package.json
   # trees, so each needs its own Dependabot entry.
   - package-ecosystem: npm
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
     ignore:
       # @types/node tracks the Node major we actually run on (24, per the CI matrix) — bumped in
       # lockstep with the runtime, not on Dependabot's schedule. Minor/patch within it still flow.
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       dev-minor-patch:
         dependency-type: development
@@ -35,14 +35,14 @@ updates:
         update-types: [minor, patch]
 
   - package-ecosystem: npm
-    directory: "/client"
+    directory: '/client'
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
     ignore:
       # @types/vscode is pinned to the minimum VS Code version we support (engines.vscode);
       # raising it silently raises that minimum, so it moves deliberately, not on schedule.
-      - dependency-name: "@types/vscode"
+      - dependency-name: '@types/vscode'
     groups:
       dev-minor-patch:
         dependency-type: development
@@ -52,7 +52,7 @@ updates:
         update-types: [minor, patch]
 
   - package-ecosystem: npm
-    directory: "/server"
+    directory: '/server'
     registries:
       - github-packages
     schedule:
@@ -67,9 +67,9 @@ updates:
         update-types: [minor, patch]
 
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
     groups:
       actions:
-        patterns: ["*"]
+        patterns: ['*']

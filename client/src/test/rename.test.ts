@@ -35,7 +35,8 @@ suite('Should rename symbols', () => {
 		assert.equal(edits.length, 3);
 		edits.forEach(e => assert.equal(e.newText, 'example'));
 
-		const key = (r: vscode.Range) => `${r.start.line}:${r.start.character}-${r.end.line}:${r.end.character}`;
+		const key = (r: vscode.Range) =>
+			`${r.start.line}:${r.start.character}-${r.end.line}:${r.end.character}`;
 		const actual = new Set(edits.map(e => key(e.range)));
 		[toRange(0, 5, 0, 8), toRange(1, 6, 1, 9), toRange(2, 6, 2, 9)].forEach(r =>
 			assert.ok(actual.has(key(r)), `expected an edit at ${key(r)}`)
