@@ -2,8 +2,11 @@
 # every PR, so a bad bump is caught before merge. Low-risk minor/patch bumps are grouped into a
 # single PR each to keep the noise down; majors still arrive as their own PRs for a proper look.
 #
-# The server's runtime dep @paul80nd/rcasm lives on GitHub Packages (private registry); the
-# `registries` block below lets Dependabot authenticate to check it for updates.
+# The server's runtime dep @paul80nd/rcasm lives on GitHub Packages (private registry). The
+# `registries` block below lets Dependabot authenticate; it is attached only to the /server
+# update, the sole tree that pulls from it. Dependabot also needs to know which scope that
+# registry serves — that mapping lives in the committed server/.npmrc (@paul80nd:registry=...),
+# without which file fetching aborts with "Private npm registries require ... a .npmrc file".
 version: 2
 registries:
   github-packages:
@@ -15,8 +18,6 @@ updates:
   # trees, so each needs its own Dependabot entry.
   - package-ecosystem: npm
     directory: "/"
-    registries:
-      - github-packages
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
@@ -35,8 +36,6 @@ updates:
 
   - package-ecosystem: npm
     directory: "/client"
-    registries:
-      - github-packages
     schedule:
       interval: weekly
     open-pull-requests-limit: 10

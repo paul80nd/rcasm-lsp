@@ -4,6 +4,9 @@ node_modules
 client/server
 .vscode-test
 .npmrc
+# ...except server/.npmrc, which holds only the @paul80nd scope->registry mapping
+# (no credentials) and must be committed so Dependabot can resolve the private dep.
+!server/.npmrc
 .idea
 *.tsbuildinfo
 .DS_Store
