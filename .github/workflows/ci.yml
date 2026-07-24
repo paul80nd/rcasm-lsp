@@ -44,8 +44,14 @@ jobs:
         # inherited by those child npm invocations so the token reaches them too.
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Formatting gate — Prettier is not otherwise enforced, so check it here to
+      # stop the repo drifting out of style. Runs before the build to fail fast.
+      - run: npx prettier --check .
       # tsc -b is incremental; a stale buildinfo can mask errors, so clear it first.
       - name: Clear stale build info
         run: find . -name '*.tsbuildinfo' -not -path '*/node_modules/*' -delete
       - run: npm run compile
       - run: npm test
+      # The browser server bundle is built by esbuild independently of `tsc -b`, so a
+      # break here slips past the compile step above; build it to gate that path too.
+      - run: npm run esbuild:prd
