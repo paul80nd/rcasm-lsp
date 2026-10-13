@@ -23,6 +23,9 @@ export default class DiagnosticProcessor {
 		});
 		const toLocation = (loc: rcasm.SourceLoc) => ({ uri: textDocument.uri, range: toRange(loc) });
 
+		// Diagnostics produced from errors raised inside a macro expansion
+		const fromExpansion = new WeakSet<Diagnostic>();
+
 		const toDiagnostics = (e: rcasm.Diagnostic, s: DiagnosticSeverity): Diagnostic[] => {
 			const diagnostic = {
 				severity: s,
@@ -49,7 +52,7 @@ export default class DiagnosticProcessor {
 				.slice(0, -1)
 				.slice(0, MAX_RELATED_CALL_SITES)
 				.map(callSite);
-			return [
+			const expanded: Diagnostic[] = [
 				{
 					...diagnostic,
 					range: toRange(outer.loc),
@@ -58,17 +61,25 @@ export default class DiagnosticProcessor {
 				},
 				{ ...diagnostic, relatedInformation: [callSite(outer)] }
 			];
+			expanded.forEach(d => fromExpansion.add(d));
+			return expanded;
 		};
 
 		// Every expansion of a broken body reports the same body line, so merge duplicates
-		// (combining their related call sites)
+		// (combining their related call sites). Diagnostics outside expansions pass through as-is.
 		const dedupe = (ds: Diagnostic[]): Diagnostic[] => {
 			const byKey = new Map<string, Diagnostic>();
+			const result: Diagnostic[] = [];
 			for (const d of ds) {
+				if (!fromExpansion.has(d)) {
+					result.push(d);
+					continue;
+				}
 				const key = JSON.stringify([d.range, d.message]);
 				const existing = byKey.get(key);
 				if (!existing) {
 					byKey.set(key, d);
+					result.push(d);
 				} else if (d.relatedInformation) {
 					const related = [...(existing.relatedInformation ?? [])];
 					for (const r of d.relatedInformation) {
@@ -79,27 +90,21 @@ export default class DiagnosticProcessor {
 					existing.relatedInformation = related;
 				}
 			}
-			return [...byKey.values()];
+			return result;
 		};
+
+		// Limit what's published, so count after expansion errors have been split and merged
+		const errorEntries = dedupe(errors.flatMap(e => toDiagnostics(e, DiagnosticSeverity.Error)));
+		const warningEntries = dedupe(
+			warnings.flatMap(e => toDiagnostics(e, DiagnosticSeverity.Warning))
+		);
 
 		const entries: Diagnostic[] = [];
 		let maxProblems = conf.maxNumberOfProblems;
-		entries.push(
-			...dedupe(
-				errors
-					.filter((_, idx) => idx <= maxProblems)
-					.flatMap(e => toDiagnostics(e, DiagnosticSeverity.Error))
-			)
-		);
-		maxProblems -= errors.length;
+		entries.push(...errorEntries.filter((_, idx) => idx <= maxProblems));
+		maxProblems -= errorEntries.length;
 		if (maxProblems > 0) {
-			entries.push(
-				...dedupe(
-					warnings
-						.filter((_, idx) => idx <= maxProblems)
-						.flatMap(e => toDiagnostics(e, DiagnosticSeverity.Warning))
-				)
-			);
+			entries.push(...warningEntries.filter((_, idx) => idx <= maxProblems));
 		}
 
 		return entries;

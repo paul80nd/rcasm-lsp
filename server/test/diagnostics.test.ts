@@ -3,11 +3,13 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import DiagnosticProcessor from '../src/diagnostics';
 import { createTestContext, range } from './helpers';
+import { Config } from '../src/config';
 
 describe('DiagnosticProcessor', () => {
 	const uri = 'file:///example.rcasm';
-	const diagnosticsFor = (...code: string[]) =>
-		new DiagnosticProcessor(createTestContext()).rcasmDiagnostics(
+	const diagnosticsFor = (...code: string[]) => diagnosticsWithConfig({}, ...code);
+	const diagnosticsWithConfig = (config: Partial<Config>, ...code: string[]) =>
+		new DiagnosticProcessor(createTestContext(config)).rcasmDiagnostics(
 			TextDocument.create(uri, 'rcasm', 0, code.join('\n'))
 		);
 	const at = (r: lsp.Range) => ({ uri, range: r });
@@ -112,6 +114,14 @@ describe('DiagnosticProcessor', () => {
 				]
 			}
 		]));
+
+	it('applies maxNumberOfProblems to published diagnostics, not rcasm errors', () => {
+		const code = ['!macro m() {', '        bogus', '}', '        +m()', '        +m()'];
+		// 2 rcasm errors become 3 diagnostics (2 call sites + 1 merged body line)
+		expect(diagnosticsFor(...code)).toHaveLength(3);
+		// The limit is inclusive of index maxNumberOfProblems, as before
+		expect(diagnosticsWithConfig({ maxNumberOfProblems: 1 }, ...code)).toHaveLength(2);
+	});
 
 	it('reports a macro called before its definition at the call name', () =>
 		expect(diagnosticsFor('        +m()', '!macro m() { add }')).toEqual([
