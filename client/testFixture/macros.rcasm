@@ -1,0 +1,19 @@
+!macro skip_if_zero(val, n) {
+        ldi b,val
+        bne _skip
+        !byte n, n+1
+_skip:  ldi m,_skip
+}
+!macro twice(v) {
+        +skip_if_zero(v, v*2)
+        +skip_if_zero(v+1, 0x10)
+}
+        +skip_if_zero(3, 7)
+        +twice(5)
+first:  +skip_if_zero(-2, 0)
+        ldi m,first::_skip
+
+!macro copy(dst, src) {
+        mov dst,src
+}
+        +copy(xy, m)            ; register arguments, 16-bit form

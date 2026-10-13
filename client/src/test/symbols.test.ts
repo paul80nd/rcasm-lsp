@@ -12,6 +12,14 @@ suite('Should list document symbols', () => {
 			{ name: 'bar', kind: vscode.SymbolKind.Field }
 		]);
 	});
+
+	test('Reports macros as functions', async () =>
+		await testSymbols(getDocUri('macros.rcasm'), [
+			{ name: 'skip_if_zero', kind: vscode.SymbolKind.Function },
+			{ name: 'twice', kind: vscode.SymbolKind.Function },
+			{ name: 'copy', kind: vscode.SymbolKind.Function },
+			{ name: 'first', kind: vscode.SymbolKind.Field }
+		]));
 });
 
 async function testSymbols(
