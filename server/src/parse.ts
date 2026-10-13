@@ -27,8 +27,8 @@ export interface ComponentInfo {
 // Regex to match line components:
 // ^
 // (?<label>                           Label:
-//   (\s*[^:\s;*=!]+:)                 - can have leading whitespace as long as colon present
-// )?
+//   (\s*[^:\s;*=!+]+:)                - can have leading whitespace as long as colon present
+// )?                                  (can't start with '+' so a `+scope::macro()` call isn't a label)
 // (\s*                                Instruction or directive:
 //   (
 //                                     Need seprate case for instructions/directives without operands
@@ -41,7 +41,8 @@ export interface ComponentInfo {
 //     )
 //     |
 //     (                                 Any other mnemonic:
-//       (?<mnemonic>([^\s.,;*=]+|=))               - Mnemonic
+//       (?<mnemonic>(\+[^\s.,;*=(]*|           - Mnemonic: macro call `+name` (args become operands)
+//                    [^\s.,;*=]+|=))
 //       (\s*(?<operands>                           - Operand list:
 //         (?<op1>                     First operand
 //          "([^"]*)"?|                 - double quoted
@@ -61,7 +62,7 @@ export interface ComponentInfo {
 // (\s*(?<comment>.+))?                Comment (any trailing text)
 // $
 const pattern =
-	/^(?<label>(\s*[^:\s;*=!]+:))?(\s*(((?<mnemonic1>\.?(nop|reset|rte|rtr|rts|trapv|illegal|clrfo|clrso|comment|einline|even|inline|list|mexit|nolist|nopage|odd|page|popsection|pushsection|rsreset|endif|endc|else|elseif|endm|endr|erem)))|((?<mnemonic>([^\s.,;*=]+|=))(\s*(?<operands>(?<op1>"([^"]*)"?|'([^']*)'?|<([^>]*)>?|[^\s;,]+)(?<op2>,\s*("([^"]*)"?|'([^']*)'?|<([^>]*)>?|[^\s;,]*))*))?)))?(\s*(?<comment>.+))?$/i;
+	/^(?<label>(\s*[^:\s;*=!+]+:))?(\s*(((?<mnemonic1>\.?(nop|reset|rte|rtr|rts|trapv|illegal|clrfo|clrso|comment|einline|even|inline|list|mexit|nolist|nopage|odd|page|popsection|pushsection|rsreset|endif|endc|else|elseif|endm|endr|erem)))|((?<mnemonic>(\+[^\s.,;*=(]*|[^\s.,;*=]+|=))(\s*(?<operands>(?<op1>"([^"]*)"?|'([^']*)'?|<([^>]*)>?|[^\s;,]+)(?<op2>,\s*("([^"]*)"?|'([^']*)'?|<([^>]*)>?|[^\s;,]*))*))?)))?(\s*(?<comment>.+))?$/i;
 
 /**
  * Parse a single line of source code into positional components
@@ -92,9 +93,15 @@ export function parseLine(text: string): ParsedLine {
 			line.mnemonic = { start, end, value };
 		}
 
-		if (groups.operands) {
+		let operandList = groups.operands;
+		if (operandList && line.mnemonic?.value.startsWith('+')) {
+			// Macro call: operands are the bracketed argument list
+			operandList = operandList.replace(/^\(/, '').replace(/\)$/, '');
+		}
+
+		if (operandList) {
 			// Split on comma, unless in parens
-			const values = groups.operands.split(/,\s*(?![^()<>]*[)>])/);
+			const values = operandList.split(/,\s*(?![^()<>]*[)>])/);
 
 			const operands: Component[] = [];
 			for (const value of values) {

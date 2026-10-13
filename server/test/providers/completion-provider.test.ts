@@ -4,7 +4,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { Context } from '../../src/context';
 import DocumentProcessor from '../../src/document-processor';
 import CompletionProvider from '../../src/providers/completion-provider';
-import { createTestContext } from '../helpers';
+import { createTestContext, range } from '../helpers';
 import assert from 'assert';
 
 describe('CompletionProvider', () => {
@@ -127,6 +127,98 @@ describe('CompletionProvider', () => {
 			it('completions match case', async () => {
 				await completionsFor('MO|').includes([{ label: 'MOV' }]);
 				await completionsFor('!A|').includes([{ label: '!ALIGN' }]);
+			});
+		});
+
+		describe('macro calls', () => {
+			const code = [
+				'; Skips ahead',
+				'!macro skip(val, n) {',
+				'        ldi b,val',
+				'}',
+				'!macro none() { add }',
+				'sc: {',
+				'!macro inner(v) { add }',
+				'        +|',
+				'}',
+				'        +|',
+				'!macro later() { add }'
+			];
+			// Complete at the '|' on the given line; the other '|' line becomes a valid call
+			const at = (line: number) =>
+				given(
+					code
+						.map((l, i) => (i === line ? l.replace('|', '') : l.replace('+|', '+none()')))
+						.join('\n')
+				).completionsAt(line, code[line].indexOf('|'));
+
+			it('completes macros defined before use with argument snippets', async () =>
+				await at(9).are([
+					{
+						label: 'skip',
+						kind: lsp.CompletionItemKind.Function,
+						detail: '!macro skip(val, n)',
+						documentation: { kind: 'markdown', value: 'Skips ahead' },
+						insertTextFormat: lsp.InsertTextFormat.Snippet,
+						insertText: '+skip(${1:val}, ${2:n})',
+						textEdit: lsp.TextEdit.replace(range(9, 8, 9, 9), '+skip(${1:val}, ${2:n})')
+					},
+					{ label: 'none', insertText: '+none()' },
+					{ label: 'sc::inner', insertText: '+sc::inner(${1:v})' }
+				]));
+
+			it('completes macros visible from the current scope by their shortest name', async () =>
+				await at(7).are([{ label: 'skip' }, { label: 'none' }, { label: 'inner' }]));
+
+			it('completes macro calls after a label and partial name', async () =>
+				await given('!macro skip(v) { add }\nfirst:  +sk')
+					.completionsAt(1, 11)
+					.are([
+						{ label: 'skip', textEdit: lsp.TextEdit.replace(range(1, 8, 1, 11), '+skip(${1:v})') }
+					]));
+
+			it('completes the name of an existing call without adding another argument list', async () =>
+				await given('!macro skip(v) { add }\n        +sk(1)')
+					.completionsAt(1, 11)
+					.are([{ label: 'skip', textEdit: lsp.TextEdit.replace(range(1, 8, 1, 11), '+skip') }]));
+
+			it('does not offer macros only reachable through anonymous or loop scopes', async () =>
+				await given(
+					[
+						'!if (1) {',
+						'!macro in_if() { add }',
+						'}',
+						'lp: !for i in range(2) {',
+						'!macro in_for() { add }',
+						'}',
+						'!macro top() { add }',
+						'  +'
+					].join('\n')
+				)
+					.completionsAt(7, 3)
+					.are([{ label: 'top' }]));
+
+			it('uses an absolute name when a relative one would resolve elsewhere', async () =>
+				await given(
+					['sc: {', '!macro m() { add }', '}', 'o: {', 'sc: {', '}', '  +', '}'].join('\n')
+				)
+					.completionsAt(6, 3)
+					.are([{ label: '::sc::m', insertText: '+::sc::m()' }]));
+
+			it('does not offer registers for !macro name or arguments', async () =>
+				await completionsFor('!macro m(|').are([]));
+
+			it('does not complete on a "+" within an expression', async () => {
+				const textDocument = await createDoc('example.rcasm', 'ldi a,1+');
+				const completions = await provider.onCompletion({
+					position: lsp.Position.create(0, 8),
+					textDocument,
+					context: {
+						triggerKind: lsp.CompletionTriggerKind.TriggerCharacter,
+						triggerCharacter: '+'
+					}
+				});
+				expect(completions).toEqual([]);
 			});
 		});
 

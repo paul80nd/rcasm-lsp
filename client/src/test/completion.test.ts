@@ -12,6 +12,13 @@ suite('Should do completion', () => {
 			{ label: 'ldi', kind: vscode.CompletionItemKind.Method }
 		]);
 	});
+
+	test('Completes macro names after a "+"', async () => {
+		// Fixture defines `skip(v)` then has a bare `+` on line 2.
+		await testCompletion(getDocUri('macro-completion.rcasm'), new vscode.Position(2, 9), [
+			{ label: 'skip', kind: vscode.CompletionItemKind.Function }
+		]);
+	});
 });
 
 async function testCompletion(

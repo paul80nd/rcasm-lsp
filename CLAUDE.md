@@ -23,8 +23,10 @@ Two upstream projects inform work here — use each for what it's good at:
 - `npm run test-e2e` — Mocha-based end-to-end test that boots VS Code against `client/testFixture/`. Requires
   `npm run compile` first so `client/out/` exists.
 - `npm run esbuild:dev` / `esbuild:prd` — Bundle the **browser** server (`server/src/server.browser.ts` →
-  `server/out/server.browser.js`) for web-extension use. Uses `server/tsconfig.browser.json` and is independent of the
+  `out/server.browser.js`) for web-extension use. Uses `server/tsconfig.browser.json` and is independent of the
   `tsc -b` build that produces the Node server.
+- `npm run test-browser` — Smoke-tests the built browser bundle (run `esbuild:dev`/`esbuild:prd` first) with a fake
+  worker `self`, the way relay-computer-ide's Monaco client drives it. The only test of `server.browser.ts`.
 
 ## Verifying changes
 

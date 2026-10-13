@@ -15,7 +15,7 @@ export interface Provider {
 	register(connection: Connection, clientCapabilities: ClientCapabilities): ServerCapabilities;
 }
 
-const providers = [
+export const providers = [
 	CompletionProvider,
 	DefinitionProvider,
 	DocumentHighlightProvider,

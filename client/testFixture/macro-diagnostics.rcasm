@@ -1,0 +1,4 @@
+!macro m(v) {
+        bogus
+}
+        +m(1)

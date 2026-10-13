@@ -16,6 +16,25 @@ suite('Should get diagnostics', () => {
 			}
 		]);
 	});
+
+	test('Underlines the call site of an error inside a macro expansion', async () => {
+		// Fixture defines `m` with a bad mnemonic in its body, then calls it on line 3.
+		const uri = getDocUri('macro-diagnostics.rcasm');
+		await activate(uri);
+		const diagnostics = vscode.languages.getDiagnostics(uri);
+		assert.equal(diagnostics.length, 2);
+
+		const call = diagnostics.find(d => d.range.start.line === 3);
+		assert.ok(call, 'expected a diagnostic at the call site');
+		assert.equal(call.message, "In macro 'm': Unknown mnemonic 'bogus'");
+		assert.deepEqual(call.range, toRange(3, 8, 3, 13));
+		assert.deepEqual(call.relatedInformation?.[0].location.range, toRange(1, 8, 1, 13));
+
+		const body = diagnostics.find(d => d.range.start.line === 1);
+		assert.ok(body, 'expected a diagnostic at the body line');
+		assert.equal(body.message, "Unknown mnemonic 'bogus'");
+		assert.deepEqual(body.relatedInformation?.[0].location.range, toRange(3, 8, 3, 13));
+	});
 });
 
 function toRange(sLine: number, sChar: number, eLine: number, eChar: number) {

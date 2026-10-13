@@ -55,3 +55,6 @@ jobs:
       # The browser server bundle is built by esbuild independently of `tsc -b`, so a
       # break here slips past the compile step above; build it to gate that path too.
       - run: npm run esbuild:prd
+      # Smoke-test that bundle the way relay-computer-ide runs it (a web worker driven by
+      # Monaco's LSP client); nothing else exercises server.browser.ts or index.browser.ts.
+      - run: npm run test-browser

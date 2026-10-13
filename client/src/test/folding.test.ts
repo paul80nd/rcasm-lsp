@@ -9,6 +9,13 @@ suite('Should provide folding ranges', () => {
 		// Fixture is `foo: {` / `add` / `}`: the scope folds from line 0 to line 2.
 		await testFolding(docUri, [{ start: 0, end: 2 }]);
 	});
+
+	test('Folds macro definitions', async () =>
+		await testFolding(getDocUri('macros.rcasm'), [
+			{ start: 0, end: 5 },
+			{ start: 6, end: 9 },
+			{ start: 15, end: 17 }
+		]));
 });
 
 async function testFolding(docUri: vscode.Uri, expected: { start: number; end: number }[]) {

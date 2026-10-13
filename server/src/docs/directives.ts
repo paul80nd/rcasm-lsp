@@ -131,6 +131,17 @@ export const directiveDocs: Record<string, MnemonicDoc> = {
 			'Alternatively a string may be provided within double quotes which will be output as an UTF-8 byte per character.'
 		]
 	},
+	'!macro': {
+		title: '!macro',
+		summary: 'Define Macro',
+		syntax: ['!macro <name>([<arg>,...]) { ... }', '+<name>([<value>,...])'],
+		snippet: '!macro ${1:name}(${2:arg}) {\n        ${3:add}\n}',
+		description: [
+			'Defines a named block of code that is assembled wherever it is expanded with `+name(...)`.',
+			'Each argument is evaluated at the call site and bound to the argument name, so it can be used anywhere an expression can (including as a branch target). Registers can also be passed as arguments.',
+			'A macro must be defined before it is used. Labels within the body are local to each expansion; a label on the call line names the expansion so body labels can be referenced as `label::inner_label`.'
+		]
+	},
 	'!error': {
 		title: '!error',
 		summary: 'Throw Assembly Error',

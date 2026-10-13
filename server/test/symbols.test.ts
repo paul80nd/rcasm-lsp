@@ -229,6 +229,99 @@ describe('symbols', () => {
 					ref.to('start__n::k').at(range(3, 21, 3, 22))
 				)
 			));
+
+		describe('macros', () => {
+			it('finds a macro, its arguments and their uses in the body', async () =>
+				await parsing(
+					'!macro copy(dst, src) {',
+					'        mov dst,src',
+					'}',
+					'        +copy(xy, m)'
+				).has(
+					definitionsOf(
+						macro.at(range(0, 7, 0, 11)).named('copy', undefined, ['dst', 'src']),
+						argument.at(range(0, 12, 0, 15)).named('__anon_scope_0::dst', '!macro copy(dst, src)'),
+						argument.at(range(0, 17, 0, 20)).named('__anon_scope_0::src', '!macro copy(dst, src)')
+					),
+					referencesOf(
+						ref.to('__anon_scope_0::dst').at(range(1, 12, 1, 15)),
+						ref.to('__anon_scope_0::src').at(range(1, 16, 1, 19)),
+						ref.to('copy').at(range(3, 9, 3, 13))
+					)
+				));
+
+			it('resolves body labels and calls from within a macro body', async () =>
+				await parsing(
+					'!macro skip(v) {',
+					'        bne _skip',
+					'_skip:  ldi a,v',
+					'}',
+					'!macro twice(v) {',
+					'        +skip(v)',
+					'        +skip(v+1)',
+					'}'
+				).has(
+					definitionsOf(
+						macro.at(range(0, 7, 0, 11)).named('skip', undefined, ['v']),
+						macro.at(range(4, 7, 4, 12)).named('twice', undefined, ['v']),
+						argument.at(range(0, 12, 0, 13)).named('__anon_scope_0::v', '!macro skip(v)'),
+						label.at(range(2, 0, 2, 5)).named('__anon_scope_0::_skip'),
+						argument.at(range(4, 13, 4, 14)).named('__anon_scope_1::v', '!macro twice(v)')
+					),
+					referencesOf(
+						ref.to('__anon_scope_0::_skip').at(range(1, 12, 1, 17)),
+						ref.to('__anon_scope_0::v').at(range(2, 14, 2, 15)),
+						ref.to('skip').at(range(5, 9, 5, 13), range(6, 9, 6, 13)),
+						ref.to('__anon_scope_1::v').at(range(5, 14, 5, 15), range(6, 14, 6, 15))
+					)
+				));
+
+			it('resolves a labelled call scope into the macro body', async () =>
+				await parsing(
+					'!macro m() {',
+					'_skip:  add',
+					'}',
+					'first:  +m()',
+					'        ldi m,first::_skip',
+					'        +m()'
+				).has(
+					definitionsOf(
+						macro.at(range(0, 7, 0, 8)).named('m', undefined, []),
+						label.at(range(1, 0, 1, 5)).named('__anon_scope_0::_skip'),
+						label.at(range(3, 0, 3, 5)).named('first')
+					),
+					referencesOf(
+						ref.to('m').at(range(3, 9, 3, 10), range(5, 9, 5, 10)),
+						ref.to('__anon_scope_0::_skip').at(range(4, 14, 4, 26))
+					)
+				));
+
+			it('resolves scope-qualified and absolute calls', async () =>
+				await parsing(
+					'sc: {',
+					'!macro m(v) { add }',
+					'}',
+					'        +sc::m(1)',
+					'        +::sc::m(2)'
+				).has(
+					definitionsOf(
+						label.at(range(0, 0, 0, 2)).named('sc'),
+						macro.at(range(1, 7, 1, 8)).named('sc::m', undefined, ['v']),
+						argument.at(range(1, 9, 1, 10)).named('sc::__anon_scope_0::v', '!macro m(v)')
+					),
+					referencesOf(ref.to('sc::m').at(range(3, 9, 3, 14), range(4, 9, 4, 16)))
+				));
+
+			it('picks up macro preceeding comment', async () =>
+				await parsing('; Does a thing', '!macro m() {', '        add', '}').has(
+					definitionsOf(macro.at(range(1, 7, 1, 8)).named('m', 'Does a thing', []))
+				));
+
+			it('picks up macro inline comment', async () =>
+				await parsing('; not me', '!macro m() { add } ; Does a thing').has(
+					definitionsOf(macro.at(range(1, 7, 1, 8)).named('m', 'Does a thing', []))
+				));
+		});
 	});
 
 	// Test Director
@@ -263,13 +356,14 @@ describe('symbols', () => {
 	const definition = {
 		ofType: (type: string) => ({
 			at: (range: lsp.Range) => ({
-				named: (name: string, comment?: string) =>
+				named: (name: string, comment?: string, fields?: Partial<Definition>) =>
 					({
 						location: expect.objectContaining({ range }),
 						name: name,
 						selectionRange: range,
 						type,
-						comment
+						comment,
+						...fields
 					}) as Definition
 			})
 		})
@@ -277,6 +371,24 @@ describe('symbols', () => {
 
 	const label = definition.ofType('label');
 	const variable = definition.ofType('variable');
+	const macro = {
+		at: (range: lsp.Range) => ({
+			named: (name: string, comment: string | undefined, args: string[]) =>
+				definition
+					.ofType('macro')
+					.at(range)
+					.named(name, comment, {
+						signature: `!macro ${name.split('::').pop()}(${args.join(', ')})`,
+						args
+					})
+		})
+	};
+	const argument = {
+		at: (range: lsp.Range) => ({
+			named: (name: string, argumentOf: string) =>
+				variable.at(range).named(name, undefined, { argumentOf })
+		})
+	};
 
 	const ref = {
 		to: (name: string) => ({

@@ -230,6 +230,41 @@ describe('parse', () => {
 			'022+003 ....Instruction add'
 		));
 
+	it('parses a macro definition', () =>
+		parsing('!macro m(t, n) {', '_s: bne t', '}').is(
+			'000+028 Program',
+			'000+028 .Line',
+			'000+028 ..Directive !macro',
+			'007+001 ...MacroName m',
+			'009+001 ...Variable t',
+			'012+001 ...Variable n',
+			'017+009 ...Line',
+			'017+002 ....Label _s',
+			'021+005 ....Instruction bne',
+			'025+001 .....SQRef t'
+		));
+
+	it('parses a macro call with a label and register argument', () =>
+		parsing('first: +sc::m(xy, n+1)').is(
+			'000+022 Program',
+			'000+022 .Line',
+			'000+005 ..Label first',
+			'007+015 ..CallMacro sc::m',
+			'008+005 ...SQRef sc,m',
+			'014+002 ...Register xy',
+			'018+003 ...BinaryOp +',
+			'018+001 ....SQRef n',
+			'020+001 ....Literal 1'
+		));
+
+	it('parses an absolute macro call without arguments', () =>
+		parsing('+::m()').is(
+			'000+006 Program',
+			'000+006 .Line',
+			'000+006 ..CallMacro m',
+			'001+003 ...SQRef m (abs)'
+		));
+
 	// Test Director
 	const parsing = (...code: string[]) => {
 		// Parse to AST

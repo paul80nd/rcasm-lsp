@@ -2,6 +2,12 @@ import { INode } from './nodes';
 
 export type SymbolScope = NamedScope<SymEntry>;
 
+// Offsets into the source text
+export interface SourceRange {
+	start: number;
+	end: number;
+}
+
 export interface SymbolReference {
 	path: string[];
 	absolute: boolean;
@@ -14,6 +20,14 @@ export class NamedScope<T> {
 	readonly name: string;
 	readonly path: string[];
 	children = new Map<string, NamedScope<T>>();
+	// Source ranges (offsets) this scope covers; a scope can be reopened so there may be several
+	ranges: SourceRange[] = [];
+	// For a labelled macro call's expansion scope: the macro's body scope it stands in for,
+	// so `label::body_label` resolves into the definition
+	macroBody?: NamedScope<T>;
+	// False where this scope's name differs from rcasm's (anonymous scopes and loop
+	// iterations are numbered differently), so it can't be referred to by name
+	nameable = true;
 
 	constructor(parent: NamedScope<T> | null, name: string) {
 		this.parent = parent;
@@ -71,12 +85,41 @@ export class NamedScope<T> {
 			if (tab === undefined) {
 				return [...this.path, path[0]]; // If not found assume ref to local undeclared
 			}
+			tab = tab.macroBody ?? tab;
 		}
 		return [...tab.path, path[path.length - 1]];
 	}
+
+	// Find the scope at the given absolute path (no fallback to undeclared)
+	scopeAt(path: string[]): NamedScope<T> | undefined {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		let tab: NamedScope<T> | undefined = this;
+		for (const p of path) {
+			tab = tab.children.get(p);
+			if (tab === undefined) {
+				return undefined;
+			}
+		}
+		return tab;
+	}
+
+	// Whether this scope and all its ancestors can be referred to by name
+	isNameable(): boolean {
+		return this.nameable && (this.parent?.isNameable() ?? true);
+	}
+
+	// Innermost scope (this or a descendant) whose source ranges contain the offset
+	scopeAtOffset(offset: number): NamedScope<T> {
+		for (const c of this.children.values()) {
+			if (c.ranges.some(r => r.start <= offset && offset <= r.end)) {
+				return c.scopeAtOffset(offset);
+			}
+		}
+		return this;
+	}
 }
 
-export type SymEntry = SymLabel | SymVar;
+export type SymEntry = SymLabel | SymVar | SymMacro;
 
 export interface SymLabel {
 	type: 'label';
@@ -88,4 +131,15 @@ export interface SymVar {
 	type: 'var';
 	name: string;
 	node: INode;
+	// Set when the variable is a macro argument
+	macro?: SymMacro;
+}
+
+export interface SymMacro {
+	type: 'macro';
+	name: string;
+	node: INode;
+	args: string[];
+	// Stand-in scope for the body (the real scope is per expansion)
+	body: SymbolScope;
 }

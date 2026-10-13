@@ -1,0 +1,3 @@
+; Skips ahead
+!macro skip(v) { add }
+        +

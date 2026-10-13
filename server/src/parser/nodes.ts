@@ -3,6 +3,7 @@ import { SymbolReference } from './scopes';
 export type NodeType =
 	| 'BinaryOp'
 	| 'CallFunc'
+	| 'CallMacro'
 	| 'ConditionalBlock'
 	| 'CurrentPC'
 	| 'Directive'
@@ -11,6 +12,7 @@ export type NodeType =
 	| 'Label'
 	| 'Line'
 	| 'Literal'
+	| 'MacroName'
 	| 'Program'
 	| 'Ref'
 	| 'Register'

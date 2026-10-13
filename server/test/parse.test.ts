@@ -286,6 +286,39 @@ describe('parse', () => {
 			}));
 	});
 
+	describe('#parseLine() macro calls', () => {
+		it('parses a macro call with arguments', () =>
+			parsing('        +skip_if_zero(3, 7)').is({
+				mnemonic: { start: 8, end: 21, value: '+skip_if_zero' },
+				operands: [
+					{ start: 22, end: 23, value: '3' },
+					{ start: 25, end: 26, value: '7' }
+				]
+			}));
+
+		it('parses a labelled scope-qualified macro call with comment', () =>
+			parsing('first:  +sc::m(xy, n+1)  ; c').is({
+				label: { start: 0, end: 5, value: 'first' },
+				mnemonic: { start: 8, end: 14, value: '+sc::m' },
+				operands: [
+					{ start: 15, end: 17, value: 'xy' },
+					{ start: 19, end: 22, value: 'n+1' }
+				],
+				comment: { start: 25, end: 28, value: '; c' }
+			}));
+
+		it('parses an absolute macro call without arguments', () =>
+			parsing('+::m() ; c').is({
+				mnemonic: { start: 0, end: 4, value: '+::m' },
+				comment: { start: 7, end: 10, value: '; c' }
+			}));
+
+		it('parses a partial macro call', () =>
+			parsing('  +sk').is({
+				mnemonic: { start: 2, end: 5, value: '+sk' }
+			}));
+	});
+
 	describe('#componentAtIndex()', () => {
 		const line = parsing('label: mov   #1,10(a0,d1,w) ; comment here');
 

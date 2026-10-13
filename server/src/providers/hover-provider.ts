@@ -55,6 +55,7 @@ export default class HoverProvider implements Provider {
 					return this.hoverSetPC(getRange(node));
 				case 'SQRef':
 				case 'Label':
+				case 'MacroName':
 					return this.hoverSymbol(processed.document, position, getRange(node));
 				case 'Literal':
 					return node.value ? this.hoverNumber(node.value, getRange(node)) : undefined;
@@ -116,7 +117,16 @@ export default class HoverProvider implements Provider {
 			}
 
 			switch (def.type) {
+				case DefinitionType.Macro:
+					contents.push(rcasmBlock(def.signature ?? def.name));
+					break;
 				case DefinitionType.Variable: {
+					if (def.argumentOf) {
+						const name = def.name.split('::').pop();
+						contents.push(rcasmBlock(def.argumentOf));
+						contents.push(`(macro argument) ${name}`);
+						break;
+					}
 					// Find Declaration and add code block
 					const startLine = def.location.range.start.line;
 					const defDoc = this.ctx.store.get(def.location.uri)?.document;
@@ -127,7 +137,7 @@ export default class HoverProvider implements Provider {
 								lsp.Position.create(startLine, Number.MAX_VALUE)
 							)
 						);
-						contents.push('```rcasm\n' + formatDeclaration(definitionLine) + '\n```');
+						contents.push(rcasmBlock(formatDeclaration(definitionLine)));
 					}
 					break;
 				}
@@ -165,6 +175,10 @@ export default class HoverProvider implements Provider {
 			}
 		};
 	}
+}
+
+function rcasmBlock(code: string): string {
+	return '```rcasm\n' + code + '\n```';
 }
 
 function lookupMnemonicDoc(mnemonic: string): MarkupContent | undefined {

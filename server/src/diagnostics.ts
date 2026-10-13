@@ -4,6 +4,8 @@ import * as rcasm from '@paul80nd/rcasm';
 import { Context } from './context';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
+const MAX_RELATED_CALL_SITES = 3;
+
 export default class DiagnosticProcessor {
 	constructor(protected readonly ctx: Context) {}
 
@@ -15,32 +17,94 @@ export default class DiagnosticProcessor {
 
 		const { errors, warnings } = rcasm.assemble(textDocument.getText());
 
-		const toDiagnostic = (e: rcasm.Diagnostic, s: DiagnosticSeverity): Diagnostic => {
-			return {
+		const toRange = (loc: rcasm.SourceLoc) => ({
+			start: textDocument.positionAt(loc.start.offset),
+			end: textDocument.positionAt(loc.end.offset)
+		});
+		const toLocation = (loc: rcasm.SourceLoc) => ({ uri: textDocument.uri, range: toRange(loc) });
+
+		// Diagnostics produced from errors raised inside a macro expansion
+		const fromExpansion = new WeakSet<Diagnostic>();
+
+		const toDiagnostics = (e: rcasm.Diagnostic, s: DiagnosticSeverity): Diagnostic[] => {
+			const diagnostic = {
 				severity: s,
-				range: {
-					start: textDocument.positionAt(e.loc.start.offset),
-					end: textDocument.positionAt(e.loc.end.offset)
-				},
+				range: toRange(e.loc),
 				message: e.msg,
 				source: 'rcasm'
 			} as Diagnostic;
+
+			if (!e.expansions?.length) {
+				return [diagnostic];
+			}
+
+			// Raised inside a macro expansion: e.loc is the body line and expansions are the
+			// call sites, innermost first. Underline the outermost call (the one in the user's
+			// code) and link back to the body line and any intermediate calls.
+			// The body line keeps its own diagnostic too, linked to the call sites that expand it.
+			const outer = e.expansions[e.expansions.length - 1];
+			const callSite = (x: rcasm.MacroExpansion) => ({
+				location: toLocation(x.loc),
+				message: `In expansion of macro '${x.name}'`
+			});
+			// Recursive macros can nest 100 deep; cap intermediates as rcasm's formatted text does
+			const intermediates = e.expansions
+				.slice(0, -1)
+				.slice(0, MAX_RELATED_CALL_SITES)
+				.map(callSite);
+			const expanded: Diagnostic[] = [
+				{
+					...diagnostic,
+					range: toRange(outer.loc),
+					message: `In macro '${outer.name}': ${e.msg}`,
+					relatedInformation: [{ location: toLocation(e.loc), message: e.msg }, ...intermediates]
+				},
+				{ ...diagnostic, relatedInformation: [callSite(outer)] }
+			];
+			expanded.forEach(d => fromExpansion.add(d));
+			return expanded;
 		};
+
+		// Every expansion of a broken body reports the same body line, so merge duplicates
+		// (combining their related call sites). Diagnostics outside expansions pass through as-is.
+		const dedupe = (ds: Diagnostic[]): Diagnostic[] => {
+			const byKey = new Map<string, Diagnostic>();
+			const result: Diagnostic[] = [];
+			for (const d of ds) {
+				if (!fromExpansion.has(d)) {
+					result.push(d);
+					continue;
+				}
+				const key = JSON.stringify([d.range, d.message]);
+				const existing = byKey.get(key);
+				if (!existing) {
+					byKey.set(key, d);
+					result.push(d);
+				} else if (d.relatedInformation) {
+					const related = [...(existing.relatedInformation ?? [])];
+					for (const r of d.relatedInformation) {
+						if (!related.some(x => JSON.stringify(x) === JSON.stringify(r))) {
+							related.push(r);
+						}
+					}
+					existing.relatedInformation = related;
+				}
+			}
+			return result;
+		};
+
+		// Limit what's published, so count after expansion errors have been split and merged
+		const errorEntries = dedupe(errors.flatMap(e => toDiagnostics(e, DiagnosticSeverity.Error)));
+		const warningEntries = dedupe(
+			warnings.flatMap(e => toDiagnostics(e, DiagnosticSeverity.Warning))
+		);
 
 		const entries: Diagnostic[] = [];
 		let maxProblems = conf.maxNumberOfProblems;
-		entries.push(
-			...errors
-				.filter((_, idx) => idx <= maxProblems)
-				.map(e => toDiagnostic(e, DiagnosticSeverity.Error))
-		);
-		maxProblems -= errors.length;
+		entries.push(...errorEntries.filter((_, idx) => idx <= maxProblems));
+		maxProblems -= errorEntries.length;
 		if (maxProblems > 0) {
-			entries.push(
-				...warnings
-					.filter((_, idx) => idx <= maxProblems)
-					.map(e => toDiagnostic(e, DiagnosticSeverity.Warning))
-			);
+			entries.push(...warningEntries.filter((_, idx) => idx <= maxProblems));
 		}
 
 		return entries;

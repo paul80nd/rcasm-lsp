@@ -3,17 +3,23 @@ import * as lsp from 'vscode-languageserver';
 import { Provider } from '.';
 import { directiveDocs, instructionDocs, mnemonicDocs, registerDocs } from '../docs/index';
 import { Definition, DefinitionType } from '../symbols';
+import DocumentProcessor, { ProcessedDocument } from '../document-processor';
 import { Context } from '../context';
 import { Component, componentAtIndex, ComponentType, parseLine, parseSignature } from '../parse';
 import { formatMnemonicDoc, formatRegisterDoc } from '../formatting';
 import { RegisterName } from '../syntax';
 
 export default class CompletionProvider implements Provider {
-	constructor(protected readonly ctx: Context) {}
+	private processor: DocumentProcessor;
+
+	constructor(protected readonly ctx: Context) {
+		this.processor = new DocumentProcessor(ctx);
+	}
 
 	async onCompletion({
 		position,
-		textDocument
+		textDocument,
+		context
 	}: lsp.CompletionParams): Promise<lsp.CompletionItem[]> {
 		const processed = this.ctx.store.get(textDocument.uri);
 		if (!processed) {
@@ -51,12 +57,24 @@ export default class CompletionProvider implements Provider {
 			}
 		}
 
+		if (type === ComponentType.Mnemonic && info && value.startsWith('+')) {
+			return this.completeMacros(processed, position, info.component);
+		}
+		// '+' only triggers completion for a macro call, not within an expression
+		if (context?.triggerCharacter === '+') {
+			return [];
+		}
+
 		switch (type) {
 			case ComponentType.Mnemonic:
 				return this.completeMnemonics(isUpperCase, position, info?.component);
 			case ComponentType.Operand: {
 				const mnemonic = line.mnemonic?.value.toLowerCase();
 				if (!mnemonic) {
+					return [];
+				}
+				// Macro name and argument names are new identifiers (and can't be registers)
+				if (mnemonic === '!macro') {
 					return [];
 				}
 				const doc = mnemonic && mnemonicDocs[mnemonic];
@@ -171,6 +189,75 @@ export default class CompletionProvider implements Provider {
 		return [...instructions, ...directives];
 	}
 
+	/**
+	 * Macros defined before the position and callable from its scope, as `+name(args)` snippets
+	 */
+	completeMacros(
+		processed: ProcessedDocument,
+		position: lsp.Position,
+		component: Component
+	): lsp.CompletionItem[] {
+		const { document } = processed;
+		// The call being typed is usually a syntax error, which leaves the stored document empty
+		const { scopes, symbols } = processed.valid
+			? processed
+			: this.processor.processWithoutLine(processed.document, position.line);
+		const { definitions } = symbols;
+
+		const offset = document.offsetAt(position);
+		// Renaming an existing call keeps its argument list
+		const hasArgList =
+			document
+				.getText()
+				.charAt(document.offsetAt({ line: position.line, character: component.end })) === '(';
+		const scope = scopes.scopeAtOffset(offset);
+		const resolves = (path: string[], target: string) =>
+			scope.findSymbolPath(path)?.join('::') === target;
+
+		const items: lsp.CompletionItem[] = [];
+		for (const def of definitions.values()) {
+			// Macros must be defined before use
+			if (
+				def.type !== DefinitionType.Macro ||
+				document.offsetAt(def.selectionRange.start) > offset
+			) {
+				continue;
+			}
+			// Shortest name that resolves to this macro from here
+			const path = def.name.split('::');
+			const bare = path[path.length - 1];
+			let name: string;
+			if (resolves([bare], def.name)) {
+				name = bare;
+			} else if (!scopes.scopeAt(path.slice(0, -1))?.isNameable()) {
+				continue; // Not reachable by name from outside an anonymous or loop scope
+			} else if (resolves(path, def.name)) {
+				name = def.name;
+			} else {
+				name = '::' + def.name;
+			}
+
+			const args = def.args ?? [];
+			const insertText = hasArgList
+				? `+${name}`
+				: `+${name}(${args.map((a, i) => `\${${i + 1}:${a}}`).join(', ')})`;
+			items.push({
+				label: name,
+				labelDetails: { description: def.signature },
+				kind: lsp.CompletionItemKind.Function,
+				detail: def.signature,
+				documentation: def.comment
+					? { kind: lsp.MarkupKind.Markdown, value: def.comment }
+					: undefined,
+				filterText: '+' + name,
+				insertTextFormat: lsp.InsertTextFormat.Snippet,
+				insertText,
+				textEdit: lsp.TextEdit.replace(this.getCompletionRange(position, component), insertText)
+			});
+		}
+		return items;
+	}
+
 	private getCompletionRange = (position: lsp.Position, component: Component) =>
 		lsp.Range.create(
 			lsp.Position.create(position.line, component.start),
@@ -241,7 +328,7 @@ export default class CompletionProvider implements Provider {
 		connection.onCompletionResolve(this.onCompletionResolve.bind(this));
 		return {
 			completionProvider: {
-				triggerCharacters: ['!'],
+				triggerCharacters: ['!', '+'],
 				resolveProvider: true
 			}
 		};
@@ -256,7 +343,8 @@ const typeMappings: Record<DefinitionType, lsp.CompletionItemKind> = {
 	// [DefinitionType.Section]: lsp.CompletionItemKind.Module,
 	[DefinitionType.Label]: lsp.CompletionItemKind.Field,
 	// [DefinitionType.Constant]: lsp.CompletionItemKind.Constant,
-	[DefinitionType.Variable]: lsp.CompletionItemKind.Variable
+	[DefinitionType.Variable]: lsp.CompletionItemKind.Variable,
+	[DefinitionType.Macro]: lsp.CompletionItemKind.Function
 	// [DefinitionType.Register]: lsp.CompletionItemKind.Constant,
 	// [DefinitionType.RegisterList]: lsp.CompletionItemKind.Constant,
 	// [DefinitionType.Offset]: lsp.CompletionItemKind.Constant,

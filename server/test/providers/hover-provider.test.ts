@@ -117,6 +117,16 @@ describe('HoverProvider', () => {
 			it('provides hover for !let', async () =>
 				await hoverFor('!l|et a=5').is(hover.between(0, 8).containingText(/Define Variable/)));
 
+			it('provides hover for !macro', async () =>
+				await given('!macro m(v) {', '        add', '}')
+					.hoverAt(0, 2)
+					.is(hover.covering(0, 0, 2, 1).containingText(/Define Macro/)));
+
+			it('mnemonic hover overrides outer !macro block', async () =>
+				await given('!macro m(v) {', '        add', '}')
+					.hoverAt(1, 9)
+					.is(hover.covering(1, 8, 1, 11).containingText(/Arithmetic Add/)));
+
 			it('provides hover for !error', async () =>
 				await hoverFor('!e|rror "broken"').is(
 					hover.between(0, 15).containingText(/Throw Assembly Error/)
@@ -238,6 +248,58 @@ describe('HoverProvider', () => {
 				await given('!let   k  = 5', 'ldi b,k')
 					.hoverAt(1, 6)
 					.is(hover.covering(1, 6, 1, 7).withRcasm('!let k = 5')));
+		});
+
+		describe('macro hovers', () => {
+			const code = [
+				'; Skips ahead',
+				'!macro skip(val, n) {',
+				'        ldi b,val',
+				'}',
+				'first:  +skip(1, 2)',
+				'        +::skip(3, 4)'
+			];
+
+			it('provides a hover on a macro definition', async () =>
+				await given(...code)
+					.hoverAt(1, 9)
+					.is(
+						hover
+							.covering(1, 7, 1, 11)
+							.withText('Skips ahead', '***', '```rcasm\n!macro skip(val, n)\n```')
+					));
+
+			it('provides a hover on a macro call', async () =>
+				await given(...code)
+					.hoverAt(4, 10)
+					.is(
+						hover
+							.covering(4, 9, 4, 13)
+							.withText('Skips ahead', '***', '```rcasm\n!macro skip(val, n)\n```')
+					));
+
+			it('provides a hover on an absolute macro call', async () =>
+				await given(...code)
+					.hoverAt(5, 12)
+					.is(
+						hover
+							.covering(5, 9, 5, 15)
+							.withText('Skips ahead', '***', '```rcasm\n!macro skip(val, n)\n```')
+					));
+
+			it('provides a hover on a macro argument used in the body', async () =>
+				await given(...code)
+					.hoverAt(2, 15)
+					.is(
+						hover
+							.covering(2, 14, 2, 17)
+							.withText('```rcasm\n!macro skip(val, n)\n```', '(macro argument) val')
+					));
+
+			it('provides a hover on a register argument', async () =>
+				await given('!macro copy(dst, src) { mov dst,src }', '+copy(xy, m)')
+					.hoverAt(1, 7)
+					.is(hover.covering(1, 6, 1, 8).containingText(/XY Register/)));
 		});
 
 		// Test Director

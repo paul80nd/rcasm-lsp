@@ -9,6 +9,13 @@ suite('Should give hover', () => {
 		// Fixture is `mov a,b`; hovering the `mov` mnemonic describes the instruction.
 		await testHover(docUri, new vscode.Position(0, 1), /Register to Register Copy/);
 	});
+
+	test('Shows the signature of a called macro', async () =>
+		await testHover(
+			getDocUri('macros.rcasm'),
+			new vscode.Position(10, 12),
+			/!macro skip_if_zero\(val, n\)/
+		));
 });
 
 async function testHover(docUri: vscode.Uri, position: vscode.Position, expected: RegExp) {

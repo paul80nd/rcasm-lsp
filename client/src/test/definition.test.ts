@@ -10,6 +10,19 @@ suite('Should go to definition', () => {
 		// label declaration on line 0.
 		await testDefinition(docUri, new vscode.Position(1, 6), toRange(0, 0, 0, 4));
 	});
+
+	suite('macros', () => {
+		const macroUri = getDocUri('macros.rcasm');
+
+		test('Resolves a macro call to its definition', async () =>
+			await testDefinition(macroUri, new vscode.Position(10, 12), toRange(0, 7, 0, 19)));
+
+		test('Resolves a macro argument used in the body to its declaration', async () =>
+			await testDefinition(macroUri, new vscode.Position(1, 15), toRange(0, 20, 0, 23)));
+
+		test('Resolves a labelled call scope into the macro body', async () =>
+			await testDefinition(macroUri, new vscode.Position(13, 22), toRange(4, 0, 4, 5)));
+	});
 });
 
 function toRange(sLine: number, sChar: number, eLine: number, eChar: number) {
