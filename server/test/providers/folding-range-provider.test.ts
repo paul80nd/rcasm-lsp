@@ -34,6 +34,15 @@ describe('FoldingRnageProvider', () => {
 		it('folds for directive', async () =>
 			await foldsFor('add', '!for i in range(2,5) {', '  add', '}').are(region.over(1, 3)));
 
+		it('folds macro directive', async () =>
+			await foldsFor('add', '!macro m(v) {', '  add', '}', '  +m(1)').are(region.over(1, 3)));
+
+		it('folds macro with nested for directive', async () =>
+			await foldsFor('!macro m(v) {', '  !for i in range(v) {', '    add', '  }', '}').are(
+				region.over(0, 4),
+				region.over(1, 3)
+			));
+
 		it('folds for with nested if directive', async () =>
 			await foldsFor(
 				'add',

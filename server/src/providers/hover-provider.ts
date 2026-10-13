@@ -55,6 +55,7 @@ export default class HoverProvider implements Provider {
 					return this.hoverSetPC(getRange(node));
 				case 'SQRef':
 				case 'Label':
+				case 'MacroName':
 					return this.hoverSymbol(processed.document, position, getRange(node));
 				case 'Literal':
 					return node.value ? this.hoverNumber(node.value, getRange(node)) : undefined;
@@ -116,7 +117,17 @@ export default class HoverProvider implements Provider {
 			}
 
 			switch (def.type) {
+				case DefinitionType.Macro:
+					contents.push('```rcasm\n' + def.signature + '\n```');
+					break;
 				case DefinitionType.Variable: {
+					if (def.signature) {
+						// Macro argument
+						const name = def.name.split('::').pop();
+						contents.push('```rcasm\n' + def.signature + '\n```');
+						contents.push(`(macro argument) ${name}`);
+						break;
+					}
 					// Find Declaration and add code block
 					const startLine = def.location.range.start.line;
 					const defDoc = this.ctx.store.get(def.location.uri)?.document;

@@ -35,8 +35,11 @@ export default class FoldingRangeProvider implements Provider {
 					endLine: range.end.line,
 					kind: 'region'
 				});
-			} else if (n.type == 'Directive' && (n.value == '!for' || n.value == '!if')) {
-				// Fold for and if directives
+			} else if (
+				n.type == 'Directive' &&
+				(n.value == '!for' || n.value == '!if' || n.value == '!macro')
+			) {
+				// Fold for, if and macro directives
 				const range = getRange(n);
 				folds.push({
 					startLine: range.start.line,
