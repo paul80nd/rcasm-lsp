@@ -33,7 +33,19 @@
 					"name": "variable.other.macro.rcasm"
 				},
 				"2": {
-					"name": "meta.macro.name.rcasm"
+					"name": "entity.name.function.macro.rcasm"
+				}
+			}
+		},
+		{
+			"name": "meta.macro.call.rcasm",
+			"match": "(?:^|(?<=[:{]))[ \t]*(\\+)((?:::)?[a-zA-Z_][a-zA-Z0-9_]*(?:::[a-zA-Z_][a-zA-Z0-9_]*)*)(?=[ \t]*\\()",
+			"captures": {
+				"1": {
+					"name": "keyword.operator.macro.rcasm"
+				},
+				"2": {
+					"name": "entity.name.function.macro.rcasm"
 				}
 			}
 		},
