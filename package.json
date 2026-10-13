@@ -73,6 +73,7 @@
 		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
 		"test": "jest ./server",
 		"test-e2e": "sh ./scripts/e2e.sh",
+		"test-browser": "node --test scripts/test-browser.mjs",
 		"prettier": "prettier --write ."
 	},
 	"overrides": {
