@@ -256,7 +256,8 @@ const typeMappings: Record<DefinitionType, lsp.CompletionItemKind> = {
 	// [DefinitionType.Section]: lsp.CompletionItemKind.Module,
 	[DefinitionType.Label]: lsp.CompletionItemKind.Field,
 	// [DefinitionType.Constant]: lsp.CompletionItemKind.Constant,
-	[DefinitionType.Variable]: lsp.CompletionItemKind.Variable
+	[DefinitionType.Variable]: lsp.CompletionItemKind.Variable,
+	[DefinitionType.Macro]: lsp.CompletionItemKind.Function
 	// [DefinitionType.Register]: lsp.CompletionItemKind.Constant,
 	// [DefinitionType.RegisterList]: lsp.CompletionItemKind.Constant,
 	// [DefinitionType.Offset]: lsp.CompletionItemKind.Constant,

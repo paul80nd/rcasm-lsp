@@ -1,15 +1,22 @@
 import * as rcasm from '@paul80nd/rcasm';
 import { INode, IOrphanNode } from './nodes';
 import * as nodes from './nodes';
-import { SymbolScope, NamedScope, SymEntry } from './scopes';
+import { SymbolScope, NamedScope, SymEntry, SymMacro } from './scopes';
+
+export interface SourceRange {
+	start: number;
+	end: number;
+}
 
 export interface IParseContext {
 	scope: SymbolScope;
-	withAnonScope(body: () => void): void;
-	withLabelScope(name: string, body: () => void): void;
-	withAnonOrLabelScope(name: string | undefined, body: () => void): void;
+	withAnonScope(body: () => void, range?: SourceRange): void;
+	withLabelScope(name: string, body: () => void, range?: SourceRange): void;
+	withAnonOrLabelScope(name: string | undefined, body: () => void, range?: SourceRange): void;
 	declareLabelSymbol(name: string, node: INode): void;
-	declareVar(name: string, node: INode): void;
+	declareVar(name: string, node: INode, macro?: SymMacro): void;
+	declareMacro(name: string, node: INode, args: string[], body: SymbolScope): SymMacro;
+	lookupMacro(ref: rcasm.ScopeQualifiedIdent): SymMacro | undefined;
 }
 
 export function parse(text: string): { tree: INode; scopes: SymbolScope } {
@@ -73,6 +80,10 @@ class AstAdapter {
 				return this.adaptLetDirective(s);
 			case 'error':
 				return mkNode(s, 'Directive', '!error');
+			case 'macro':
+				return this.adaptMacroDirective(s);
+			case 'callmacro':
+				return this.adaptCallMacro(s, l?.name);
 		}
 	}
 
@@ -86,13 +97,17 @@ class AstAdapter {
 	adaptScope(ss: rcasm.Line): IOrphanNode {
 		const n = mkNode(ss, 'Scope', ss.label?.name);
 		const label = ss.label?.name ?? '?';
-		this.ctx.withLabelScope(label, () => {
-			ss.scopedStmts
-				?.filter(l => l.label || l.scopedStmts || l.stmt)
-				.forEach(l => {
-					n.adoptChild(this.adaptLine(l));
-				});
-		});
+		this.ctx.withLabelScope(
+			label,
+			() => {
+				ss.scopedStmts
+					?.filter(l => l.label || l.scopedStmts || l.stmt)
+					.forEach(l => {
+						n.adoptChild(this.adaptLine(l));
+					});
+			},
+			rangeOf(ss)
+		);
 		return n;
 	}
 
@@ -138,15 +153,19 @@ class AstAdapter {
 			sn = `${lsn}__n`;
 		}
 
-		this.ctx.withAnonOrLabelScope(sn, () => {
-			n.adoptChild(this.adaptVariable(ss.index));
+		this.ctx.withAnonOrLabelScope(
+			sn,
+			() => {
+				n.adoptChild(this.adaptVariable(ss.index));
 
-			if (ss.body) {
-				ss.body
-					.filter(st => st.label || st.scopedStmts || st.stmt)
-					.forEach(st => n.adoptChild(this.adaptLine(st)));
-			}
-		});
+				if (ss.body) {
+					ss.body
+						.filter(st => st.label || st.scopedStmts || st.stmt)
+						.forEach(st => n.adoptChild(this.adaptLine(st)));
+				}
+			},
+			rangeOf(ss)
+		);
 
 		return n;
 	}
@@ -155,17 +174,68 @@ class AstAdapter {
 		const n = mkNode(ss, 'Directive', '!if');
 		ss.cases.forEach(c => {
 			n.adoptChild(this.adaptExpr(c[0]));
-			this.ctx.withAnonOrLabelScope(lsn, () => {
-				c[1]
-					.filter(st => st.label || st.scopedStmts || st.stmt)
-					.forEach(st => n.adoptChild(this.adaptLine(st)));
-			});
+			this.ctx.withAnonOrLabelScope(
+				lsn,
+				() => {
+					c[1]
+						.filter(st => st.label || st.scopedStmts || st.stmt)
+						.forEach(st => n.adoptChild(this.adaptLine(st)));
+				},
+				rangeOfLines(c[1])
+			);
 		});
 		if (ss.elseBranch) {
-			this.ctx.withAnonOrLabelScope(lsn, () => {
-				ss.elseBranch
-					.filter(st => st.label || st.scopedStmts || st.stmt)
-					.forEach(st => n.adoptChild(this.adaptLine(st)));
+			this.ctx.withAnonOrLabelScope(
+				lsn,
+				() => {
+					ss.elseBranch
+						.filter(st => st.label || st.scopedStmts || st.stmt)
+						.forEach(st => n.adoptChild(this.adaptLine(st)));
+				},
+				rangeOfLines(ss.elseBranch)
+			);
+		}
+		return n;
+	}
+
+	adaptMacroDirective(sm: rcasm.StmtMacro): IOrphanNode {
+		const n = mkNode(sm, 'Directive', '!macro');
+		const nameNode = mkNode(sm.name, 'MacroName', sm.name.name);
+		n.adoptChild(nameNode);
+
+		// The body only has a real scope per expansion, so use an anonymous
+		// scope per definition as a stand-in for navigation within the body
+		this.ctx.withAnonScope(() => {
+			const macro = this.ctx.declareMacro(
+				sm.name.name,
+				nameNode,
+				sm.args.map(a => a.name),
+				this.ctx.scope
+			);
+			sm.args.forEach(a => n.adoptChild(this.adaptVariable(a, macro)));
+			sm.body
+				.filter(st => st.label || st.scopedStmts || st.stmt)
+				.forEach(st => n.adoptChild(this.adaptLine(st)));
+		}, rangeOf(sm));
+		return n;
+	}
+
+	adaptCallMacro(sc: rcasm.StmtCallMacro, lsn?: string): IOrphanNode {
+		const n = mkNode(
+			sc,
+			'CallMacro',
+			sc.name.path.join('::'),
+			this.adaptSQIndent(sc.name),
+			// Arguments are evaluated at the call site, not in the expansion scope
+			...sc.args.map(a => this.adaptExpr(a))
+		);
+
+		// A label on the call names the expansion scope; point it at the macro's
+		// body so `label::body_label` can be resolved
+		if (lsn) {
+			const macro = this.ctx.lookupMacro(sc.name);
+			this.ctx.withLabelScope(lsn, () => {
+				this.ctx.scope.expands = macro?.body;
 			});
 		}
 		return n;
@@ -198,9 +268,9 @@ class AstAdapter {
 		}
 	};
 
-	adaptVariable(i: rcasm.Ident): IOrphanNode {
+	adaptVariable(i: rcasm.Ident, macro?: SymMacro): IOrphanNode {
 		const n = mkNode(i, 'Variable', i.name);
-		this.ctx.declareVar(i.name, n);
+		this.ctx.declareVar(i.name, n, macro);
 		return n;
 	}
 
@@ -226,39 +296,69 @@ const mkNode = (
 	return n;
 };
 
+const rangeOf = (rn: rcasm.Node): SourceRange => ({
+	start: rn.loc.start.offset,
+	end: rn.loc.end.offset
+});
+
+const rangeOfLines = (ls: rcasm.Line[]): SourceRange | undefined =>
+	ls.length > 0
+		? { start: ls[0].loc.start.offset, end: ls[ls.length - 1].loc.end.offset }
+		: undefined;
+
 class ParserContext implements IParseContext {
 	root: SymbolScope = new NamedScope<SymEntry>(null, '');
 	scope = this.root;
 	private anonScopeCount = 0;
 	private path: string[] = [];
 
-	withAnonScope(body: () => void) {
+	withAnonScope(body: () => void, range?: SourceRange) {
 		const anonLabel = `__anon_scope_${this.anonScopeCount}`;
 		this.anonScopeCount++;
-		this.withLabelScope(anonLabel, body);
+		this.withLabelScope(anonLabel, body, range);
 	}
 
-	withLabelScope(name: string, body: () => void) {
+	withLabelScope(name: string, body: () => void, range?: SourceRange) {
 		const curSym = this.scope;
 		this.path.push(name);
 		this.scope = this.scope.newScope(name, curSym);
+		if (range) {
+			this.scope.ranges.push(range);
+		}
 		body();
 		this.path.pop();
 		this.scope = curSym;
 	}
 
-	withAnonOrLabelScope(name: string | undefined, body: () => void) {
+	withAnonOrLabelScope(name: string | undefined, body: () => void, range?: SourceRange) {
 		if (name) {
-			return this.withLabelScope(name, body);
+			return this.withLabelScope(name, body, range);
 		}
-		this.withAnonScope(body);
+		this.withAnonScope(body, range);
 	}
 
 	declareLabelSymbol(name: string, node: nodes.INode) {
 		this.scope.addSymbol(name, { type: 'label', name, node });
 	}
 
-	declareVar(name: string, node: nodes.INode): void {
-		this.scope.addSymbol(name, { type: 'var', name, node });
+	declareVar(name: string, node: nodes.INode, macro?: SymMacro): void {
+		this.scope.addSymbol(name, { type: 'var', name, node, macro });
+	}
+
+	// Declared in the enclosing scope of `body` (the definition's own stand-in scope)
+	declareMacro(name: string, node: nodes.INode, args: string[], body: SymbolScope): SymMacro {
+		const macro: SymMacro = { type: 'macro', name, node, args, body };
+		(body.parent ?? body).addSymbol(name, macro);
+		return macro;
+	}
+
+	// Resolve a macro call to its definition as seen from the current scope
+	lookupMacro(ref: rcasm.ScopeQualifiedIdent): SymMacro | undefined {
+		const path = (ref.absolute ? this.root : this.scope).findSymbolPath(ref.path);
+		if (!path) {
+			return undefined;
+		}
+		const sym = this.root.scopeAt(path.slice(0, -1))?.syms.get(path[path.length - 1]);
+		return sym?.type === 'macro' ? sym : undefined;
 	}
 }

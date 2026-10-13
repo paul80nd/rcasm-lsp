@@ -2,7 +2,7 @@ import * as lsp from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as parser from './parser/nodes';
 import { Context } from './context';
-import { SymbolScope, SymEntry } from './parser/scopes';
+import { SymbolScope, SymEntry, SymMacro } from './parser/scopes';
 import { parseLine } from './parse';
 import { containsPosition } from './geometry';
 
@@ -16,6 +16,8 @@ export interface Definition extends NamedSymbol {
 	type: DefinitionType;
 	selectionRange: lsp.Range;
 	comment?: string;
+	// Macro signature, for a macro or one of its arguments
+	signature?: string;
 }
 
 export function isDefinition(symbol: NamedSymbol): symbol is Definition {
@@ -24,7 +26,8 @@ export function isDefinition(symbol: NamedSymbol): symbol is Definition {
 
 export enum DefinitionType {
 	Label = 'label',
-	Variable = 'variable'
+	Variable = 'variable',
+	Macro = 'macro'
 }
 
 export interface Symbols {
@@ -61,6 +64,12 @@ export function processSymbols(
 			selectionRange: range
 		};
 
+		if (se.type === 'macro') {
+			def.signature = macroSignature(se);
+		} else if (se.type === 'var' && se.macro) {
+			def.signature = macroSignature(se.macro);
+		}
+
 		// Comments:
 		const commentLines: string[] = [];
 
@@ -70,10 +79,14 @@ export function processSymbols(
 			lsp.Position.create(range.start.line, lsp.uinteger.MAX_VALUE)
 		);
 		const line = parseLine(document.getText(lineRange) ?? '');
-		if (line && line.comment) {
-			const c = line.comment.value.trim();
+		// A `!macro name() { ... }` line parses the body as a comment; only use what follows a ';'
+		// so that it doesn't hide preceding comments
+		const lineComment =
+			se.type === 'macro' ? macroLineComment(line?.comment?.value) : line?.comment?.value;
+		if (lineComment) {
+			const c = lineComment.trim();
 			if (c.startsWith(';')) {
-				commentLines.unshift(line.comment.value);
+				commentLines.unshift(lineComment);
 			}
 		} else if (lineRange.start.line > 0) {
 			// Preceding line comments
@@ -332,13 +345,24 @@ export function labelBeforePosition(): Definition | undefined {
 
 const definitionTypeMappings: Record<string, DefinitionType> = {
 	label: DefinitionType.Label,
-	var: DefinitionType.Variable
+	var: DefinitionType.Variable,
+	macro: DefinitionType.Macro
 };
 
 export const symbolKindMappings: Record<DefinitionType, lsp.SymbolKind> = {
 	[DefinitionType.Label]: lsp.SymbolKind.Field,
-	[DefinitionType.Variable]: lsp.SymbolKind.Variable
+	[DefinitionType.Variable]: lsp.SymbolKind.Variable,
+	[DefinitionType.Macro]: lsp.SymbolKind.Function
 };
+
+function macroLineComment(text?: string): string | undefined {
+	const i = text?.indexOf(';') ?? -1;
+	return i >= 0 ? text?.substring(i) : undefined;
+}
+
+export function macroSignature(m: SymMacro): string {
+	return `!macro ${m.name}(${m.args.join(', ')})`;
+}
 
 function getRange(node: parser.INode, document: TextDocument): lsp.Range {
 	return lsp.Range.create(document.positionAt(node.offset), document.positionAt(node.end));
