@@ -379,7 +379,17 @@ describe('symbols', () => {
 
 	const label = definition.ofType('label');
 	const variable = definition.ofType('variable');
-	const macro = definition.ofType('macro');
+	const macro = {
+		at: (range: lsp.Range) => ({
+			named: (name: string, comment: string | undefined, signature: string) => ({
+				...definition.ofType('macro').at(range).named(name, comment, signature),
+				args: signature
+					.match(/\((.*)\)$/)?.[1]
+					.split(', ')
+					.filter(a => a)
+			})
+		})
+	};
 
 	const ref = {
 		to: (name: string) => ({

@@ -18,6 +18,8 @@ export interface Definition extends NamedSymbol {
 	comment?: string;
 	// Macro signature, for a macro or one of its arguments
 	signature?: string;
+	// Macro argument names
+	args?: string[];
 }
 
 export function isDefinition(symbol: NamedSymbol): symbol is Definition {
@@ -66,6 +68,7 @@ export function processSymbols(
 
 		if (se.type === 'macro') {
 			def.signature = macroSignature(se);
+			def.args = se.args;
 		} else if (se.type === 'var' && se.macro) {
 			def.signature = macroSignature(se.macro);
 		}
