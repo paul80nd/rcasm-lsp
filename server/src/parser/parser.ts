@@ -19,11 +19,12 @@ export interface IParseContext {
 	lookupMacro(ref: rcasm.ScopeQualifiedIdent): SymMacro | undefined;
 }
 
-export function parse(text: string): { tree: INode; scopes: SymbolScope } {
+export function parse(text: string): { tree: INode; scopes: SymbolScope; valid: boolean } {
 	const ast = rcasm.parseOnly(text);
 	const adapter = new AstAdapter();
 	const tree = adapter.adapt(ast);
-	return { tree, scopes: adapter.ctx.root };
+	// A syntax error anywhere leaves no AST, so the tree is empty
+	return { tree, scopes: adapter.ctx.root, valid: ast !== undefined };
 }
 
 class AstAdapter {

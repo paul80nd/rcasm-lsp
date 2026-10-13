@@ -1,17 +1,20 @@
 import * as lsp from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { Provider } from '.';
 import { directiveDocs, instructionDocs, mnemonicDocs, registerDocs } from '../docs/index';
-import { Definition, DefinitionType, processSymbols } from '../symbols';
-import { parse } from '../parser';
+import { Definition, DefinitionType } from '../symbols';
+import DocumentProcessor, { ProcessedDocument } from '../document-processor';
 import { Context } from '../context';
 import { Component, componentAtIndex, ComponentType, parseLine, parseSignature } from '../parse';
 import { formatMnemonicDoc, formatRegisterDoc } from '../formatting';
 import { RegisterName } from '../syntax';
 
 export default class CompletionProvider implements Provider {
-	constructor(protected readonly ctx: Context) {}
+	private processor: DocumentProcessor;
+
+	constructor(protected readonly ctx: Context) {
+		this.processor = new DocumentProcessor(ctx);
+	}
 
 	async onCompletion({
 		position,
@@ -55,7 +58,7 @@ export default class CompletionProvider implements Provider {
 		}
 
 		if (type === ComponentType.Mnemonic && info && value.startsWith('+')) {
-			return this.completeMacros(processed.document, position, info.component);
+			return this.completeMacros(processed, position, info.component);
 		}
 		// '+' only triggers completion for a macro call, not within an expression
 		if (context?.triggerCharacter === '+') {
@@ -190,27 +193,23 @@ export default class CompletionProvider implements Provider {
 	 * Macros defined before the position and callable from its scope, as `+name(args)` snippets
 	 */
 	completeMacros(
-		document: TextDocument,
+		processed: ProcessedDocument,
 		position: lsp.Position,
 		component: Component
 	): lsp.CompletionItem[] {
-		// The call being typed is usually a syntax error, which loses the whole tree, so parse
-		// the document with the current line blanked out (keeping offsets the same)
-		const text = document.getText();
-		const lineStart = document.offsetAt(lsp.Position.create(position.line, 0));
-		const lineEnd = document.offsetAt(lsp.Position.create(position.line, lsp.uinteger.MAX_VALUE));
-		const blanked =
-			text.substring(0, lineStart) + ' '.repeat(lineEnd - lineStart) + text.substring(lineEnd);
-		const blankedDoc = TextDocument.create(
-			document.uri,
-			document.languageId,
-			document.version,
-			blanked
-		);
-		const { tree, scopes } = parse(blanked);
-		const { definitions } = processSymbols(blankedDoc, tree, scopes);
+		const { document } = processed;
+		// The call being typed is usually a syntax error, which leaves the stored document empty
+		const { scopes, symbols } = processed.valid
+			? processed
+			: this.processor.processWithoutLine(processed.document, position.line);
+		const { definitions } = symbols;
 
 		const offset = document.offsetAt(position);
+		// Renaming an existing call keeps its argument list
+		const hasArgList =
+			document
+				.getText()
+				.charAt(document.offsetAt({ line: position.line, character: component.end })) === '(';
 		const scope = scopes.scopeAtOffset(offset);
 		const resolves = (path: string[], target: string) =>
 			scope.findSymbolPath(path)?.join('::') === target;
@@ -239,7 +238,9 @@ export default class CompletionProvider implements Provider {
 			}
 
 			const args = def.args ?? [];
-			const insertText = `+${name}(${args.map((a, i) => `\${${i + 1}:${a}}`).join(', ')})`;
+			const insertText = hasArgList
+				? `+${name}`
+				: `+${name}(${args.map((a, i) => `\${${i + 1}:${a}}`).join(', ')})`;
 			items.push({
 				label: name,
 				labelDetails: { description: def.signature },

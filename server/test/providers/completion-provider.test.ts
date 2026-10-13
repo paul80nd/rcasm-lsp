@@ -177,6 +177,11 @@ describe('CompletionProvider', () => {
 						{ label: 'skip', textEdit: lsp.TextEdit.replace(range(1, 8, 1, 11), '+skip(${1:v})') }
 					]));
 
+			it('completes the name of an existing call without adding another argument list', async () =>
+				await given('!macro skip(v) { add }\n        +sk(1)')
+					.completionsAt(1, 11)
+					.are([{ label: 'skip', textEdit: lsp.TextEdit.replace(range(1, 8, 1, 11), '+skip') }]));
+
 			it('uses an absolute name when a relative one would resolve elsewhere', async () =>
 				await given(
 					['sc: {', '!macro m() { add }', '}', 'o: {', 'sc: {', '}', '  +', '}'].join('\n')
