@@ -16,10 +16,11 @@ export interface Definition extends NamedSymbol {
 	type: DefinitionType;
 	selectionRange: lsp.Range;
 	comment?: string;
-	// Macro signature, for a macro or one of its arguments
+	// For a macro: its signature and argument names
 	signature?: string;
-	// Macro argument names
 	args?: string[];
+	// For a macro argument: the signature of the macro it belongs to
+	argumentOf?: string;
 }
 
 export function isDefinition(symbol: NamedSymbol): symbol is Definition {
@@ -70,7 +71,7 @@ export function processSymbols(
 			def.signature = macroSignature(se);
 			def.args = se.args;
 		} else if (se.type === 'var' && se.macro) {
-			def.signature = macroSignature(se.macro);
+			def.argumentOf = macroSignature(se.macro);
 		}
 
 		// Comments:

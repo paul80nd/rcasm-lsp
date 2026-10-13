@@ -1,12 +1,7 @@
 import * as rcasm from '@paul80nd/rcasm';
 import { INode, IOrphanNode } from './nodes';
 import * as nodes from './nodes';
-import { SymbolScope, NamedScope, SymEntry, SymMacro } from './scopes';
-
-export interface SourceRange {
-	start: number;
-	end: number;
-}
+import { SymbolScope, NamedScope, SymEntry, SymMacro, SourceRange } from './scopes';
 
 export interface IParseContext {
 	scope: SymbolScope;
@@ -157,6 +152,8 @@ class AstAdapter {
 		this.ctx.withAnonOrLabelScope(
 			sn,
 			() => {
+				// rcasm numbers each iteration (`label__0`), whereas this stands in for all of them
+				this.ctx.scope.nameable = false;
 				n.adoptChild(this.adaptVariable(ss.index));
 
 				if (ss.body) {
@@ -236,7 +233,7 @@ class AstAdapter {
 		if (lsn) {
 			const macro = this.ctx.lookupMacro(sc.name);
 			this.ctx.withLabelScope(lsn, () => {
-				this.ctx.scope.expands = macro?.body;
+				this.ctx.scope.macroBody = macro?.body;
 			});
 		}
 		return n;
@@ -316,7 +313,14 @@ class ParserContext implements IParseContext {
 	withAnonScope(body: () => void, range?: SourceRange) {
 		const anonLabel = `__anon_scope_${this.anonScopeCount}`;
 		this.anonScopeCount++;
-		this.withLabelScope(anonLabel, body, range);
+		this.withLabelScope(
+			anonLabel,
+			() => {
+				this.scope.nameable = false;
+				body();
+			},
+			range
+		);
 	}
 
 	withLabelScope(name: string, body: () => void, range?: SourceRange) {

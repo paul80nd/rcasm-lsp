@@ -182,6 +182,22 @@ describe('CompletionProvider', () => {
 					.completionsAt(1, 11)
 					.are([{ label: 'skip', textEdit: lsp.TextEdit.replace(range(1, 8, 1, 11), '+skip') }]));
 
+			it('does not offer macros only reachable through anonymous or loop scopes', async () =>
+				await given(
+					[
+						'!if (1) {',
+						'!macro in_if() { add }',
+						'}',
+						'lp: !for i in range(2) {',
+						'!macro in_for() { add }',
+						'}',
+						'!macro top() { add }',
+						'  +'
+					].join('\n')
+				)
+					.completionsAt(7, 3)
+					.are([{ label: 'top' }]));
+
 			it('uses an absolute name when a relative one would resolve elsewhere', async () =>
 				await given(
 					['sc: {', '!macro m() { add }', '}', 'o: {', 'sc: {', '}', '  +', '}'].join('\n')

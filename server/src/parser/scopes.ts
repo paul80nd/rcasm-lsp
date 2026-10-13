@@ -2,6 +2,12 @@ import { INode } from './nodes';
 
 export type SymbolScope = NamedScope<SymEntry>;
 
+// Offsets into the source text
+export interface SourceRange {
+	start: number;
+	end: number;
+}
+
 export interface SymbolReference {
 	path: string[];
 	absolute: boolean;
@@ -15,10 +21,13 @@ export class NamedScope<T> {
 	readonly path: string[];
 	children = new Map<string, NamedScope<T>>();
 	// Source ranges (offsets) this scope covers; a scope can be reopened so there may be several
-	ranges: { start: number; end: number }[] = [];
-	// A labelled macro call's expansion scope stands in for the macro's body scope, so
-	// `label::body_label` resolves into the definition
-	expands?: NamedScope<T>;
+	ranges: SourceRange[] = [];
+	// For a labelled macro call's expansion scope: the macro's body scope it stands in for,
+	// so `label::body_label` resolves into the definition
+	macroBody?: NamedScope<T>;
+	// False where this scope's name differs from rcasm's (anonymous scopes and loop
+	// iterations are numbered differently), so it can't be referred to by name
+	nameable = true;
 
 	constructor(parent: NamedScope<T> | null, name: string) {
 		this.parent = parent;
@@ -76,7 +85,7 @@ export class NamedScope<T> {
 			if (tab === undefined) {
 				return [...this.path, path[0]]; // If not found assume ref to local undeclared
 			}
-			tab = tab.expands ?? tab;
+			tab = tab.macroBody ?? tab;
 		}
 		return [...tab.path, path[path.length - 1]];
 	}
@@ -92,6 +101,11 @@ export class NamedScope<T> {
 			}
 		}
 		return tab;
+	}
+
+	// Whether this scope and all its ancestors can be referred to by name
+	isNameable(): boolean {
+		return this.nameable && (this.parent?.isNameable() ?? true);
 	}
 
 	// Innermost scope (this or a descendant) whose source ranges contain the offset

@@ -229,7 +229,7 @@ export default class CompletionProvider implements Provider {
 			let name: string;
 			if (resolves([bare], def.name)) {
 				name = bare;
-			} else if (path.some(p => p.startsWith('__anon_scope_') || p.endsWith('__n'))) {
+			} else if (!scopes.scopeAt(path.slice(0, -1))?.isNameable()) {
 				continue; // Not reachable by name from outside an anonymous or loop scope
 			} else if (resolves(path, def.name)) {
 				name = def.name;

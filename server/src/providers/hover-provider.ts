@@ -118,13 +118,12 @@ export default class HoverProvider implements Provider {
 
 			switch (def.type) {
 				case DefinitionType.Macro:
-					contents.push('```rcasm\n' + def.signature + '\n```');
+					contents.push(rcasmBlock(def.signature ?? def.name));
 					break;
 				case DefinitionType.Variable: {
-					if (def.signature) {
-						// Macro argument
+					if (def.argumentOf) {
 						const name = def.name.split('::').pop();
-						contents.push('```rcasm\n' + def.signature + '\n```');
+						contents.push(rcasmBlock(def.argumentOf));
 						contents.push(`(macro argument) ${name}`);
 						break;
 					}
@@ -138,7 +137,7 @@ export default class HoverProvider implements Provider {
 								lsp.Position.create(startLine, Number.MAX_VALUE)
 							)
 						);
-						contents.push('```rcasm\n' + formatDeclaration(definitionLine) + '\n```');
+						contents.push(rcasmBlock(formatDeclaration(definitionLine)));
 					}
 					break;
 				}
@@ -176,6 +175,10 @@ export default class HoverProvider implements Provider {
 			}
 		};
 	}
+}
+
+function rcasmBlock(code: string): string {
+	return '```rcasm\n' + code + '\n```';
 }
 
 function lookupMnemonicDoc(mnemonic: string): MarkupContent | undefined {
