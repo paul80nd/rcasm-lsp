@@ -26,6 +26,10 @@ updates:
       # lockstep with the runtime, not on Dependabot's schedule. Minor/patch within it still flow.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      # ts-jest (up to 29.4.15) peers on typescript <7, so a TS 7 bump fails `npm ci` with
+      # ERESOLVE. Lift this once ts-jest widens its peer range (or we move off ts-jest).
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
     groups:
       dev-minor-patch:
         dependency-type: development
