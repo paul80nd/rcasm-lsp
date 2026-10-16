@@ -77,7 +77,10 @@
 		"prettier": "prettier --write ."
 	},
 	"overrides": {
-		"serialize-javascript": "^7.0.6"
+		"serialize-javascript": "^7.0.6",
+		"@istanbuljs/load-nyc-config": {
+			"js-yaml": "^4.3.2"
+		}
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
